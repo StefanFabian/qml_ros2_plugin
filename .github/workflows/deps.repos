@@ -1,0 +1,5 @@
+- git:
+    local-name: ros2_babel_fish
+    uri: https://github.com/LOEWE-emergenCITY/ros2_babel_fish
+    version: main
+

@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>qml_ros2_plugin</name>
+  <version>1.0.0</version>
+  <description>
+    A QML plugin for ROS.
+    Enables full communication with ROS from QML.
+  </description>
+
+  <maintainer email="qml_ros2_plugin@stefanfabian.me">Stefan Fabian</maintainer>
+
+  <license>GPLv3</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>image_transport</depend>
+  <depend>ros2_babel_fish</depend>
+  <depend>libqt5-core</depend>
+  <depend>libqt5-multimedia</depend>
+  <depend>libqt5-qml</depend>
+  <depend>libqt5-quick</depend>
+  <depend>yaml-cpp</depend>
+  <build_depend>qtbase5-dev</build_depend>
+  <build_depend>qtdeclarative5-dev</build_depend>
+  <build_depend>qtmultimedia5-dev</build_depend>
+  <test_depend>qml-module-qtquick2</test_depend>
+  <test_depend>example_interfaces</test_depend>
+  <test_depend>ros2_babel_fish_test_msgs</test_depend>
+  <test_depend>std_srvs</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

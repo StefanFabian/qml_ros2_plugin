@@ -1,0 +1,13 @@
+BasedOnStyle: LLVM
+AllowShortBlocksOnASingleLine: Always
+AllowShortLoopsOnASingleLine: true
+AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeBraces: Linux
+ColumnLimit: 100
+PenaltyBreakComment: 1000
+PenaltyExcessCharacter: 10
+SpaceAfterTemplateKeyword: false
+SpaceInEmptyBlock: true
+SpacesInConditionalStatement: true
+SpacesInParentheses: true
+UseTab: Never

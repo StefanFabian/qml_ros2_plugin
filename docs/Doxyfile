@@ -1,0 +1,19 @@
+PROJECT_NAME="QML ROS Plugin"
+# List the source input folders from which the documentation is generated here
+INPUT=../include
+RECURSIVE=YES
+GENERATE_HTML=YES
+GENERATE_XML=YES
+XML_OUTPUT=xml
+XML_PROGRAMLISTING=NO
+CASE_SENSE_NAMES=NO
+HIDE_UNDOC_RELATIONS=YES
+# Removes warning if a method is not documented
+WARN_IF_UNDOCUMENTED=NO
+# Removes warning and Q_INVOKABLE flag for Q_INVOKABLE marked methods
+MACRO_EXPANSION=YES
+EXPAND_ONLY_PREDEF=YES
+PREDEFINED= Q_INVOKABLE= \
+            Q_GADGET=
+HIDE_SCOPE_NAMES=YES
+
