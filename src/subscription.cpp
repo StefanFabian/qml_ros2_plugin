@@ -32,9 +32,9 @@ Subscription::Subscription()
   initTimers();
 }
 
-Subscription::Subscription( QString topic, QString message_type, quint32 queue_size, bool enabled )
-    : topic_( std::move( topic ) ), user_message_type_( std::move( message_type ) ),
-      queue_size_( queue_size ), running_( enabled )
+Subscription::Subscription( QString topic, QString message_type, QoS qos, bool enabled )
+    : topic_( std::move( topic ) ), user_message_type_( std::move( message_type ) ), qos_( qos ),
+      running_( enabled )
 {
   babel_fish_ = BabelFishDispenser::getBabelFish();
   initTimers();
@@ -64,11 +64,11 @@ void Subscription::setTopic( const QString &value )
   emit topicChanged();
 }
 
-quint32 Subscription::queueSize() const { return queue_size_; }
+quint32 Subscription::queueSize() const { return qos_.getQoS().get_rmw_qos_profile().depth; }
 
 void Subscription::setQueueSize( quint32 value )
 {
-  queue_size_ = value;
+  qos_.keep_last( value );
   subscribe();
   emit queueSizeChanged();
 }
@@ -112,6 +112,15 @@ void Subscription::setMessageType( const QString &value )
   emit messageTypeChanged();
 }
 
+qml_ros2_plugin::QoS Subscription::qos() { return qos_; }
+
+void Subscription::setQoS( qml_ros2_plugin::QoS qos )
+{
+  qos_ = qos;
+  subscribe();
+  emit qosChanged();
+}
+
 unsigned int Subscription::getPublisherCount()
 {
   return is_subscribed_ ? subscription_->get_publisher_count() : 0;
@@ -143,12 +152,12 @@ void Subscription::try_subscribe()
     return;
   if ( user_message_type_.isEmpty() ) {
     subscription_ = babel_fish_.create_subscription(
-        *node, topic_.toStdString(), queue_size_,
+        *node, topic_.toStdString(), qos_.getQoS(),
         [this]( ros2_babel_fish::CompoundMessage::SharedPtr msg ) { messageCallback( msg ); },
         nullptr, {}, std::chrono::nanoseconds( 0 ) );
   } else {
     subscription_ = babel_fish_.create_subscription(
-        *node, topic_.toStdString(), user_message_type_.toStdString(), queue_size_,
+        *node, topic_.toStdString(), user_message_type_.toStdString(), qos_.getQoS(),
         [this]( ros2_babel_fish::CompoundMessage::SharedPtr msg ) { messageCallback( msg ); },
         nullptr, {} );
   }

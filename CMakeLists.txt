@@ -54,6 +54,7 @@ set(SOURCES
   include/qml_ros2_plugin/logger.hpp
   include/qml_ros2_plugin/publisher.hpp
   include/qml_ros2_plugin/qobject_ros2.hpp
+  include/qml_ros2_plugin/qos.hpp
   include/qml_ros2_plugin/ros2.hpp
   include/qml_ros2_plugin/service_client.hpp
   include/qml_ros2_plugin/subscription.hpp
@@ -75,6 +76,7 @@ set(SOURCES
   src/publisher.cpp
   src/qml_ros2_plugin.cpp
   src/qobject_ros2.cpp
+  src/qos.cpp
   src/ros2.cpp
   src/service_client.cpp
   src/subscription.cpp

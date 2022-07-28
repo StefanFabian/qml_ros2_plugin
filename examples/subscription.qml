@@ -18,10 +18,16 @@ ApplicationWindow {
   Subscription {
     id: mySubscription
     //messageType: "example_interfaces/msg/Int32" // This is optional, if not specified, type is selected automatically
+    // Quality of service settings, see ROS2 docs for details:
+    // https://docs.ros.org/en/rolling/Concepts/About-Quality-of-Service-Settings.html
+    //qos: Ros2.QoS(10).best_effort().transient_local()
     topic: "/intval"
+
+    property int count: 0
+    onNewMessage: ++count
   }
   // Alternatively:
-  //property var mySubscription: Ros2.createSubscription("/intval", 10)
+  //property var mySubscription: Ros2.createSubscription("/intval", Ros2.QoS(10).best_effort())
   // or
   //property var mySubscription: Ros2.createSubscription("/intval", "example_interfaces/msg/Int32", 10)
 
@@ -42,6 +48,7 @@ ApplicationWindow {
       text: "Received:\n" +
             "  Message type: " + mySubscription.messageType + "\n" +
             "  Message content: " + (mySubscription.message ? mySubscription.message.data : "No message received yet") + "\n" +
+            "  Messages received: " + (mySubscription.count == null ? "Not available" : mySubscription.count) + "\n" +
             "  Enabled: " + mySubscription.enabled + "\n" +
             "  Subscribed: " + mySubscription.subscribed
     }

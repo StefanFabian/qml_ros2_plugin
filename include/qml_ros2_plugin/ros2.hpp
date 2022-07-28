@@ -20,6 +20,7 @@
 
 #include "qml_ros2_plugin/io.hpp"
 #include "qml_ros2_plugin/logger.hpp"
+#include "qml_ros2_plugin/qos.hpp"
 #include "qml_ros2_plugin/time.hpp"
 #include "qml_ros2_plugin/topic_info.hpp"
 
@@ -39,6 +40,8 @@ class Ros2Qml : public QObject
   Q_OBJECT
 private:
   Ros2Qml();
+
+  ~Ros2Qml() override;
 
 public:
   static Ros2Qml &getInstance();
@@ -244,10 +247,20 @@ public:
    * Convenience function to create a subscriber in a single line.
    *
    * @param topic The topic to createSubscription to.
-   * @param queue_size The maximum number of incoming messages to be queued for processing.
+   * @param history_depth The maximum number of incoming messages to be queued for processing.
    * @return A Subscriber instance.
    */
-  Q_INVOKABLE QObject *createSubscription( const QString &topic, quint32 queue_size = 0 );
+  Q_INVOKABLE QObject *createSubscription( const QString &topic, quint32 history_depth = 0 );
+
+  /*!
+   * Creates a Subscriber to createSubscription to ROS messages.
+   * Convenience function to create a subscriber in a single line.
+   *
+   * @param topic The topic to createSubscription to.
+   * @param qos The quality of service settings. See QoS
+   * @return A Subscriber instance.
+   */
+  Q_INVOKABLE QObject *createSubscription( const QString &topic, const qml_ros2_plugin::QoS &qos );
 
   /*!
    * Creates a Subscriber to createSubscription to ROS messages.
@@ -255,11 +268,23 @@ public:
    *
    * @param topic The topic to createSubscription to.
    * @param message_type The type of the messages to subscribe to on the topic.
-   * @param queue_size The maximum number of incoming messages to be queued for processing.
+   * @param history_depth The maximum number of incoming messages to be queued for processing.
    * @return A Subscriber instance.
    */
   Q_INVOKABLE QObject *createSubscription( const QString &topic, const QString &message_type,
-                                           quint32 queue_size = 0 );
+                                           quint32 history_depth = 0 );
+
+  /*!
+   * Creates a Subscriber to createSubscription to ROS messages.
+   * Convenience function to create a subscriber in a single line.
+   *
+   * @param topic The topic to createSubscription to.
+   * @param message_type The type of the messages to subscribe to on the topic.
+   * @param qos The quality of service settings. See QoS
+   * @return A Subscriber instance.
+   */
+  Q_INVOKABLE QObject *createSubscription( const QString &topic, const QString &message_type,
+                                           const qml_ros2_plugin::QoS &qos );
 
   /*!
    * Creates a ServiceClient for the given type and the given name.
@@ -276,6 +301,8 @@ public:
    * @return An instance of ActionClient.
    */
   Q_INVOKABLE QObject *createActionClient( const QString &name, const QString &type );
+
+  Q_INVOKABLE qml_ros2_plugin::QoS QoS( unsigned int history_depth );
 
 signals:
 

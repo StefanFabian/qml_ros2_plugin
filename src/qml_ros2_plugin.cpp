@@ -65,6 +65,7 @@ public:
     qmlRegisterUncreatableType<TopicInfo>(
         "Ros2", 1, 0, "TopicInfo",
         "Error: No point in creating TopicInfo in QML and it's not supported." );
+    qRegisterMetaType<QoS>();
     qmlRegisterUncreatableType<Publisher>(
         "Ros2", 1, 0,
         "Publisher", "Error: Can not create Publisher manually in QML. Use one of the createPublisher functions." );

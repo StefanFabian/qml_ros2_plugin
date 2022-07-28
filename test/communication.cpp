@@ -221,6 +221,62 @@ TEST( Communication, subscriber )
     FAIL() << "Shouldn't have received the message that was published while the subscriber wasn't "
               "running.";
   delete subscriber_ns;
+
+  // ==================
+  // Quality of service
+  // ==================
+  // Pub: best_effort and subscriber reliable (default) won't connect
+  pub_ns = node->create_publisher<geometry_msgs::msg::Pose>( "/other_pose",
+                                                             rclcpp::QoS( 10 ).best_effort() );
+  subscriber_ns = dynamic_cast<qml_ros2_plugin::Subscription *>(
+      wrapper.createSubscription( "/other_pose", wrapper.QoS( 10 ).reliable() ) );
+  if ( waitFor( [&]() { return pub_ns->get_subscription_count() > 0; }, 60 ) )
+    FAIL() << "Should not have been able to establish this connection.";
+  delete subscriber_ns;
+
+  // With both best effort it should work
+  subscriber_ns = dynamic_cast<qml_ros2_plugin::Subscription *>(
+      wrapper.createSubscription( "/other_pose", wrapper.QoS( 10 ).best_effort() ) );
+  if ( !waitFor( [&]() { return pub_ns->get_subscription_count() > 0; } ) )
+    FAIL() << "Timout while waiting for subscriber num increasing.";
+  pub_ns->publish( pose );
+  if ( !waitFor( [&]() {
+         auto position = subscriber_ns->message().toMap()["position"].toMap();
+         return std::abs( position["z"].toDouble() - 1.0 ) < 1E-4;
+       } ) )
+    FAIL() << "Did not receive message in time.";
+  delete subscriber_ns;
+
+  // Pub: volatile and subscriber transient_local won't connect
+  pub_ns = node->create_publisher<geometry_msgs::msg::Pose>( "/other_pose_transient",
+                                                             rclcpp::QoS( 10 ).durability_volatile() );
+  subscriber_ns = dynamic_cast<qml_ros2_plugin::Subscription *>(
+      wrapper.createSubscription( "/other_pose_transient", wrapper.QoS( 10 ).transient_local() ) );
+  if ( waitFor( [&]() { return pub_ns->get_subscription_count() > 0; }, 60 ) )
+    FAIL() << "Should not have been able to establish this connection.";
+
+  // with transient_local pub it should work
+  pub_ns = node->create_publisher<geometry_msgs::msg::Pose>( "/other_pose_transient",
+                                                             rclcpp::QoS( 10 ).transient_local() );
+  if ( !waitFor( [&]() { return pub_ns->get_subscription_count() > 0; } ) )
+    FAIL() << "Timout while waiting for subscriber num increasing.";
+  pub_ns->publish( pose );
+  if ( !waitFor( [&]() { return subscriber_ns->message().isValid(); } ) )
+    FAIL() << "Did not receive message in time.";
+  delete subscriber_ns;
+
+  // With both volatile it should also work
+  pub_ns = node->create_publisher<geometry_msgs::msg::Pose>( "/other_pose",
+                                                             rclcpp::QoS( 10 ).durability_volatile() );
+  subscriber_ns = dynamic_cast<qml_ros2_plugin::Subscription *>(
+      wrapper.createSubscription( "/other_pose", wrapper.QoS( 10 ).durability_volatile() ) );
+  if ( !waitFor( [&]() { return pub_ns->get_subscription_count() > 0; } ) )
+    FAIL() << "Timout while waiting for subscriber num increasing.";
+  pub_ns->publish( pose );
+  if ( !waitFor( [&]() { return subscriber_ns->message().isValid(); } ) )
+    FAIL() << "Did not receive message in time.";
+  delete subscriber_ns;
+
 }
 
 TEST( Communication, queryTopics )

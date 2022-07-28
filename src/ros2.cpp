@@ -21,6 +21,7 @@
 #include "qml_ros2_plugin/conversion/message_conversions.hpp"
 #include "qml_ros2_plugin/helpers/logging.hpp"
 #include "qml_ros2_plugin/publisher.hpp"
+#include "qml_ros2_plugin/qos.hpp"
 #include "qml_ros2_plugin/service_client.hpp"
 #include "qml_ros2_plugin/subscription.hpp"
 
@@ -41,6 +42,18 @@ Ros2Qml::Ros2Qml()
 {
   babel_fish_ = BabelFishDispenser::getBabelFish();
   count_wrappers = 0;
+}
+
+Ros2Qml::~Ros2Qml()
+{
+  if ( context_ == nullptr )
+    return;
+  rclcpp::shutdown( context_,
+                    "Ros2Qml is destroyed but executor wasn't ended. Could be a bug." );
+  node_.reset();
+  context_.reset();
+  if ( executor_thread_.joinable() )
+    executor_thread_.join();
 }
 
 bool Ros2Qml::isInitialized() const { return context_ != nullptr; }
@@ -340,15 +353,29 @@ QObject *Ros2QmlSingletonWrapper::createPublisher( const QString &topic, const Q
   return new Publisher( topic, type, queue_size );
 }
 
-QObject *Ros2QmlSingletonWrapper::createSubscription( const QString &topic, quint32 queue_size )
+QObject *Ros2QmlSingletonWrapper::createSubscription( const QString &topic, quint32 history_depth )
 {
-  return new Subscription( topic, QString(), queue_size );
+  return new Subscription( topic, QString(), QoS( history_depth ) );
 }
 
 QObject *Ros2QmlSingletonWrapper::createSubscription( const QString &topic,
-                                                      const QString &message_type, quint32 queue_size )
+                                                      const qml_ros2_plugin::QoS &qos )
 {
-  return new Subscription( topic, message_type, queue_size );
+  return new Subscription( topic, QString(), qos );
+}
+
+QObject *Ros2QmlSingletonWrapper::createSubscription( const QString &topic,
+                                                      const QString &message_type,
+                                                      quint32 history_depth )
+{
+  return new Subscription( topic, message_type, QoS( history_depth ) );
+}
+
+QObject *Ros2QmlSingletonWrapper::createSubscription( const QString &topic,
+                                                      const QString &message_type,
+                                                      const qml_ros2_plugin::QoS &qos )
+{
+  return new Subscription( topic, message_type, qos );
 }
 
 QObject *Ros2QmlSingletonWrapper::createServiceClient( const QString &name, const QString &type )
@@ -359,6 +386,11 @@ QObject *Ros2QmlSingletonWrapper::createServiceClient( const QString &name, cons
 QObject *Ros2QmlSingletonWrapper::createActionClient( const QString &name, const QString &type )
 {
   return new ActionClient( name, type );
+}
+
+QoS Ros2QmlSingletonWrapper::QoS( unsigned int history_depth )
+{
+  return qml_ros2_plugin::QoS{ history_depth };
 }
 
 bool Ros2QmlSingletonWrapper::initLogging()

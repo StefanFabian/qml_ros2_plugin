@@ -19,6 +19,7 @@
 #define QML_ROS2_PLUGIN_SUBSCRIPTION_HPP
 
 #include "qml_ros2_plugin/qobject_ros2.hpp"
+#include "qml_ros2_plugin/qos.hpp"
 
 #include <QMap>
 #include <QTimer>
@@ -37,6 +38,8 @@ class Subscription : public QObjectRos2
   //! The topic this subscriber subscribes to.
   Q_PROPERTY( QString topic READ topic WRITE setTopic NOTIFY topicChanged )
   //! The maximum number of messages that are queued for processing. Default: 10
+  //! This property only has an effect if qos is configured with history policy keep last.
+  //! Setting it to a value will automatically set keep last with the given depth.
   Q_PROPERTY( quint32 queueSize READ queueSize WRITE setQueueSize NOTIFY queueSizeChanged )
 
   //! The last message that was received by this subscriber.
@@ -54,10 +57,15 @@ class Subscription : public QObjectRos2
 
   //! Indicates whether a subscription is active or not.
   Q_PROPERTY( bool subscribed READ subscribed NOTIFY subscribedChanged )
+
+  //! The quality of service settings for this subscription.
+  //! See QoS and the ROS2 Docs for more info:
+  //! https://docs.ros.org/en/rolling/Concepts/About-Quality-of-Service-Settings.html
+  Q_PROPERTY( qml_ros2_plugin::QoS qos READ qos WRITE setQoS NOTIFY qosChanged )
 public:
   Subscription();
 
-  Subscription( QString topic, QString message_type, quint32 queue_size, bool enabled = true );
+  Subscription( QString topic, QString message_type, QoS qos, bool enabled = true );
 
   ~Subscription() override;
 
@@ -88,6 +96,10 @@ public:
   //! @return The number of publishers this subscriber is connected to.
   Q_INVOKABLE unsigned int getPublisherCount();
 
+  qml_ros2_plugin::QoS qos();
+
+  Q_INVOKABLE void setQoS( qml_ros2_plugin::QoS qos );
+
 signals:
 
   void subscribedChanged();
@@ -103,6 +115,8 @@ signals:
   void messageChanged();
 
   void messageTypeChanged();
+
+  void qosChanged();
 
   /*!
    * Emitted whenever a new message was received.
@@ -140,7 +154,7 @@ protected:
   QString user_message_type_;
   QString message_type_;
   QVariant message_;
-  quint32 queue_size_ = 10;
+  QoS qos_;
   int throttle_rate_ = 20;
   bool running_ = true;
   bool is_subscribed_ = false;
