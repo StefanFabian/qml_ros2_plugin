@@ -236,11 +236,22 @@ public:
    *
    * @param type The type of the messages published using this publisher.
    * @param topic The topic on which the messages are published.
-   * @param queue_size The maximum number of outgoing messages to be queued for delivery to subscribers.
+   * @param history_depth The maximum number of outgoing messages to be queued for delivery to subscribers.
    * @return A Publisher instance.
    */
   Q_INVOKABLE QObject *createPublisher( const QString &topic, const QString &type,
-                                        quint32 queue_size = 1 );
+                                        quint32 history_depth = 0 );
+
+  /*!
+   * Creates a Publisher to publish ROS messages.
+   *
+   * @param type The type of the messages published using this publisher.
+   * @param topic The topic on which the messages are published.
+   * @param qos The quality of service settings. See QoS
+   * @return A Publisher instance.
+   */
+  Q_INVOKABLE QObject *createPublisher( const QString &topic, const QString &type,
+                                        const qml_ros2_plugin::QoS &qos );
 
   /*!
    * Creates a Subscriber to createSubscription to ROS messages.

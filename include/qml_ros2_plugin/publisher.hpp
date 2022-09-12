@@ -19,6 +19,8 @@
 #define QML_ROS2_PLUGIN_PUBLISHER_HPP
 
 #include "qml_ros2_plugin/qobject_ros2.hpp"
+#include "qml_ros2_plugin/qos.hpp"
+
 #include <QMap>
 #include <QTimer>
 #include <QVariant>
@@ -40,8 +42,13 @@ class Publisher : public QObjectRos2
   //! Whether or not this publisher has advertised its existence on its topic.
   //! Reasons for not being advertised include ROS not being initialized yet. (readonly)
   Q_PROPERTY( bool isAdvertised READ isAdvertised NOTIFY advertised )
+  //! The quality of service settings for this publisher.
+  //! See QoS and the ROS2 Docs for more info:
+  //! https://docs.ros.org/en/rolling/Concepts/About-Quality-of-Service-Settings.html
+  Q_PROPERTY( qml_ros2_plugin::QoS qos READ qos )
+
 public:
-  Publisher( QString topic, QString type, uint32_t queue_size );
+  Publisher( QString topic, QString type, QoS qos );
 
   ~Publisher() override;
 
@@ -62,6 +69,8 @@ public:
    * @return True if the message was sent successfully, false otherwise.
    */
   Q_INVOKABLE bool publish( const QVariantMap &msg );
+
+  qml_ros2_plugin::QoS qos();
 
 signals:
 
@@ -91,7 +100,7 @@ protected:
   QString type_;
   std::string std_type_;
   QString topic_;
-  uint32_t queue_size_;
+  QoS qos_;
 };
 } // namespace qml_ros2_plugin
 
