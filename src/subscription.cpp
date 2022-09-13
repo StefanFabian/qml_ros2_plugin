@@ -117,7 +117,11 @@ unsigned int Subscription::getPublisherCount()
   return is_subscribed_ ? subscription_->get_publisher_count() : 0;
 }
 
-void Subscription::onRos2Initialized() { subscribe(); }
+void Subscription::onRos2Initialized()
+{
+  if ( !is_subscribed_ )
+    subscribe();
+}
 
 void Subscription::onRos2Shutdown() { shutdown(); }
 

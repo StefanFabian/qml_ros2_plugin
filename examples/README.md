@@ -31,3 +31,9 @@ For the `image_subscription.qml`, you can use the usb_cam package and run
 ros2 run usb_cam usb_cam_node_exe
 ```
 to stream your webcam.
+
+**Troubleshooting:** If you get an error that compressed is not available, you're missing the `image_transport_plugins`.   
+Install on Ubuntu using
+```
+sudo apt install ros-{DISTRO}-image-transport-plugins
+```
