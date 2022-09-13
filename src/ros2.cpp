@@ -384,9 +384,11 @@ QObject *Ros2QmlSingletonWrapper::createSubscription( const QString &topic,
   return new Subscription( topic, message_type, qos );
 }
 
-QObject *Ros2QmlSingletonWrapper::createServiceClient( const QString &name, const QString &type )
+QObject *Ros2QmlSingletonWrapper::createServiceClient( const QString &name,
+                                                       const QString &type,
+                                                       const qml_ros2_plugin::QoS &qos)
 {
-  return new ServiceClient( name, type );
+  return new ServiceClient( name, type, qos );
 }
 
 QObject *Ros2QmlSingletonWrapper::createActionClient( const QString &name, const QString &type )

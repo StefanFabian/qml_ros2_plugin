@@ -301,9 +301,11 @@ public:
    * Creates a ServiceClient for the given type and the given name.
    * @param name The name of the service to connect to.
    * @param type The type of the service. Example: example_interfaces/srv/AddTwoInts
+   * @param qos The quality of service settings. See QoS
    * @return An instance of ServiceClient.
    */
-  Q_INVOKABLE QObject *createServiceClient( const QString &name, const QString &type );
+  Q_INVOKABLE QObject *createServiceClient( const QString &name, const QString &type,
+                                            const qml_ros2_plugin::QoS &qos = qml_ros2_plugin::QoS{} );
 
   /*!
    * Creates an ActionClient for the given type and the given name.
