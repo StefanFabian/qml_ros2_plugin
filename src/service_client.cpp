@@ -29,8 +29,8 @@ using namespace qml_ros2_plugin::conversion;
 
 namespace qml_ros2_plugin
 {
-ServiceClient::ServiceClient( QString name, QString type )
-    : name_( std::move( name ) ), service_type_( std::move( type ) )
+ServiceClient::ServiceClient( QString name, QString type, QoS qos )
+    : name_( std::move( name ) ), service_type_( std::move( type ) ), qos_( qos )
 {
   babel_fish_ = BabelFishDispenser::getBabelFish();
 }
@@ -40,7 +40,7 @@ void ServiceClient::onRos2Initialized()
   try {
     rclcpp::Node &node = *Ros2Qml::getInstance().node();
     client_ =
-        babel_fish_.create_service_client( node, name_.toStdString(), service_type_.toStdString() );
+        babel_fish_.create_service_client( node, name_.toStdString(), service_type_.toStdString(), qos_.getQoS().get_rmw_qos_profile() );
   } catch ( BabelFishException &ex ) {
     QML_ROS2_PLUGIN_ERROR( "Could not create ServiceClient: %s", ex.what() );
     client_ = nullptr;
@@ -95,6 +95,8 @@ void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &ca
     return;
   }
 }
+
+qml_ros2_plugin::QoS ServiceClient::qos() { return qos_; }
 
 void ServiceClient::invokeCallback( QJSValue value, QVariant result )
 {

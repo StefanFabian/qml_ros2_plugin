@@ -19,6 +19,8 @@
 #define QML_ROS2_PLUGIN_SERVICE_CLIENT_HPP
 
 #include "qml_ros2_plugin/qobject_ros2.hpp"
+#include "qml_ros2_plugin/qos.hpp"
+
 #include <QJSValue>
 #include <QTimer>
 #include <QVariant>
@@ -33,12 +35,18 @@ class ServiceClient : public QObjectRos2
   Q_OBJECT
   //! True if the ServiceClient is connected to the Service and the Service is ready, false otherwise.
   Q_PROPERTY( bool ready READ isServiceReady NOTIFY serviceReadyChanged )
+  //! The quality of service settings for this service client's connection.
+  //! See QoS and the ROS2 Docs for more info:
+  //! https://docs.ros.org/en/rolling/Concepts/About-Quality-of-Service-Settings.html
+  Q_PROPERTY( qml_ros2_plugin::QoS qos READ qos )
+
 public:
   /*!
    * @param name The service topic.
    * @param type The type of the service, e.g., "example_interfaces/srv/AddTwoInts"
+   * @param qos The QoS settings to use for this client's connection.
    */
-  ServiceClient( QString name, QString type );
+  ServiceClient( QString name, QString type, QoS qos );
 
   //! Returns whether the service is ready.
   bool isServiceReady() const;
@@ -52,6 +60,8 @@ public:
    *   If the request failed, the callback is called with false.
    */
   Q_INVOKABLE void sendRequestAsync( const QVariantMap &req, const QJSValue &callback );
+
+  qml_ros2_plugin::QoS qos();
 
 signals:
 
@@ -74,6 +84,7 @@ private:
   QString service_type_;
   ros2_babel_fish::BabelFishServiceClient::SharedPtr client_;
   QTimer connect_timer_;
+  QoS qos_;
 };
 } // namespace qml_ros2_plugin
 
