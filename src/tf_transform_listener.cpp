@@ -47,7 +47,7 @@ TfTransformListener &TfTransformListener::getInstance()
   return instance;
 }
 
-TfTransformListener::TfTransformListener() { state_.reset(); }
+TfTransformListener::TfTransformListener() : wrapper_count_( 0 ) { state_.reset(); }
 
 TfTransformListener::~TfTransformListener() = default;
 
