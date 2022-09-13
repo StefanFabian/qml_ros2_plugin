@@ -17,7 +17,63 @@
 
 #include "qml_ros2_plugin/image_buffer.hpp"
 
-#include <boost/endian/conversion.hpp>
+#if (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L) || __cplusplus >= 202002L
+#include <bit>
+namespace qml_ros2_plugin
+{
+namespace
+{
+using endian = std::endian;
+}
+} // namespace qml_ros2_plugin
+#else
+namespace qml_ros2_plugin
+{
+namespace
+{
+enum endian {
+  little = 0,
+  big = 1,
+#ifndef BYTEORDER_ENDIAN
+// Detect with GCC 4.6's macro.
+#   if defined(__BYTE_ORDER__)
+#       if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+  native = little
+#       elif (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+  native = big
+#       else
+#           error "Unknown machine byteorder endianness detected. User needs to define BYTEORDER_ENDIAN."
+#       endif
+// Detect with GLIBC's endian.h.
+#   elif defined(__GLIBC__)
+#       include <endian.h>
+#       if (__BYTE_ORDER == __LITTLE_ENDIAN)
+  native = little
+#       elif (__BYTE_ORDER == __BIG_ENDIAN)
+  native = big
+#       else
+#           error "Unknown machine byteorder endianness detected. User needs to define BYTEORDER_ENDIAN."
+#       endif
+// Detect with _LITTLE_ENDIAN and _BIG_ENDIAN macro.
+#   elif defined(_LITTLE_ENDIAN) && !defined(_BIG_ENDIAN)
+  native = little
+#   elif defined(_BIG_ENDIAN) && !defined(_LITTLE_ENDIAN)
+  native = big
+// Detect with architecture macros.
+#   elif defined(__sparc) || defined(__sparc__) || defined(_POWER) || defined(__powerpc__) || defined(__ppc__) || defined(__hpux) || defined(__hppa) || defined(_MIPSEB) || defined(_POWER) || defined(__s390__)
+  native = big
+#   elif defined(__i386__) || defined(__alpha__) || defined(__ia64) || defined(__ia64__) || defined(_M_IX86) || defined(_M_IA64) || defined(_M_ALPHA) || defined(__amd64) || defined(__amd64__) || defined(_M_AMD64) || defined(__x86_64) || defined(__x86_64__) || defined(_M_X64) || defined(__bfin__)
+  native = little
+#   elif defined(_MSC_VER) && (defined(_M_ARM) || defined(_M_ARM64))
+  native = little
+#   else
+#       error "Unknown machine byteorder endianness detected. User needs to define BYTEORDER_ENDIAN."
+#   endif
+#endif
+};
+}
+} // namespace qml_ros2_plugin
+#endif
 
 namespace qml_ros2_plugin
 {
@@ -283,8 +339,7 @@ QVideoFrame::PixelFormat convertFrame( const sensor_msgs::msg::Image &img, uint8
 {
   num_bytes = img.data.size();
   bytes_per_line = img.step;
-  bool same_endianness = ( boost::endian::order::native == boost::endian::order::big ) ==
-                         static_cast<bool>( img.is_bigendian );
+  bool same_endianness = ( endian::native == endian::big ) == static_cast<bool>( img.is_bigendian );
   if ( img.encoding == sensor_msgs::image_encodings::RGB8 ) {
     return convertToClosestFormat<uint8_t, extractChannel<uint8_t, 0>, extractChannel<uint8_t, 1>,
                                   extractChannel<uint8_t, 2>, returnMax<uint8_t>, 3>(
@@ -367,7 +422,7 @@ QVideoFrame::PixelFormat convertFrame( const sensor_msgs::msg::Image &img, uint8
     // Native format is BGRA32 if little endian because then RGBA in memory is ABGR as an uint32 which is somehow
     // the actual layout of BGRA32 in Qt 5.9.5 (contrary to what the documentation says)
     QList<QVideoFrame::PixelFormat> native_formats;
-    if ( boost::endian::order::native == boost::endian::order::little )
+    if ( endian::native == endian::little )
       native_formats = { QVideoFrame::Format_BGRA32, QVideoFrame::Format_BGR32 };
     return convertToClosestFormat<uint8_t, extractChannel<uint8_t, 0>, extractChannel<uint8_t, 1>,
                                   extractChannel<uint8_t, 2>, extractChannel<uint8_t, 3>, 4>(
@@ -379,7 +434,7 @@ QVideoFrame::PixelFormat convertFrame( const sensor_msgs::msg::Image &img, uint8
   } else if ( img.encoding == sensor_msgs::image_encodings::BGRA8 ) {
     // Native format is ARGB32 if little endian because then BGRA in memory is ARGB as an uint32
     QList<QVideoFrame::PixelFormat> native_formats;
-    if ( boost::endian::order::native == boost::endian::order::little )
+    if ( endian::native == endian::little )
       native_formats = { QVideoFrame::Format_ARGB32, QVideoFrame::Format_RGB32 };
     return convertToClosestFormat<uint8_t, extractChannel<uint8_t, 2>, extractChannel<uint8_t, 1>,
                                   extractChannel<uint8_t, 0>, extractChannel<uint8_t, 3>, 4>(
