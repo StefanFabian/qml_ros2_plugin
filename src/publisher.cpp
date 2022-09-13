@@ -85,16 +85,7 @@ void Publisher::advertise()
     return;
   if ( topic_.isEmpty() )
     return;
-  if ( queue_size_ == 0 )
-    return;
 
-  try_advertise();
-}
-
-void Publisher::try_advertise()
-{
-  if ( is_advertised_ )
-    return;
   std::shared_ptr<rclcpp::Node> node = Ros2Qml::getInstance().node();
   if ( node == nullptr )
     return;

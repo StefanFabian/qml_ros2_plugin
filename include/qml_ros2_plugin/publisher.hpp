@@ -72,10 +72,6 @@ signals:
    */
   void advertised();
 
-protected slots:
-
-  void try_advertise();
-
 protected:
   void onRos2Initialized() override;
 
