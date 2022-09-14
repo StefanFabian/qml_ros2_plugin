@@ -122,9 +122,10 @@ template<>
   // Make sure time is accurate to the millisecond which is the supported resolution by QDateTime
   if ( std::abs( map.value<Time>().seconds() - rclcpp::Time( msg ).seconds() ) <= 1E-3 )
     return ::testing::AssertionSuccess();
-  return ::testing::AssertionFailure() << "Map at " << path << " differed!" << std::endl
-                                       << "Map: " << map.value<Time>().getTime() << std::endl
-                                       << "Message: " << rclcpp::Time( msg );
+  return ::testing::AssertionFailure()
+         << "Map at " << path << " differed!" << std::endl
+         << "Map: " << map.value<Time>().getTime().nanoseconds() << std::endl
+         << "Message: " << rclcpp::Time( msg ).nanoseconds();
 }
 
 template<>
@@ -586,8 +587,8 @@ messageEqual( const FixedLengthCompoundArrayMessage &arr, const std::array<TestS
   if ( compound["stamp"].value<rclcpp::Time>() != msg.stamp )
     return ::testing::AssertionFailure()
            << "Retranslated message differed at " << path << ".stamp !" << std::endl
-           << "RBF2 Message: " << compound["stamp"].value<rclcpp::Time>() << std::endl
-           << "Message: " << msg.stamp;
+           << "RBF2 Message: " << compound["stamp"].value<rclcpp::Time>().nanoseconds() << std::endl
+           << "Message: " << rclcpp::Time( msg.stamp ).nanoseconds();
   return ::testing::AssertionSuccess();
 }
 
@@ -662,13 +663,13 @@ messageEqual( const FixedLengthCompoundArrayMessage &arr, const std::array<TestS
   if ( compound["t"].value<rclcpp::Time>() != msg.t )
     return ::testing::AssertionFailure()
            << "Retranslated message differed at " << path << ".t !" << std::endl
-           << "RBF2 Message: " << compound["t"].value<rclcpp::Time>() << std::endl
-           << "Message: " << msg.t;
+           << "RBF2 Message: " << compound["t"].value<rclcpp::Time>().nanoseconds() << std::endl
+           << "Message: " << rclcpp::Time( msg.t ).nanoseconds();
   if ( compound["d"].value<rclcpp::Duration>() != msg.d )
     return ::testing::AssertionFailure()
            << "Retranslated message differed at " << path << ".d !" << std::endl
-           << "RBF2 Message: " << compound["d"].value<rclcpp::Duration>() << std::endl
-           << "Message: " << msg.d;
+           << "RBF2 Message: " << compound["d"].value<rclcpp::Duration>().nanoseconds() << std::endl
+           << "Message: " << rclcpp::Duration( msg.d ).nanoseconds();
 
   const auto &list = compound["point_arr"].as<CompoundArrayMessage>();
   if ( list.size() != msg.point_arr.size() )
