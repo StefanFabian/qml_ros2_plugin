@@ -100,31 +100,33 @@ if(BUILD_TESTING)
   find_package(std_srvs REQUIRED)
   find_package(Qt5Test REQUIRED)
 
+  set(TEST_DEPENDENCIES example_interfaces ros2_babel_fish_test_msgs std_srvs)
+
   ament_add_gtest(test_communication test/communication.cpp)
-  ament_target_dependencies(test_communication ros2_babel_fish_test_msgs example_interfaces std_srvs)
+  ament_target_dependencies(test_communication ${TEST_DEPENDENCIES})
   target_link_libraries(test_communication ${PROJECT_NAME} Qt5::Test)
 
   ament_add_gtest(test_image_conversions test/image_conversions.cpp)
-  ament_target_dependencies(test_image_conversions ros2_babel_fish_test_msgs)
+  ament_target_dependencies(test_image_conversions  ${TEST_DEPENDENCIES})
   target_link_libraries(test_image_conversions ${PROJECT_NAME})
 
   ament_add_gtest(test_image_transport_subscriber test/image_transport_subscriber.cpp)
-  ament_target_dependencies(test_image_transport_subscriber ros2_babel_fish_test_msgs)
+  ament_target_dependencies(test_image_transport_subscriber  ${TEST_DEPENDENCIES})
   target_link_libraries(test_image_transport_subscriber ${PROJECT_NAME})
 
   ament_add_gtest(test_message_conversions test/message_conversions.cpp)
-  ament_target_dependencies(test_message_conversions ros2_babel_fish_test_msgs)
+  ament_target_dependencies(test_message_conversions  ${TEST_DEPENDENCIES})
   target_link_libraries(test_message_conversions ${PROJECT_NAME})
 
   ament_add_gtest(test_ros_life_cycle test/ros_life_cycle.cpp)
-  ament_target_dependencies(test_ros_life_cycle ros2_babel_fish_test_msgs)
+  ament_target_dependencies(test_ros_life_cycle  ${TEST_DEPENDENCIES})
   target_link_libraries(test_ros_life_cycle ${PROJECT_NAME})
 
   ament_add_gtest(test_logging test/logging.cpp)
   target_link_libraries(test_logging ${PROJECT_NAME})
   #
   ament_add_gtest(test_io test/io.cpp)
-  ament_target_dependencies(test_io ros2_babel_fish_test_msgs)
+  ament_target_dependencies(test_io  ${TEST_DEPENDENCIES})
   target_link_libraries(test_io ${PROJECT_NAME})
 
   install(DIRECTORY test/test_io DESTINATION share/qml_ros2_plugin/test/)
