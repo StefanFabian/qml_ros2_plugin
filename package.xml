@@ -9,7 +9,7 @@
 
   <maintainer email="qml_ros2_plugin@stefanfabian.me">Stefan Fabian</maintainer>
 
-  <license>GPLv3</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

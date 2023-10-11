@@ -26,7 +26,7 @@ Logging, Publisher, Subscription, ImageTransportSubscription, Service client, Ac
 
 **Note:** For full examples including ROS init calls and shutdown handling checkout the examples directory.
 
-**License:** GPLv3 - If you require a different license, contact me.
+**License:** MIT
 
 ## Logging
 
