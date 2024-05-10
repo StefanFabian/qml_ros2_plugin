@@ -233,7 +233,7 @@ public:
    * @param queue_size The maximum number of incoming messages to be queued for processing.
    * @return A Subscriber instance.
    */
-  Q_INVOKABLE QObject *createSubscription( const QString &topic, quint32 queue_size = 0 );
+  Q_INVOKABLE QObject *createSubscription( const QString &topic, quint32 queue_size = 1 );
 
   /*!
    * Creates a Subscriber to createSubscription to ROS messages.
@@ -245,7 +245,7 @@ public:
    * @return A Subscriber instance.
    */
   Q_INVOKABLE QObject *createSubscription( const QString &topic, const QString &message_type,
-                                           quint32 queue_size = 0 );
+                                           quint32 queue_size = 1 );
 
   /*!
    * Creates a ServiceClient for the given type and the given name.

@@ -30,10 +30,16 @@ public:
   {
     Q_ASSERT( uri == QLatin1String( "Ros2" ) );
 
+#if QT_VERSION >= QT_VERSION_CHECK( 5, 14, 0 )
+    qmlRegisterAnonymousType<Array>( "Ros2", 1 );
+    qmlRegisterAnonymousType<Logger>( "Ros2", 1 );
+    qmlRegisterAnonymousType<IO>( "Ros2", 1 );
+#else
     qmlRegisterType<Array>();
-    QMetaType::registerConverter<Array, QVariantList>( &Array::toVariantList );
     qmlRegisterType<Logger>();
     qmlRegisterType<IO>();
+#endif
+    QMetaType::registerConverter<Array, QVariantList>( &Array::toVariantList );
     qmlRegisterUncreatableMetaObject( ros2_logger_levels::staticMetaObject, "Ros2", 1, 0,
                                       "Ros2LoggerLevel", "Error: Can not create enum object." );
     qmlRegisterSingletonType<Ros2QmlSingletonWrapper>(

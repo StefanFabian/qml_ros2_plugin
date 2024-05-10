@@ -57,7 +57,7 @@ TEST( IO, yaml )
   ASSERT_TRUE( messageEqual( file_msg->as<CompoundMessage>(), test_array ) );
 
   ASSERT_FALSE( io.writeYaml(
-      "/usr/bin/i_really_hope_this_fails_on_your_machine_for_your_own_sake.mission", map ) );
+      "/dev/null/i_really_hope_this_fails_on_your_machine_for_your_own_sake.mission", map ) );
   EXPECT_FALSE( io.writeYaml( "https://somewebserver.org/mission.mission", map ) );
   file = io.readYaml( "https://somewebserver.org/mission.mission" );
   EXPECT_EQ( file.type(), QVariant::Bool );

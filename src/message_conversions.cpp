@@ -74,12 +74,13 @@ QVariantMap msgToMap( const geometry_msgs::msg::Quaternion &msg )
 
 QString uuidToString( const rclcpp_action::GoalUUID &uuid )
 {
-  static const char hex[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
-                                '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+  static constexpr char hex[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
+                                    '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
   static_assert( std::is_same<std::remove_const<std::remove_reference<decltype( uuid )>::type>::type,
                               std::array<uint8_t, 16>>::value,
                  "The UUID definition was changed. Please open an issue!" );
-  QString result_uuid( 36 );
+  QString result_uuid;
+  result_uuid.resize( 36 );
   int input_index = 0;
   int output_index = -1;
   for ( ; input_index < 4; ++input_index ) {
@@ -326,8 +327,15 @@ template<typename T>
 using limits = std::numeric_limits<T>;
 
 template<typename TargetType, typename ValueType>
+typename std::enable_if<std::is_same<ValueType, bool>::value, bool>::type isCompatible( const bool & )
+{
+  return std::is_same<TargetType, bool>::value;
+}
+
+template<typename TargetType, typename ValueType>
 typename std::enable_if<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value &&
-                            std::is_signed<TargetType>::value == std::is_signed<ValueType>::value,
+                            std::is_signed<TargetType>::value == std::is_signed<ValueType>::value &&
+                            !std::is_same<ValueType, bool>::value,
                         bool>::type
 isCompatible( const ValueType &value )
 {
@@ -337,7 +345,8 @@ isCompatible( const ValueType &value )
 
 template<typename TargetType, typename ValueType>
 typename std::enable_if<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value &&
-                            std::is_signed<TargetType>::value && !std::is_signed<ValueType>::value,
+                            std::is_signed<TargetType>::value && !std::is_signed<ValueType>::value &&
+                            !std::is_same<ValueType, bool>::value,
                         bool>::type
 isCompatible( const ValueType &value )
 {
@@ -347,7 +356,8 @@ isCompatible( const ValueType &value )
 
 template<typename TargetType, typename ValueType>
 typename std::enable_if<std::is_integral<TargetType>::value && std::is_integral<ValueType>::value &&
-                            !std::is_signed<TargetType>::value && std::is_signed<ValueType>::value,
+                            !std::is_signed<TargetType>::value && std::is_signed<ValueType>::value &&
+                            !std::is_same<ValueType, bool>::value,
                         bool>::type
 isCompatible( const ValueType &value )
 {
@@ -1051,7 +1061,7 @@ bool fillMessage( BabelFish &fish, Message &msg, const QVariant &value )
     auto quaternion = value.value<QQuaternion>();
     auto &compound = msg.as<CompoundMessage>();
     bool no_error = true;
-    for ( const std::string &key : { "w", "x", "y", "z" } ) {
+    for ( const std::string &key : std::array<std::string, 4>{ "w", "x", "y", "z" } ) {
       if ( !compound.containsKey( key ) ) {
         QML_ROS2_PLUGIN_ERROR(
             "Tried to set QQuaternion to compound message that has no '%s' property!", key.c_str() );

@@ -12,7 +12,9 @@ ApplicationWindow {
   // This connection makes sure the application exits if this ROS node is requested to shutdown
   Connections {
     target: Ros2
-    onShutdown: Qt.quit()
+    function onShutdown() {
+      Qt.quit()
+    }
   }
 
   // Arguments are: Name, Message Type
@@ -30,6 +32,13 @@ ApplicationWindow {
       Layout.fillWidth: true
       Layout.columnSpan: 2
       text: "Enter an integer to send it to the fibonacci tutorial action server:"
+    }
+
+    TextInput {
+      Layout.columnSpan: 2
+      readOnly: true
+      selectByMouse: true
+      text: "ros2 run action_tutorials_py fibonacci_action_server"
     }
 
     SpinBox {

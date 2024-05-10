@@ -14,7 +14,9 @@ ApplicationWindow {
   // This connection makes sure the application exits if this ROS node is requested to shutdown
   Connections {
     target: Ros2
-    onShutdown: Qt.quit()
+    function onShutdown() {
+      Qt.quit()
+    }
   }
 
   property var time: Ros2.now()

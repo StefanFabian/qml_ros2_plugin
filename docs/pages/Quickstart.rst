@@ -89,7 +89,9 @@ to the ``Shutdown`` signal:
   ApplicationWindow {
     Connections {
       target: Ros2
-      onShutdown: Qt.quit()
+      function onShutdown() {
+        Qt.quit()
+      }
     }
     /* ... */
   }

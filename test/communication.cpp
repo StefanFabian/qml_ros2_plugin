@@ -171,13 +171,13 @@ TEST( Communication, subscriber )
   EXPECT_DOUBLE_EQ( pose.position.y,
                     subscriber_pns_glob.message().toMap()["position"].toMap()["y"].toDouble() );
 
-  auto pub_ns = node->create_publisher<geometry_msgs::msg::Pose>( "/other_pose", 10 );
+  auto pub_ns = node->create_publisher<geometry_msgs::msg::Pose>( "/other_pose", rclcpp::QoS( 1 ) );
   ASSERT_EQ( pub_ns->get_topic_name(), std::string( "/other_pose" ) );
   auto subscriber_ns =
-      dynamic_cast<qml_ros2_plugin::Subscription *>( wrapper.createSubscription( "/other_pose", 0 ) );
+      dynamic_cast<qml_ros2_plugin::Subscription *>( wrapper.createSubscription( "/other_pose", 1 ) );
   QCoreApplication::processEvents();
   EXPECT_TRUE( subscriber_ns->isRosInitialized() );
-  EXPECT_EQ( subscriber_ns->queueSize(), 0U );
+  EXPECT_EQ( subscriber_ns->queueSize(), 1U );
   EXPECT_EQ( subscriber_ns->topic(), QString( "/other_pose" ) )
       << subscriber_ns->topic().toStdString();
   if ( !waitFor( [&]() { return pub_ns->get_subscription_count() > 0; } ) )
@@ -197,15 +197,16 @@ TEST( Communication, subscriber )
   EXPECT_FALSE( subscriber_ns->enabled() );
   pose.position.z = 1.0;
   pub_ns->publish( pose );
-  waitFor( []() { return false; }, 10 ); // Wait for a moment
-  subscriber_ns->setEnabled( true );
-  EXPECT_TRUE( subscriber_ns->enabled() );
   if ( waitFor( [&]() {
          return std::abs( subscriber_ns->message().toMap()["position"].toMap()["z"].toDouble() -
                           1.0 ) < 1E-4;
        } ) )
     FAIL() << "Shouldn't have received the message that was published while the subscriber wasn't "
               "running.";
+  subscriber_ns->setEnabled( true );
+  EXPECT_TRUE( subscriber_ns->enabled() );
+  ASSERT_FALSE( std::abs( subscriber_ns->message().toMap()["position"].toMap()["z"].toDouble() -
+                          1.0 ) < 1E-4 );
   delete subscriber_ns;
 }
 
@@ -435,6 +436,7 @@ TEST( Communication, actionClient )
   engine.newQObject( client_ptr );
   ActionClient &client = *client_ptr;
   EXPECT_FALSE( client.isServerReady() );
+  // This should also print a warning "Tried to send goal when ActionClient was not connected!"
   EXPECT_EQ( client.sendGoalAsync( { { "goal", 8 } } ), nullptr );
 
   auto *callback_watcher = new ActionClientCallback;
