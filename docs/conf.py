@@ -15,18 +15,14 @@ import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-
 # Fix for Q_Property
 from breathe.renderer.sphinxrenderer import DomainDirectiveFactory, CMacroObject
 if "property" not in DomainDirectiveFactory.cpp_classes:
   DomainDirectiveFactory.cpp_classes["property"] = (CMacroObject, "macro")
 
-if not on_rtd:
-  import sphinx_rtd_theme
-  html_theme = 'sphinx_rtd_theme'
-  html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-else:
+
+# On ReadTheDocs, generate the Doxygen documentation
+if os.environ.get('READTHEDOCS', None) == 'True':
   from subprocess import call
   call('doxygen')
 
@@ -45,8 +41,11 @@ author = 'Stefan Fabian'
 extensions = [
   "breathe",
   "sphinx.ext.autosectionlabel",
-  "sphinx.ext.todo"
+  "sphinx.ext.todo",
+  "sphinx_rtd_theme"
 ]
+
+html_theme = 'sphinx_rtd_theme'
 
 todo_include_todos = True
 
