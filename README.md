@@ -1,10 +1,5 @@
 [![Documentation Status](https://readthedocs.org/projects/qml-ros2-plugin/badge/?version=latest)](https://qml-ros2-plugin.readthedocs.io/en/latest/?badge=latest)
 
-## Warning: Currently in Alpha
-
-While this plugin contains a significant amount of tests, it is still in alpha stadium and bugs
-are expected. Be aware of this. I would not recommend using it in production systems without further testing.
-
 ## Scientific Works
 If you are using this module in a scientific context, feel free to cite [this paper](https://ieeexplore.ieee.org/document/9568801):
 ```
@@ -24,9 +19,14 @@ Please be aware that this loses some of the semantic information that the type o
 Currently, has support for the following:  
 Logging, Publisher, Subscription, ImageTransportSubscription, Service client, ActionClient, TfTransform, Ament index and querying topics  
 
-**Note:** For full examples including ROS init calls and shutdown handling checkout the examples directory.
-
 **License:** MIT
+
+https://github.com/StefanFabian/qml_ros2_plugin/assets/2090520/c45280cf-24fe-4ff1-8423-30035deda10d
+
+This demo interface uses Tf and a velocity publisher to control and display the turtle demo with less than 200 lines of code for the entire interface.
+It is available in the examples folder as `turtle_demo_control.qml`.
+
+**Note:** For full examples including ROS init calls and shutdown handling checkout the examples directory.
 
 ## Logging
 
