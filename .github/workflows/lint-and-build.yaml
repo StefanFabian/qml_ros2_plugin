@@ -1,0 +1,69 @@
+name: Build & Test
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+defaults:
+  run:
+    shell: bash
+jobs:
+  Linting:
+    name: Lint Code Base
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup
+        run: |
+          apt-get update && apt-get install -y clang-format cppcheck libxml2-utils
+      - name: Lint C++
+        run: |
+          clang-format -Werror -n -style=file $(find . -name '*.cpp' -o -name '*.hpp' -o -name '*.h' -o -name '*.c' -o -name '*.cc')
+      - name: Check C++
+        run: |
+          cppcheck --force --library=qt --quiet --error-exitcode=1 include src
+      - name: Lint package.xml
+        run: |
+          xmllint --noout --schema http://download.ros.org/schema/package_format3.xsd $(find . -name 'package.xml')
+
+  build-and-test:
+    needs: Linting
+    runs-on: ${{ matrix.setup.os }}
+    container:
+      image: ros:${{ matrix.setup.rosdistro }}-ros-base
+    strategy:
+      matrix:
+        setup:
+          - rosdistro: foxy
+            os: ubuntu-20.04
+          - rosdistro: jazzy
+            os: ubuntu-latest
+    steps:
+      - name: install build tools
+        run: |
+          apt-get update
+          apt-get install -y ros-dev-tools
+      - uses: actions/checkout@v4
+        with:
+          path: src/qml_ros2_plugin
+      - uses: actions/checkout@v4
+        with:
+          path: src/ros2_babel_fish
+          repository: 'LOEWE-emergenCITY/ros2_babel_fish'
+          ref: ${{ matrix.setup.rosdistro }}
+      - name: rosdep
+        run: |
+          rosdep update
+          rosdep install -y --from-paths src --ignore-src --rosdistro ${{ matrix.setup.rosdistro }}
+      - name: build
+        run: |
+          source /opt/ros/${{ matrix.setup.rosdistro }}/setup.bash
+          colcon build
+      - name: test
+        run: |
+          source /opt/ros/${{ matrix.setup.rosdistro }}/setup.bash
+          colcon test --packages-select qml_ros2_plugin
+          colcon test-result --verbose
