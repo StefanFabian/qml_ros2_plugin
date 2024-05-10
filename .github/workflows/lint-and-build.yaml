@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
       - name: Setup
         run: |
-          apt-get update && apt-get install -y clang-format cppcheck libxml2-utils
+          sudo apt-get update && sudo apt-get install -y clang-format cppcheck libxml2-utils
       - name: Lint C++
         run: |
           clang-format -Werror -n -style=file $(find . -name '*.cpp' -o -name '*.hpp' -o -name '*.h' -o -name '*.c' -o -name '*.cc')
@@ -44,8 +44,8 @@ jobs:
     steps:
       - name: install build tools
         run: |
-          apt-get update
-          apt-get install -y ros-dev-tools
+          sudo apt-get update
+          sudo apt-get install -y ros-dev-tools
       - uses: actions/checkout@v4
         with:
           path: src/qml_ros2_plugin
