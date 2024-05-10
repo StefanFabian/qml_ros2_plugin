@@ -56,7 +56,7 @@ jobs:
           ref: ${{ matrix.setup.rosdistro }}
       - name: rosdep
         run: |
-          rosdep update
+          rosdep update --rosdistro ${{ matrix.setup.rosdistro }} --include-eol-distros
           rosdep install -y --from-paths src --ignore-src --rosdistro ${{ matrix.setup.rosdistro }}
       - name: build
         run: |
