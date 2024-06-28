@@ -66,8 +66,9 @@ private slots:
 
   void checkServerReady();
 
-  void invokeGoalResponseCallback(
-      QJSValue callback, ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr handle );
+  void
+  invokeGoalResponseCallback( QJSValue callback,
+                              ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr handle );
 
   void invokeFeedbackCallback( QJSValue callback,
                                ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr handle,
