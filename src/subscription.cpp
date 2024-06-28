@@ -134,12 +134,12 @@ void Subscription::try_subscribe()
   if ( user_message_type_.isEmpty() ) {
     subscription_ = babel_fish_.create_subscription(
         *node, topic_.toStdString(), queue_size_,
-        [this]( ros2_babel_fish::CompoundMessage::SharedPtr msg ) { messageCallback( msg ); },
+        [this]( ros_babel_fish::CompoundMessage::SharedPtr msg ) { messageCallback( msg ); },
         nullptr, {}, std::chrono::nanoseconds( 0 ) );
   } else {
     subscription_ = babel_fish_.create_subscription(
         *node, topic_.toStdString(), user_message_type_.toStdString(), queue_size_,
-        [this]( ros2_babel_fish::CompoundMessage::SharedPtr msg ) { messageCallback( msg ); },
+        [this]( ros_babel_fish::CompoundMessage::SharedPtr msg ) { messageCallback( msg ); },
         nullptr, {} );
   }
   if ( subscription_ == nullptr )
@@ -167,7 +167,7 @@ void Subscription::shutdown()
   emit subscribedChanged();
 }
 
-void Subscription::messageCallback( const ros2_babel_fish::CompoundMessage::SharedPtr &msg )
+void Subscription::messageCallback( const ros_babel_fish::CompoundMessage::SharedPtr &msg )
 {
   std::lock_guard<std::mutex> lock( message_mutex_ );
   last_message_ = msg;
@@ -178,7 +178,7 @@ void Subscription::updateMessage()
   std::unique_lock<std::mutex> lock( message_mutex_ );
   if ( last_message_ == nullptr )
     return;
-  ros2_babel_fish::CompoundMessage::ConstSharedPtr msg = std::move( last_message_ );
+  ros_babel_fish::CompoundMessage::ConstSharedPtr msg = std::move( last_message_ );
   last_message_ = nullptr;
   lock.unlock(); // Don't need the mutex anymore
   message_ = msgToMap( *msg );

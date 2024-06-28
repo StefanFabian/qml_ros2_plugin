@@ -8,7 +8,7 @@
 #include "qml_ros2_plugin/qobject_ros2.hpp"
 #include "qml_ros2_plugin/time.hpp"
 
-#include <ros2_babel_fish/babel_fish.hpp>
+#include <ros_babel_fish/babel_fish.hpp>
 
 namespace qml_ros2_plugin
 {
@@ -22,8 +22,8 @@ class GoalHandle : public QObjectRos2
   Q_PROPERTY( QString goalId READ goalId )
   Q_PROPERTY( qml_ros2_plugin::Time goalStamp READ goalStamp )
 public:
-  explicit GoalHandle( ros2_babel_fish::BabelFishActionClient::SharedPtr client,
-                       ros2_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr handle );
+  explicit GoalHandle( ros_babel_fish::BabelFishActionClient::SharedPtr client,
+                       ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr handle );
 
   qml_ros2_plugin::action_goal_status::GoalStatus status() const;
 
@@ -38,10 +38,10 @@ protected:
   void onRos2Shutdown() override;
 
 private:
-  ros2_babel_fish::BabelFish babel_fish_;
+  ros_babel_fish::BabelFish babel_fish_;
   // Store the client to make sure its destructed after the goal handles
-  ros2_babel_fish::BabelFishActionClient::SharedPtr client_;
-  ros2_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr goal_handle_;
+  ros_babel_fish::BabelFishActionClient::SharedPtr client_;
+  ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr goal_handle_;
 };
 } // namespace qml_ros2_plugin
 

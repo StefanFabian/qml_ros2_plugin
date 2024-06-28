@@ -10,7 +10,7 @@
 #include <QJSEngine>
 #include <thread>
 
-using namespace ros2_babel_fish;
+using namespace ros_babel_fish;
 using namespace qml_ros2_plugin::conversion;
 
 namespace qml_ros2_plugin

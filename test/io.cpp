@@ -21,7 +21,7 @@ TEST( IO, yaml )
   Ros2QmlSingletonWrapper wrapper;
   IO io = wrapper.io();
 
-  ros2_babel_fish_test_msgs::msg::TestArray test_array;
+  ros_babel_fish_test_msgs::msg::TestArray test_array;
   unsigned SEED = 42;
   fillArray( test_array.bools, SEED++ );
   fillArray( test_array.uint8s, SEED++ );
@@ -41,7 +41,7 @@ TEST( IO, yaml )
   fillArray( test_array.subarrays, SEED++ );
 
   CompoundMessage translated(
-      *fish.get_message_type_support( "ros2_babel_fish_test_msgs/msg/TestArray" ),
+      *fish.get_message_type_support( "ros_babel_fish_test_msgs/msg/TestArray" ),
       std::shared_ptr<void>( &test_array, []( void * ) { /* do nothing */ } ) );
   QVariant map = conversion::msgToMap( translated );
 
@@ -52,7 +52,7 @@ TEST( IO, yaml )
   QVariant file = io.readYaml( QString::fromStdString( path ) );
 
   Message::SharedPtr file_msg =
-      fish.create_message_shared( "ros2_babel_fish_test_msgs/msg/TestArray" );
+      fish.create_message_shared( "ros_babel_fish_test_msgs/msg/TestArray" );
   conversion::fillMessage( *file_msg, file );
   ASSERT_TRUE( messageEqual( file_msg->as<CompoundMessage>(), test_array ) );
 

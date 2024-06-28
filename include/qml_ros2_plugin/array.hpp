@@ -5,7 +5,7 @@
 #define QML_ROS2_PLUGIN_ARRAY_HPP
 
 #include <QVariant>
-#include <ros2_babel_fish/messages/array_message.hpp>
+#include <ros_babel_fish/messages/array_message.hpp>
 
 namespace qml_ros2_plugin
 {
@@ -25,7 +25,7 @@ public:
 
   Array();
 
-  explicit Array( const ros2_babel_fish::ArrayMessageBase::ConstSharedPtr &message );
+  explicit Array( const ros_babel_fish::ArrayMessageBase::ConstSharedPtr &message );
 
   //  Array( const Array &other );
 
@@ -107,7 +107,7 @@ public:
 
   bool _inCache() const;
 
-  ros2_babel_fish::ArrayMessageBase::ConstSharedPtr _message() const;
+  ros_babel_fish::ArrayMessageBase::ConstSharedPtr _message() const;
 
   Q_INVOKABLE QVariantList toVariantList() const;
 

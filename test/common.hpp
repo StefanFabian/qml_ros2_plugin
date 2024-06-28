@@ -1,10 +1,10 @@
 // Copyright (c) 2021 Stefan Fabian. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#ifndef ROS2_BABEL_FISH_TEST_COMMON_H
-#define ROS2_BABEL_FISH_TEST_COMMON_H
+#ifndef ROS_BABEL_FISH_TEST_COMMON_H
+#define ROS_BABEL_FISH_TEST_COMMON_H
 
-#include <ros2_babel_fish_test_msgs/msg/test_array.hpp>
+#include <ros_babel_fish_test_msgs/msg/test_array.hpp>
 
 #include <QString>
 #include <gtest/gtest.h>
@@ -197,8 +197,8 @@ void fillArray( std::array<std::string, L> &msg, unsigned seed )
 }
 
 template<>
-void fillArray<ros2_babel_fish_test_msgs::msg::TestSubArray>(
-    std::vector<ros2_babel_fish_test_msgs::msg::TestSubArray> &msg, unsigned seed )
+void fillArray<ros_babel_fish_test_msgs::msg::TestSubArray>(
+    std::vector<ros_babel_fish_test_msgs::msg::TestSubArray> &msg, unsigned seed )
 {
   std::default_random_engine generator( seed );
   std::uniform_int_distribution<unsigned> distribution( std::numeric_limits<unsigned>::min() );
@@ -206,7 +206,7 @@ void fillArray<ros2_babel_fish_test_msgs::msg::TestSubArray>(
   size_t length = length_distribution( generator );
   msg.reserve( length );
   for ( size_t i = 0; i < length; ++i ) {
-    ros2_babel_fish_test_msgs::msg::TestSubArray message;
+    ros_babel_fish_test_msgs::msg::TestSubArray message;
     fillArray( message.ints, seed++ );
     fillArray( message.strings, seed++ );
     fillArray( message.times, seed++ );
@@ -215,7 +215,7 @@ void fillArray<ros2_babel_fish_test_msgs::msg::TestSubArray>(
 }
 
 template<size_t L>
-void fillArray( std::array<ros2_babel_fish_test_msgs::msg::TestSubArray, L> &msg, unsigned seed )
+void fillArray( std::array<ros_babel_fish_test_msgs::msg::TestSubArray, L> &msg, unsigned seed )
 {
   std::default_random_engine generator( seed );
   std::uniform_int_distribution<unsigned> distribution( std::numeric_limits<unsigned>::min() );
@@ -226,4 +226,4 @@ void fillArray( std::array<ros2_babel_fish_test_msgs::msg::TestSubArray, L> &msg
   }
 }
 
-#endif // ROS2_BABEL_FISH_TEST_COMMON_H
+#endif // ROS_BABEL_FISH_TEST_COMMON_H

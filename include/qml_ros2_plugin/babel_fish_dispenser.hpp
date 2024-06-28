@@ -4,7 +4,7 @@
 #ifndef QML_ROS2_PLUGIN_BABEL_FISH_DISPENSER_HPP
 #define QML_ROS2_PLUGIN_BABEL_FISH_DISPENSER_HPP
 
-#include <ros2_babel_fish/babel_fish.hpp>
+#include <ros_babel_fish/babel_fish.hpp>
 
 namespace qml_ros2_plugin
 {
@@ -12,7 +12,7 @@ namespace qml_ros2_plugin
 /*!
  * @brief Can be used to obtain a BabelFish that is linked to a type support provider that is reused for all BabelFish.
  *
- * The ros2_babel_fish::TypeSupportProvider is responsible for looking up message type supports and caching them, hence,
+ * The ros_babel_fish::TypeSupportProvider is responsible for looking up message type supports and caching them, hence,
  * sharing an instance significantly improves performance.
  */
 class BabelFishDispenser
@@ -25,12 +25,12 @@ public:
   void operator=( const BabelFishDispenser & ) = delete;
 
   //! @return A BabelFish instance using the shared type support providers.
-  static ros2_babel_fish::BabelFish getBabelFish();
+  static ros_babel_fish::BabelFish getBabelFish();
 
 private:
-  ros2_babel_fish::BabelFish createBabelFish();
+  ros_babel_fish::BabelFish createBabelFish();
 
-  std::vector<ros2_babel_fish::TypeSupportProvider::SharedPtr> type_support_providers_;
+  std::vector<ros_babel_fish::TypeSupportProvider::SharedPtr> type_support_providers_;
 };
 } // namespace qml_ros2_plugin
 

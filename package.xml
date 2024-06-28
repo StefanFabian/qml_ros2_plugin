@@ -15,7 +15,7 @@
 
   <depend>rclcpp</depend>
   <depend>image_transport</depend>
-  <depend>ros2_babel_fish</depend>
+  <depend>ros_babel_fish</depend>
   <depend>libqt5-core</depend>
   <depend>libqt5-multimedia</depend>
   <depend>libqt5-qml</depend>
@@ -26,7 +26,7 @@
   <build_depend>qtmultimedia5-dev</build_depend>
   <test_depend>qml-module-qtquick2</test_depend>
   <test_depend>example_interfaces</test_depend>
-  <test_depend>ros2_babel_fish_test_msgs</test_depend>
+  <test_depend>ros_babel_fish_test_msgs</test_depend>
   <test_depend>std_srvs</test_depend>
 
   <export>

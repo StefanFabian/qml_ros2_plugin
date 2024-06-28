@@ -16,7 +16,7 @@
 
 #include <example_interfaces/srv/add_two_ints.hpp>
 #include <geometry_msgs/msg/pose.hpp>
-#include <ros2_babel_fish_test_msgs/action/simple_test.hpp>
+#include <ros_babel_fish_test_msgs/action/simple_test.hpp>
 #include <std_srvs/srv/empty.hpp>
 
 #include <QCoreApplication>
@@ -356,12 +356,12 @@ TEST( Communication, serviceCallAsync )
 class ActionServer
 {
 public:
-  using SimpleTest = ros2_babel_fish_test_msgs::action::SimpleTest;
+  using SimpleTest = ros_babel_fish_test_msgs::action::SimpleTest;
 
   ActionServer()
   {
     using namespace std::placeholders;
-    server = rclcpp_action::create_server<ros2_babel_fish_test_msgs::action::SimpleTest>(
+    server = rclcpp_action::create_server<ros_babel_fish_test_msgs::action::SimpleTest>(
         node, "action", std::bind( &ActionServer::handleGoal, this, _1, _2 ),
         std::bind( &ActionServer::cancelGoal, this, _1 ),
         std::bind( &ActionServer::handleAccepted, this, _1 ) );
@@ -391,18 +391,18 @@ public:
     for ( int i = 0; i < goal; ++i ) {
       std::this_thread::sleep_for( 1ms );
       if ( goal_handle->is_canceling() ) {
-        auto result = std::make_shared<ros2_babel_fish_test_msgs::action::SimpleTest::Result>();
+        auto result = std::make_shared<ros_babel_fish_test_msgs::action::SimpleTest::Result>();
         result->result = goal_handle->get_goal()->goal * 2 - 1;
         goal_handle->canceled( result );
         return;
       }
       if ( i == goal / 2 ) {
-        auto feedback = std::make_shared<ros2_babel_fish_test_msgs::action::SimpleTest::Feedback>();
+        auto feedback = std::make_shared<ros_babel_fish_test_msgs::action::SimpleTest::Feedback>();
         feedback->feedback = goal + 1;
         goal_handle->publish_feedback( feedback );
       }
     }
-    auto result = std::make_shared<ros2_babel_fish_test_msgs::action::SimpleTest::Result>();
+    auto result = std::make_shared<ros_babel_fish_test_msgs::action::SimpleTest::Result>();
     result->result = goal_handle->get_goal()->goal * 2;
     goal_handle->succeed( result );
   }
@@ -432,7 +432,7 @@ TEST( Communication, actionClient )
 {
   ActionServer server;
   QJSEngine engine;
-  auto *client_ptr = new ActionClient( "action", "ros2_babel_fish_test_msgs/action/SimpleTest" );
+  auto *client_ptr = new ActionClient( "action", "ros_babel_fish_test_msgs/action/SimpleTest" );
   engine.newQObject( client_ptr );
   ActionClient &client = *client_ptr;
   EXPECT_FALSE( client.isServerReady() );

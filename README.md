@@ -205,7 +205,7 @@ rosdep install --from-paths . --ignore-packages-from-source
 
 ### Source Dependencies
 
-* [ros2_babel_fish](https://github.com/LOEWE-emergenCity/ros2_babel_fish)
+* [ros_babel_fish](https://github.com/LOEWE-emergenCity/ros2_babel_fish)
 
 ## Documentation
 

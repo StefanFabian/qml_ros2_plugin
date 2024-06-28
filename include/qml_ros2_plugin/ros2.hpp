@@ -14,7 +14,7 @@
 #include <QTimer>
 
 #include <rclcpp/rclcpp.hpp>
-#include <ros2_babel_fish/babel_fish.hpp>
+#include <ros_babel_fish/babel_fish.hpp>
 
 //! @brief Project namespace.
 namespace qml_ros2_plugin
@@ -131,7 +131,7 @@ private:
   std::thread executor_thread_;
   std::shared_ptr<rclcpp::Context> context_;
   std::shared_ptr<rclcpp::Node> node_;
-  ros2_babel_fish::BabelFish babel_fish_;
+  ros_babel_fish::BabelFish babel_fish_;
   std::atomic<int> count_wrappers;
 };
 

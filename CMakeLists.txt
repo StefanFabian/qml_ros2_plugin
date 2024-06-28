@@ -13,7 +13,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(image_transport REQUIRED)
-find_package(ros2_babel_fish REQUIRED)
+find_package(ros_babel_fish REQUIRED)
 find_package(tf2_ros REQUIRED)
 
 find_package(Qt5 COMPONENTS Core Multimedia Qml Quick REQUIRED)
@@ -84,7 +84,7 @@ set(SOURCES
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Multimedia Qt5::Qml Qt5::Quick ${YAML_CPP_LIBRARIES})
-ament_target_dependencies(${PROJECT_NAME} ament_index_cpp rclcpp image_transport ros2_babel_fish tf2_ros)
+ament_target_dependencies(${PROJECT_NAME} ament_index_cpp rclcpp image_transport ros_babel_fish tf2_ros)
 
 #############
 ## Testing ##
@@ -95,12 +95,12 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_gtest REQUIRED)
-  find_package(ros2_babel_fish_test_msgs REQUIRED)
+  find_package(ros_babel_fish_test_msgs REQUIRED)
   find_package(example_interfaces REQUIRED)
   find_package(std_srvs REQUIRED)
   find_package(Qt5Test REQUIRED)
 
-  set(TEST_DEPENDENCIES example_interfaces ros2_babel_fish_test_msgs std_srvs)
+  set(TEST_DEPENDENCIES example_interfaces ros_babel_fish_test_msgs std_srvs)
 
   ament_add_gtest(test_communication test/communication.cpp)
   ament_target_dependencies(test_communication ${TEST_DEPENDENCIES})

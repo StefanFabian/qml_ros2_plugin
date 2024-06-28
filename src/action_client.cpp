@@ -12,7 +12,7 @@
 #include <QJSEngine>
 #include <utility>
 
-using namespace ros2_babel_fish;
+using namespace ros_babel_fish;
 using namespace qml_ros2_plugin::conversion;
 
 namespace qml_ros2_plugin
@@ -61,7 +61,7 @@ void ActionClient::checkServerReady()
 }
 
 void ActionClient::invokeGoalResponseCallback(
-    QJSValue callback, ros2_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr handle )
+    QJSValue callback, ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr handle )
 {
   QJSEngine *engine = qjsEngine( this );
   if ( handle != nullptr )
@@ -86,7 +86,7 @@ void ActionClient::invokeFeedbackCallback( QJSValue callback,
 
 void ActionClient::invokeResultCallback( QJSValue callback, QString goal_id,
                                          qml_ros2_plugin::action_goal_status::GoalStatus result_code,
-                                         ros2_babel_fish::CompoundMessage::ConstSharedPtr result )
+                                         ros_babel_fish::CompoundMessage::ConstSharedPtr result )
 {
   QJSEngine *engine = qjsEngine( this );
   try {
@@ -124,7 +124,7 @@ QObject *ActionClient::sendGoalAsync( const QVariantMap &goal, QJSValue options 
           QMetaObject::invokeMethod(
               this, "invokeGoalResponseCallback", Qt::AutoConnection,
               Q_ARG( QJSValue, goal_response_cb ),
-              Q_ARG( ros2_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr, gh ) );
+              Q_ARG( ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr, gh ) );
         };
     goal_options.feedback_callback =
         [options, this]( const BabelFishActionClient::GoalHandle::SharedPtr &goal_handle,
@@ -136,8 +136,8 @@ QObject *ActionClient::sendGoalAsync( const QVariantMap &goal, QJSValue options 
             return;
           QMetaObject::invokeMethod(
               this, "invokeFeedbackCallback", Qt::AutoConnection, Q_ARG( QJSValue, feedback_cb ),
-              Q_ARG( ros2_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr, goal_handle ),
-              Q_ARG( ros2_babel_fish::CompoundMessage::ConstSharedPtr, feedback ) );
+              Q_ARG( ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr, goal_handle ),
+              Q_ARG( ros_babel_fish::CompoundMessage::ConstSharedPtr, feedback ) );
         };
     goal_options.result_callback =
         [options, this]( const BabelFishActionClient::GoalHandle::WrappedResult &result ) {
@@ -151,7 +151,7 @@ QObject *ActionClient::sendGoalAsync( const QVariantMap &goal, QJSValue options 
               Q_ARG( QString, uuidToString( result.goal_id ) ),
               Q_ARG( qml_ros2_plugin::action_goal_status::GoalStatus,
                      static_cast<qml_ros2_plugin::action_goal_status::GoalStatus>( result.code ) ),
-              Q_ARG( ros2_babel_fish::CompoundMessage::ConstSharedPtr, result.result ) );
+              Q_ARG( ros_babel_fish::CompoundMessage::ConstSharedPtr, result.result ) );
         };
     auto goal_handle = client_->async_send_goal( message, goal_options );
     return nullptr; // TODO add promise or something like that

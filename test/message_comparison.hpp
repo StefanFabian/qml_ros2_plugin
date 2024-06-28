@@ -12,16 +12,16 @@
 #include <example_interfaces/srv/add_two_ints.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
-#include <ros2_babel_fish/babel_fish.hpp>
-#include <ros2_babel_fish_test_msgs/msg/test_array.hpp>
-#include <ros2_babel_fish_test_msgs/msg/test_message.hpp>
+#include <ros_babel_fish/babel_fish.hpp>
+#include <ros_babel_fish_test_msgs/msg/test_array.hpp>
+#include <ros_babel_fish_test_msgs/msg/test_message.hpp>
 
 #include <QDateTime>
 #include <QVariant>
 
 using namespace qml_ros2_plugin;
-using namespace ros2_babel_fish;
-using namespace ros2_babel_fish_test_msgs::msg;
+using namespace ros_babel_fish;
+using namespace ros_babel_fish_test_msgs::msg;
 
 constexpr double DEFAULT_PRECISION = 1E-6;
 

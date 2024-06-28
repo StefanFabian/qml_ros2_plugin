@@ -6,7 +6,7 @@
 #include "qml_ros2_plugin/babel_fish_dispenser.hpp"
 #include "qml_ros2_plugin/conversion/message_conversions.hpp"
 
-using namespace ros2_babel_fish;
+using namespace ros_babel_fish;
 using namespace qml_ros2_plugin::conversion;
 
 namespace qml_ros2_plugin

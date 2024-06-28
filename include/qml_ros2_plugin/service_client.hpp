@@ -9,7 +9,7 @@
 #include <QTimer>
 #include <QVariant>
 
-#include <ros2_babel_fish/babel_fish.hpp>
+#include <ros_babel_fish/babel_fish.hpp>
 
 namespace qml_ros2_plugin
 {
@@ -55,10 +55,10 @@ private slots:
   void invokeCallback( QJSValue value, QVariant result );
 
 private:
-  ros2_babel_fish::BabelFish babel_fish_;
+  ros_babel_fish::BabelFish babel_fish_;
   QString name_;
   QString service_type_;
-  ros2_babel_fish::BabelFishServiceClient::SharedPtr client_;
+  ros_babel_fish::BabelFishServiceClient::SharedPtr client_;
   QTimer connect_timer_;
 };
 } // namespace qml_ros2_plugin

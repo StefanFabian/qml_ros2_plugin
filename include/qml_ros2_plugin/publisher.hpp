@@ -9,7 +9,7 @@
 #include <QTimer>
 #include <QVariant>
 
-#include <ros2_babel_fish/babel_fish.hpp>
+#include <ros_babel_fish/babel_fish.hpp>
 
 namespace qml_ros2_plugin
 {
@@ -66,8 +66,8 @@ protected:
   void advertise();
 
   QTimer advertise_timer_;
-  ros2_babel_fish::BabelFish babel_fish_;
-  ros2_babel_fish::BabelFishPublisher::SharedPtr publisher_;
+  ros_babel_fish::BabelFish babel_fish_;
+  ros_babel_fish::BabelFishPublisher::SharedPtr publisher_;
 
   bool is_advertised_;
   QString type_;

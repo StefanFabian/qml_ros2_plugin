@@ -8,7 +8,7 @@
 #include "qml_ros2_plugin/conversion/message_conversions.hpp"
 #include "qml_ros2_plugin/conversion/qml_ros_conversion.hpp"
 #include "qml_ros2_plugin/ros2.hpp"
-#include <ros2_babel_fish_test_msgs/msg/test_message.hpp>
+#include <ros_babel_fish_test_msgs/msg/test_message.hpp>
 
 #include <QAbstractListModel>
 #include <QCoreApplication>
@@ -18,8 +18,8 @@
 
 using namespace qml_ros2_plugin;
 using namespace qml_ros2_plugin::conversion;
-using namespace ros2_babel_fish;
-using namespace ros2_babel_fish_test_msgs::msg;
+using namespace ros_babel_fish;
+using namespace ros_babel_fish_test_msgs::msg;
 
 TEST( MessageConversion, babelFishDispenser )
 {
@@ -37,8 +37,8 @@ TEST( MessageConversion, emptyMessage )
     EXPECT_TRUE( mapAndMessageEqual( map, msg ) );
   }
   {
-    QVariant map = ros.createEmptyMessage( "ros2_babel_fish_test_msgs/TestMessage" );
-    ros2_babel_fish_test_msgs::msg::TestMessage msg;
+    QVariant map = ros.createEmptyMessage( "ros_babel_fish_test_msgs/TestMessage" );
+    ros_babel_fish_test_msgs::msg::TestMessage msg;
     EXPECT_TRUE( mapAndMessageEqual( map, msg ) );
   }
   {
@@ -160,7 +160,7 @@ TEST( MessageConversion, msgToMapGoalStatus )
 TEST( MessageConversion, msgToMapRBF )
 {
   BabelFish fish = BabelFishDispenser::getBabelFish();
-  ros2_babel_fish_test_msgs::msg::TestMessage test_message;
+  ros_babel_fish_test_msgs::msg::TestMessage test_message;
   test_message.header.stamp = rclcpp::Time( 42 );
   test_message.header.frame_id = "test";
   test_message.b = false;
@@ -186,12 +186,12 @@ TEST( MessageConversion, msgToMapRBF )
   }
 
   CompoundMessage wrapped(
-      *fish.get_message_type_support( "ros2_babel_fish_test_msgs/TestMessage" ),
+      *fish.get_message_type_support( "ros_babel_fish_test_msgs/TestMessage" ),
       std::shared_ptr<void>( &test_message, []( void * ) { /*empty deleter*/ } ) );
   QVariant map = msgToMap( wrapped );
   EXPECT_TRUE( mapAndMessageEqual( map, test_message ) );
   CompoundMessage::SharedPtr msg =
-      fish.create_message_shared( "ros2_babel_fish_test_msgs/TestMessage" );
+      fish.create_message_shared( "ros_babel_fish_test_msgs/TestMessage" );
   EXPECT_TRUE( fillMessage( *msg, map ) );
   auto &compound = msg->as<CompoundMessage>();
   EXPECT_TRUE( messageEqual( compound, test_message ) );
@@ -242,7 +242,7 @@ TEST( MessageConversion, array )
   BabelFish fish = BabelFishDispenser::getBabelFish();
   // TODO: Test for fixed array length
 
-  ros2_babel_fish_test_msgs::msg::TestArray test_array;
+  ros_babel_fish_test_msgs::msg::TestArray test_array;
   unsigned SEED = 42;
   fillArray( test_array.bools, SEED++ );
   fillArray( test_array.uint8s, SEED++ );
@@ -261,12 +261,12 @@ TEST( MessageConversion, array )
   fillArray( test_array.subarrays_fixed, SEED++ );
   fillArray( test_array.subarrays, SEED++ );
 
-  CompoundMessage wrapped( *fish.get_message_type_support( "ros2_babel_fish_test_msgs/TestArray" ),
+  CompoundMessage wrapped( *fish.get_message_type_support( "ros_babel_fish_test_msgs/TestArray" ),
                            std::shared_ptr<void>( &test_array, []( void * ) { /*empty deleter*/ } ) );
   QVariant map = msgToMap( wrapped );
   ASSERT_TRUE( mapAndMessageEqual( map, test_array ) );
   CompoundMessage::SharedPtr msg =
-      fish.create_message_shared( "ros2_babel_fish_test_msgs/TestArray" );
+      fish.create_message_shared( "ros_babel_fish_test_msgs/TestArray" );
   EXPECT_TRUE( fillMessage( *msg, map ) );
   ASSERT_TRUE( messageEqual( msg->as<CompoundMessage>(), test_array ) );
 
@@ -362,7 +362,7 @@ TEST( MessageConversion, array )
   duration_array.spliceList( 7, 1, { static_cast<qlonglong>( 42 ) } );
   test_array.durations[7] = rclcpp::Duration::from_seconds( 0.042 );
 
-  msg = fish.create_message_shared( "ros2_babel_fish_test_msgs/TestArray" );
+  msg = fish.create_message_shared( "ros_babel_fish_test_msgs/TestArray" );
   EXPECT_TRUE( fillMessage( *msg, map ) );
   ASSERT_TRUE( messageEqual( msg->as<CompoundMessage>(), test_array ) );
   map = msgToMap( msg );
@@ -373,7 +373,7 @@ TEST( MessageConversion, array )
   QVariant broken_map = msgToMap( msg );
   auto int32_array = broken_map.toMap()["int32s"].value<Array>();
   int32_array.push( 1337.42 );
-  auto broken_msg = fish.create_message_shared( "ros2_babel_fish_test_msgs/TestArray" );
+  auto broken_msg = fish.create_message_shared( "ros_babel_fish_test_msgs/TestArray" );
   EXPECT_FALSE( fillMessage( *broken_msg, broken_map ) );
 
   broken_map = msgToMap( msg );
@@ -439,7 +439,7 @@ QtObject {
                      QUrl() );
   QObject *obj = component.create();
   CompoundMessage::SharedPtr msg =
-      fish.create_message_shared( "ros2_babel_fish_test_msgs/TestMessage" );
+      fish.create_message_shared( "ros_babel_fish_test_msgs/TestMessage" );
   ASSERT_NE( obj, nullptr ) << component.errorString().toStdString();
   fillMessage( *msg, QVariant::fromValue( obj ) );
 
@@ -550,7 +550,7 @@ QtObject {
 )",
                      QUrl() );
   obj = component.create();
-  msg = fish.create_message_shared( "ros2_babel_fish_test_msgs/msg/TestArray" );
+  msg = fish.create_message_shared( "ros_babel_fish_test_msgs/msg/TestArray" );
   ASSERT_NE( obj, nullptr ) << component.errorString().toStdString();
   fillMessage( *msg, QVariant::fromValue( obj ) );
   TestArray test_array;

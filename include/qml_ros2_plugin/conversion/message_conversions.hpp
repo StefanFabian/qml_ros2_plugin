@@ -10,11 +10,11 @@
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <rclcpp_action/types.hpp>
 
-namespace ros2_babel_fish
+namespace ros_babel_fish
 {
 class BabelFish;
 class Message;
-} // namespace ros2_babel_fish
+} // namespace ros_babel_fish
 
 namespace qml_ros2_plugin
 {
@@ -58,13 +58,13 @@ QVariantMap msgToMap( const action_msgs::msg::GoalInfo &msg );
 
 QVariantMap msgToMap( const action_msgs::msg::GoalStatus &msg );
 
-QVariant msgToMap( const std::shared_ptr<const ros2_babel_fish::Message> &msg );
+QVariant msgToMap( const std::shared_ptr<const ros_babel_fish::Message> &msg );
 
-QVariant msgToMap( const ros2_babel_fish::Message &msg );
+QVariant msgToMap( const ros_babel_fish::Message &msg );
 
-bool fillMessage( ros2_babel_fish::Message &msg, const QVariant &value );
+bool fillMessage( ros_babel_fish::Message &msg, const QVariant &value );
 
-bool fillMessage( ros2_babel_fish::BabelFish &fish, ros2_babel_fish::Message &msg,
+bool fillMessage( ros_babel_fish::BabelFish &fish, ros_babel_fish::Message &msg,
                   const QVariant &value );
 } // namespace conversion
 } // namespace qml_ros2_plugin

@@ -7,7 +7,7 @@
 #include "qml_ros2_plugin/helpers/logging.hpp"
 #include "qml_ros2_plugin/ros2.hpp"
 
-using namespace ros2_babel_fish;
+using namespace ros_babel_fish;
 using namespace qml_ros2_plugin::conversion;
 
 namespace qml_ros2_plugin
@@ -44,7 +44,7 @@ bool Publisher::publish( const QVariantMap &msg )
   if ( !is_advertised_ )
     return false;
   try {
-    ros2_babel_fish::CompoundMessage message = babel_fish_.create_message( type_.toStdString() );
+    ros_babel_fish::CompoundMessage message = babel_fish_.create_message( type_.toStdString() );
     if ( !fillMessage( message, msg ) )
       return false;
     publisher_->publish( message );

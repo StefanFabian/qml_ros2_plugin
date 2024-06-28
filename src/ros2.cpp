@@ -147,7 +147,7 @@ QVariant Ros2Qml::createEmptyMessage( const QString &datatype ) const
   try {
     auto message = babel_fish_.create_message_shared( datatype.toStdString() );
     return conversion::msgToMap( message );
-  } catch ( ros2_babel_fish::BabelFishException &ex ) {
+  } catch ( ros_babel_fish::BabelFishException &ex ) {
     QML_ROS2_PLUGIN_WARN( "Failed to create empty message for datatype '%s': %s",
                           datatype.toStdString().c_str(), ex.what() );
   }
@@ -159,7 +159,7 @@ QVariant Ros2Qml::createEmptyServiceRequest( const QString &datatype ) const
   try {
     auto message = babel_fish_.create_service_request_shared( datatype.toStdString() );
     return conversion::msgToMap( message );
-  } catch ( ros2_babel_fish::BabelFishException &ex ) {
+  } catch ( ros_babel_fish::BabelFishException &ex ) {
     QML_ROS2_PLUGIN_WARN( "Failed to create empty service request for datatype '%s': %s",
                           datatype.toStdString().c_str(), ex.what() );
   }

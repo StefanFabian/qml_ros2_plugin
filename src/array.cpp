@@ -7,7 +7,7 @@
 #include "qml_ros2_plugin/time.hpp"
 
 using namespace qml_ros2_plugin::conversion;
-using namespace ros2_babel_fish;
+using namespace ros_babel_fish;
 
 namespace qml_ros2_plugin
 {
@@ -15,7 +15,7 @@ namespace qml_ros2_plugin
 struct Array::Data {
   QVariantList cache;
   QList<bool> modified;
-  ros2_babel_fish::ArrayMessageBase::ConstSharedPtr message = nullptr;
+  ros_babel_fish::ArrayMessageBase::ConstSharedPtr message = nullptr;
   bool all_in_cache = true;
   int length = 0;
 };
@@ -232,7 +232,7 @@ bool Array::_isModified( int index ) const
   return p_->all_in_cache || ( index < p_->modified.size() && p_->modified[index] );
 }
 
-ros2_babel_fish::ArrayMessageBase::ConstSharedPtr Array::_message() const { return p_->message; }
+ros_babel_fish::ArrayMessageBase::ConstSharedPtr Array::_message() const { return p_->message; }
 
 QVariantList Array::toVariantList() const
 {

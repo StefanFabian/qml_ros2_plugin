@@ -12,7 +12,7 @@
 
 #include <mutex>
 
-#include <ros2_babel_fish/babel_fish.hpp>
+#include <ros_babel_fish/babel_fish.hpp>
 
 namespace qml_ros2_plugin
 {
@@ -113,12 +113,12 @@ protected:
 
   void shutdown();
 
-  void messageCallback( const std::shared_ptr<ros2_babel_fish::CompoundMessage> &msg );
+  void messageCallback( const std::shared_ptr<ros_babel_fish::CompoundMessage> &msg );
 
   QTimer subscribe_timer_;
-  ros2_babel_fish::BabelFish babel_fish_;
-  ros2_babel_fish::BabelFishSubscription::SharedPtr subscription_;
-  ros2_babel_fish::CompoundMessage::ConstSharedPtr last_message_;
+  ros_babel_fish::BabelFish babel_fish_;
+  ros_babel_fish::BabelFishSubscription::SharedPtr subscription_;
+  ros_babel_fish::CompoundMessage::ConstSharedPtr last_message_;
   std::mutex message_mutex_;
   QTimer throttle_timer_;
 

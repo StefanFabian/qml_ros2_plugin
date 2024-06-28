@@ -18,10 +18,10 @@
 #include <QVector3D>
 #include <QVector4D>
 
-#include <ros2_babel_fish/babel_fish.hpp>
-#include <ros2_babel_fish/method_invoke_helpers.hpp>
+#include <ros_babel_fish/babel_fish.hpp>
+#include <ros_babel_fish/method_invoke_helpers.hpp>
 
-using namespace ros2_babel_fish;
+using namespace ros_babel_fish;
 
 namespace qml_ros2_plugin
 {

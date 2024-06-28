@@ -8,7 +8,7 @@
 #include "qml_ros2_plugin/qobject_ros2.hpp"
 #include "qml_ros2_plugin/time.hpp"
 
-#include <ros2_babel_fish/babel_fish.hpp>
+#include <ros_babel_fish/babel_fish.hpp>
 
 #include <QJSValue>
 #include <QTimer>
@@ -67,31 +67,31 @@ private slots:
   void checkServerReady();
 
   void invokeGoalResponseCallback(
-      QJSValue callback, ros2_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr handle );
+      QJSValue callback, ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr handle );
 
   void invokeFeedbackCallback( QJSValue callback,
-                               ros2_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr handle,
-                               ros2_babel_fish::CompoundMessage::ConstSharedPtr feedback );
+                               ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr handle,
+                               ros_babel_fish::CompoundMessage::ConstSharedPtr feedback );
 
   void invokeResultCallback( QJSValue callback, QString goal_id,
                              qml_ros2_plugin::action_goal_status::GoalStatus result_code,
-                             ros2_babel_fish::CompoundMessage::ConstSharedPtr result );
+                             ros_babel_fish::CompoundMessage::ConstSharedPtr result );
 
 private:
   void onRos2Initialized() override;
 
   void onRos2Shutdown() override;
 
-  ros2_babel_fish::BabelFish babel_fish_;
+  ros_babel_fish::BabelFish babel_fish_;
   QString action_type_;
   QString name_;
-  ros2_babel_fish::BabelFishActionClient::SharedPtr client_;
+  ros_babel_fish::BabelFishActionClient::SharedPtr client_;
   QTimer connect_timer_;
 };
 } // namespace qml_ros2_plugin
 
-Q_DECLARE_METATYPE( ros2_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr )
+Q_DECLARE_METATYPE( ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr )
 
-Q_DECLARE_METATYPE( ros2_babel_fish::CompoundMessage::ConstSharedPtr )
+Q_DECLARE_METATYPE( ros_babel_fish::CompoundMessage::ConstSharedPtr )
 
 #endif // QML_ROS2_PLUGIN_ACTION_CLIENT_HPP

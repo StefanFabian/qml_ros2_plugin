@@ -8,17 +8,17 @@ namespace qml_ros2_plugin
 
 BabelFishDispenser::BabelFishDispenser() = default;
 
-ros2_babel_fish::BabelFish BabelFishDispenser::getBabelFish()
+ros_babel_fish::BabelFish BabelFishDispenser::getBabelFish()
 {
   static BabelFishDispenser dispenser;
   return dispenser.createBabelFish();
 }
 
-ros2_babel_fish::BabelFish BabelFishDispenser::createBabelFish()
+ros_babel_fish::BabelFish BabelFishDispenser::createBabelFish()
 {
   if ( !type_support_providers_.empty() )
-    return ros2_babel_fish::BabelFish( type_support_providers_ );
-  ros2_babel_fish::BabelFish babel_fish;
+    return ros_babel_fish::BabelFish( type_support_providers_ );
+  ros_babel_fish::BabelFish babel_fish;
   type_support_providers_ = babel_fish.type_support_providers();
   return babel_fish;
 }
