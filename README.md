@@ -152,7 +152,7 @@ Item {
 **Explanation**:  
 You can use the TfTransformListener.lookUpTransform (and canTransform) methods anywhere in your QML code.
 However, they only do this look up once and return the result. If you want to continuously monitor the transform, you
-have to either connect to the *transformChanged* signal or use the convenience component TfTransform.
+have to use the TfTransform component.
 The message structure is identical to the ROS message, except for an added *valid* field (`message.valid`) indicating if
 the transform returned is valid or not. If it is not valid, there may be a field *exception* containing the name of the
 exception that occured and a field *message* with the message of the exception.
