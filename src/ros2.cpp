@@ -45,8 +45,8 @@ void Ros2Qml::init( const QString &name, const QStringList &argv, quint32 )
   }
   //  std::this_thread::sleep_for(std::chrono::seconds(10));
   int argc = argv.size();
-  std::vector<const char *> p_args(argc);
-  std::vector<std::string> args(argc);
+  std::vector<const char *> p_args( argc );
+  std::vector<std::string> args( argc );
   for ( int i = 0; i < argv.size(); ++i ) {
     args[i] = argv[i].toStdString();
     p_args[i] = args[i].c_str();

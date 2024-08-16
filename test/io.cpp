@@ -85,7 +85,7 @@ QtObject {
 }
 )",
                      QUrl() );
-  auto obj = std::unique_ptr<QObject>(component.create());
+  auto obj = std::unique_ptr<QObject>( component.create() );
   path = ament_index_cpp::get_package_share_directory( "qml_ros2_plugin" ) +
          "/test/test_io/qobject.yaml";
   ASSERT_TRUE( io.writeYaml( QString::fromStdString( path ), QVariant::fromValue( obj.get() ) ) );

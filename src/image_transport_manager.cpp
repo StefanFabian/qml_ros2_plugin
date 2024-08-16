@@ -109,7 +109,7 @@ private:
 
     {
       std::lock_guard image_lock( image_mutex_ );
-      if (last_image_ != nullptr ) {
+      if ( last_image_ != nullptr ) {
         if ( rclcpp::Time( last_image_->header.stamp ).nanoseconds() == 0 )
           camera_base_interval_ = static_cast<int>(
               ( received_stamp - last_received_stamp_ ).nanoseconds() / ( 1000 * 1000 ) );
