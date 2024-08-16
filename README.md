@@ -1,3 +1,7 @@
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=StefanFabian_qml_ros2_plugin&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=StefanFabian_qml_ros2_plugin)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=StefanFabian_qml_ros2_plugin&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=StefanFabian_qml_ros2_plugin)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=StefanFabian_qml_ros2_plugin&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=StefanFabian_qml_ros2_plugin)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=StefanFabian_qml_ros2_plugin&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=StefanFabian_qml_ros2_plugin)
 [![Documentation Status](https://readthedocs.org/projects/qml-ros2-plugin/badge/?version=latest)](https://qml-ros2-plugin.readthedocs.io/en/latest/?badge=latest)
 
 ## Scientific Works
