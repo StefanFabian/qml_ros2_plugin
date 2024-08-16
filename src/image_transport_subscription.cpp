@@ -71,7 +71,7 @@ void ImageTransportSubscription::initSubscriber()
   image_transport::TransportHints transport_hints( node.get(), default_transport_.toStdString() );
   subscription_ = ImageTransportManager::getInstance().subscribe(
       node, topic_, queue_size_, transport_hints,
-      [this]( const QVideoFrame &frame ) { presentFrame( frame ); }, surface_, throttle_interval_ );
+      [this]( const QVideoFrame &frame ) { presentFrame( frame ); }, surface_ );
   subscribed_ = subscription_ != nullptr;
   if ( !was_subscribed )
     emit subscribedChanged();
@@ -208,17 +208,6 @@ void ImageTransportSubscription::setTimeout( int value )
 {
   timeout_ = value;
   emit timeoutChanged();
-}
-
-double ImageTransportSubscription::throttleRate() const { return 1000.0 / throttle_interval_; }
-
-void ImageTransportSubscription::setThrottleRate( double value )
-{
-  throttle_interval_ = value == 0 ? 0 : static_cast<int>( 1000 / value );
-  if ( subscription_ ) {
-    subscription_->updateThrottleInterval( throttle_interval_ );
-  }
-  emit throttleRateChanged();
 }
 
 bool ImageTransportSubscription::enabled() const { return enabled_; }

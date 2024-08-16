@@ -32,21 +32,19 @@ class ImageTransportSubscription : public QObjectRos2
                   defaultTransportChanged )
   //! Whether or not this ImageTransportSubscriber is subscribed to the given topic (readonly)
   Q_PROPERTY( bool subscribed READ subscribed NOTIFY subscribedChanged )
-  //! The latency from the sender to the received time in ms not including the conversion latency before displaying.
-  //! This latency is based on the ROS time of the sending and receiving machines, hence, they need to be synchronized. (readonly)
+  //! The latency from the sender to the received time in ms not including the conversion latency before displaying. (readonly)
+  //! This is computed based on the timestamp and relies on your system clock being synchronized with the camera host.
   Q_PROPERTY( int networkLatency READ networkLatency NOTIFY networkLatencyChanged )
   //! The latency (in ms) from the reception of the image until it is in a displayable format. (readonly)
   Q_PROPERTY( int processingLatency READ processingLatency NOTIFY processingLatencyChanged )
   //! The full latency (in ms) from the camera to your display excluding drawing time.  (readonly)
+  //! This is computed based on the timestamp and relies on your system clock being synchronized with the camera host.
   Q_PROPERTY( int latency READ latency NOTIFY latencyChanged )
   //! The framerate of the received camera frames in frames per second.  (readonly)
   Q_PROPERTY( double framerate READ framerate NOTIFY framerateChanged )
   //! The timeout when no image is received until a blank frame is served. Set to 0 to disable and
   //! always show last frame. Default is 3000 ms.
   Q_PROPERTY( int timeout READ timeout WRITE setTimeout NOTIFY timeoutChanged )
-  //! The update rate to throttle image receiving in images per second. Set to 0 to disable
-  //! throttling. Default is 0 (disabled).
-  Q_PROPERTY( double throttleRate READ throttleRate WRITE setThrottleRate NOTIFY throttleRateChanged )
   //! Whether the subscriber is active or not. Setting to false will shut down subscribers
   Q_PROPERTY( bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged )
 public:
@@ -71,10 +69,6 @@ public:
   int timeout() const;
 
   void setTimeout( int value );
-
-  double throttleRate() const;
-
-  void setThrottleRate( double value );
 
   bool enabled() const;
 

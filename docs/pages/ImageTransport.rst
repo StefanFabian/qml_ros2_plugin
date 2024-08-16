@@ -30,22 +30,12 @@ The :cpp:class:`ImageTransportSubscription <qml_ros2_plugin::ImageTransportSubsc
 the source of a ``VideoOutput`` to display the camera images as they are received.
 Additionally, it can be configured to show a blank image after x milliseconds using the ``timeout`` property
 which is set to 3000ms (3s) by default. This can be disabled by setting the ``timeout`` to 0.
-If you do not want the full camera rate, you can throttle the rate by setting ``throttleRate`` to a value
-greater than 0 (which is the default and disables throttling). E.g. a rate of 0.2 would show a new frame
-every 5 seconds.
-Since there is no ROS functionality for a throttled subscription, this means the ``image_transport::Subscriber``
-is shut down and newly subscribed for each frame. This comes at some overhead, hence, it should only be used
-to throttle to low rates <1.
-To avoid all throttled subscribers subscribing at the same time causing huge network spikes, the throttled rates
-are load balanced by default. This can be disabled globally using
-:cpp:func:`ImageTransportManager::setLoadBalancingEnabled <qml_ros2_plugin::ImageTransportManagerSingletonWrapper::setLoadBalancingEnabled>`
-which is available in QML using the singleton ``ImageTransportManager``.
+
+The QML ROS2 plugin internally keeps track of all image transport subscriptions and will only create one
+shared subscription per topic to avoid unnecessary computation and bandwidth overhead.
 
 API
 ---
 
 .. doxygenclass:: qml_ros2_plugin::ImageTransportSubscription
-   :members:
-
-.. doxygenclass:: qml_ros2_plugin::ImageTransportManagerSingletonWrapper
    :members:

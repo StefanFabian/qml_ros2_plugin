@@ -13,11 +13,12 @@ ApplicationWindow {
   // This connection makes sure the application exits if this ROS node is requested to shutdown
   Connections {
     target: Ros2
+
     function onShutdown() {
       Qt.quit()
     }
   }
-  
+
   ImageTransportSubscription {
     id: imageSubscription
     // Enter a valid image topic here
@@ -26,12 +27,23 @@ ApplicationWindow {
     // Requires the compressed_image_transport package to be installed
     defaultTransport: "compressed"
   }
-
-  VideoOutput {
+  GridLayout {
     anchors.fill: parent
-    // Can be used in increments of 90 to rotate the video
-    orientation: 0
-    source: imageSubscription
+    anchors.margins: 12
+    columns: 1
+    Text {
+      text: "For this example,\n run the following in a separate terminal:"
+    }
+    TextInput {
+      readOnly: true
+      selectByMouse: true
+      text: "ros2 run examples_rclcpp_minimal_service service_main"
+    }
+    VideoOutput {
+      // Can be used in increments of 90 to rotate the video
+      orientation: 0
+      source: imageSubscription
+    }
   }
 
   Component.onCompleted: {

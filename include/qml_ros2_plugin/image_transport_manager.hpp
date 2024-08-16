@@ -12,14 +12,6 @@ namespace qml_ros2_plugin
 {
 class ImageTransportSubscriptionHandle;
 
-class ImageTransportManagerSingletonWrapper : public QObject
-{
-  Q_OBJECT
-public:
-  //! @copydoc ImageTransportManager::setLoadBalancingEnabled
-  Q_INVOKABLE void setLoadBalancingEnabled( bool value );
-};
-
 /*!
  * Encapsulates the image transport communication to share the subscription resources, avoiding multiple conversions of
  *  the same image and subscription overhead if multiple cameras are set to throttle.
@@ -32,14 +24,8 @@ class ImageTransportManager
 
   class Subscription;
 
-  class LoadBalancer;
-
 public:
   static ImageTransportManager &getInstance();
-
-  //! Sets whether the manager should try to balance throttled subscriptions_ to ensure they don't update at the same
-  //!   time which would result in network spikes.
-  void setLoadBalancingEnabled( bool value );
 
   /*!
    * Note: Can only be called with a ready NodeHandle!
@@ -60,11 +46,10 @@ public:
   subscribe( const rclcpp::Node::SharedPtr &node, const QString &qtopic, quint32 queue_size,
              const image_transport::TransportHints &transport_hints,
              const std::function<void( const QVideoFrame & )> &callback,
-             QAbstractVideoSurface *surface = nullptr, int throttle_interval = 0 );
+             QAbstractVideoSurface *surface = nullptr );
 
 private:
-  std::map<std::string, std::shared_ptr<SubscriptionManager>> subscriptions_;
-  std::unique_ptr<LoadBalancer> load_balancer_;
+  std::shared_ptr<SubscriptionManager> subscription_manager_;
 
   friend class ImageTransportSubscriptionHandle;
 };
@@ -73,13 +58,6 @@ class ImageTransportSubscriptionHandle
 {
 public:
   ~ImageTransportSubscriptionHandle();
-
-  //! The interval in ms the subscription waits between receiving images.
-  int throttleInterval() const { return throttle_interval; }
-
-  //! Set the interval in ms the subscription may wait between images.
-  //! The images may still arrive at a higher rate if other subscriptions request it.
-  void updateThrottleInterval( int interval );
 
   //! The subscribed topic. Once subscribed this is the full topic name without the transport.
   std::string getTopic() const;
@@ -101,7 +79,6 @@ private:
   QAbstractVideoSurface *surface = nullptr;
   std::function<void( const QVideoFrame & )> callback;
   double framerate_ = 0;
-  int throttle_interval = 0;
   int network_latency = -1;
   int processing_latency = -1;
 
