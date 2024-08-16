@@ -42,7 +42,7 @@ TEST( IO, yaml )
 
   CompoundMessage translated(
       *fish.get_message_type_support( "ros_babel_fish_test_msgs/msg/TestArray" ),
-      std::shared_ptr<void>( &test_array, []( void * ) { /* do nothing */ } ) );
+      std::shared_ptr<void>( &test_array, []( const void * ) { /* do nothing */ } ) );
   QVariant map = conversion::msgToMap( translated );
 
   std::string path = ament_index_cpp::get_package_share_directory( "qml_ros2_plugin" ) +
@@ -85,10 +85,10 @@ QtObject {
 }
 )",
                      QUrl() );
-  QObject *obj = component.create();
+  auto obj = std::unique_ptr<QObject>(component.create());
   path = ament_index_cpp::get_package_share_directory( "qml_ros2_plugin" ) +
          "/test/test_io/qobject.yaml";
-  ASSERT_TRUE( io.writeYaml( QString::fromStdString( path ), QVariant::fromValue( obj ) ) );
+  ASSERT_TRUE( io.writeYaml( QString::fromStdString( path ), QVariant::fromValue( obj.get() ) ) );
 
   file = io.readYaml( QString::fromStdString( path ) );
   ASSERT_EQ( file.type(), QVariant::Map );

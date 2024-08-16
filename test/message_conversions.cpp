@@ -392,8 +392,9 @@ TEST( MessageConversion, array )
 
   // Non string in string array that cant be converted to string
   broken_map = msgToMap( msg );
+  auto qobject = std::make_unique<QObject>();
   broken_map.toMap()["strings"].value<Array>().spliceList(
-      3, 0, { QVariant::fromValue( new QObject() ) } );
+      3, 0, { QVariant::fromValue( qobject.get() ) } );
   EXPECT_FALSE( fillMessage( *broken_msg, broken_map ) );
   broken_map = msgToMap( msg );
   broken_map.toMap()["strings"].value<Array>().spliceList(
@@ -437,11 +438,11 @@ QtObject {
 }
 )",
                      QUrl() );
-  QObject *obj = component.create();
+  auto obj = std::unique_ptr<QObject>( component.create() );
   CompoundMessage::SharedPtr msg =
       fish.create_message_shared( "ros_babel_fish_test_msgs/TestMessage" );
   ASSERT_NE( obj, nullptr ) << component.errorString().toStdString();
-  fillMessage( *msg, QVariant::fromValue( obj ) );
+  fillMessage( *msg, QVariant::fromValue( obj.get() ) );
 
   TestMessage test_msg;
   test_msg.b = false;
@@ -461,7 +462,6 @@ QtObject {
   test_msg.point_arr[3].y = -2;
   test_msg.point_arr[3].z = -300;
   EXPECT_TRUE( messageEqual( msg->as<CompoundMessage>(), test_msg ) );
-  delete obj;
 
   component.setData( R"(
 import QtQuick 2.0
@@ -549,10 +549,10 @@ QtObject {
 }
 )",
                      QUrl() );
-  obj = component.create();
+  obj = std::unique_ptr<QObject>( component.create() );
   msg = fish.create_message_shared( "ros_babel_fish_test_msgs/msg/TestArray" );
   ASSERT_NE( obj, nullptr ) << component.errorString().toStdString();
-  fillMessage( *msg, QVariant::fromValue( obj ) );
+  fillMessage( *msg, QVariant::fromValue( obj.get() ) );
   TestArray test_array;
   test_array.bools = { true, false, true };
   test_array.uint8s = { 1, 2, 3, 5 };
@@ -575,7 +575,6 @@ QtObject {
       rclcpp::Duration::from_seconds( 0.004 ),  rclcpp::Duration::from_seconds( 0.005 ) };
   test_array.strings = { "This", "is", "a", "test" };
   EXPECT_TRUE( messageEqual( msg->as<CompoundMessage>(), test_array ) );
-  delete obj;
 }
 
 TEST( MessageConversion, timeConversion )

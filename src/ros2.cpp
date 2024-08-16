@@ -45,14 +45,14 @@ void Ros2Qml::init( const QString &name, const QStringList &argv, quint32 )
   }
   //  std::this_thread::sleep_for(std::chrono::seconds(10));
   int argc = argv.size();
-  char **cargv = new char *[argc];
+  std::vector<const char *> p_args(argc);
+  std::vector<std::string> args(argc);
   for ( int i = 0; i < argv.size(); ++i ) {
-    cargv[i] = new char[argv[i].length() + 1];
-    std::string string = argv[i].toStdString();
-    std::copy( string.begin(), string.end(), cargv[i] );
+    args[i] = argv[i].toStdString();
+    p_args[i] = args[i].c_str();
   }
   context_ = rclcpp::Context::make_shared();
-  context_->init( argc, cargv ); // TODO init options
+  context_->init( argc, p_args.data() ); // TODO init options
   rclcpp::NodeOptions node_options;
   node_options.context( context_ );
   node_ = rclcpp::Node::make_shared( name.toStdString(),
@@ -64,8 +64,6 @@ void Ros2Qml::init( const QString &name, const QStringList &argv, quint32 )
   auto executor = rclcpp::executors::SingleThreadedExecutor::make_unique( executor_options );
   executor->add_node( node_ );
   emit initialized();
-  for ( int i = 0; i < argv.size(); ++i ) { delete[] cargv[i]; }
-  delete[] cargv;
 
   executor_thread_ = std::thread( [executor = std::move( executor )]() { executor->spin(); } );
   QML_ROS2_PLUGIN_DEBUG( "QML Ros2 initialized." );
