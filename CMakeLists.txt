@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(qml_ros2_plugin VERSION 1.0.0)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_BUILD_TYPE "Debug")
+#set(CMAKE_BUILD_TYPE "Debug")
 
 option(GLOBAL_INSTALL "Install the plugin globally instead of as a ROS2 overlay." OFF)
 
