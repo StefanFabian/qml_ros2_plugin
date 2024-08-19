@@ -2,8 +2,8 @@
 Changelog for package qml_ros2_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.1 (2024-08-19)
+------------------
 * Added missing dependencies.
 * Contributors: Stefan Fabian
 
