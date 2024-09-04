@@ -39,10 +39,13 @@ jobs:
         setup:
           - rosdistro: foxy
             os: ubuntu-20.04
+            babel_fish: foxy
           - rosdistro: jazzy
             os: ubuntu-latest
+            babel_fish: jazzy
           - rosdistro: rolling
             os: ubuntu-latest
+            babel_fish: jazzy
     steps:
       - name: install build tools
         run: |
@@ -55,7 +58,7 @@ jobs:
         with:
           path: src/ros2_babel_fish
           repository: 'LOEWE-emergenCITY/ros2_babel_fish'
-          ref: ${{ matrix.setup.rosdistro }}
+          ref: ${{ matrix.setup.babel_fish }}
       - name: rosdep
         run: |
           rosdep update --rosdistro ${{ matrix.setup.rosdistro }} --include-eol-distros
