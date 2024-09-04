@@ -41,6 +41,8 @@ jobs:
             os: ubuntu-20.04
           - rosdistro: jazzy
             os: ubuntu-latest
+          - rosdistro: rolling
+            os: ubuntu-latest
     steps:
       - name: install build tools
         run: |
