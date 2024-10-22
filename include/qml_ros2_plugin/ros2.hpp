@@ -81,6 +81,26 @@ public:
   QStringList queryTopicTypes( const QString &name ) const;
 
   /*!
+   * Queries the internal node for its known topics and their types.
+   * See rclcpp::Node::get_topic_names_and_types() for more information.
+   * @return A map with the topic names as keys and the types as values.
+   */
+  QMap<QString, QStringList> getTopicNamesAndTypes() const;
+
+  /*!
+   * Queries the internal node for its known services and their types.
+   * See rclcpp::Node::get_service_names_and_types() for more information.
+   * @return A map with the service names as keys and the types as values.
+   */
+  QMap<QString, QStringList> getServiceNamesAndTypes() const;
+
+  /*!
+   * Queries the internal node for its known actions and their types.
+   * @return A map with the action names as keys and the types as values.
+   */
+  QMap<QString, QStringList> getActionNamesAndTypes() const;
+
+  /*!
    * Creates an empty message for the given message type, e.g., "geometry_msgs/Point".
    * If the message type is known, an empty message with all members set to their default is returned.
    * If the message type is not found on the current machine, a warning message is printed and null is returned.
@@ -115,9 +135,7 @@ signals:
   //! Emitted when this ROS node was shut down and it is time to exit.
   void shutdown();
 
-
 private:
-
   std::thread executor_thread_;
   std::shared_ptr<rclcpp::Context> context_;
   std::shared_ptr<rclcpp::Node> node_;
@@ -168,6 +186,15 @@ public:
 
   //! @copydoc Ros2Qml::queryTopicTypes
   Q_INVOKABLE QStringList queryTopicTypes( const QString &name ) const;
+
+  //! @copydoc Ros2Qml::getTopicNamesAndTypes
+  Q_INVOKABLE QVariantMap getTopicNamesAndTypes() const;
+
+  //! @copydoc Ros2Qml::getServiceNamesAndTypes
+  Q_INVOKABLE QVariantMap getServiceNamesAndTypes() const;
+
+  //! @copydoc Ros2Qml::getActionNamesAndTypes
+  Q_INVOKABLE QVariantMap getActionNamesAndTypes() const;
 
   //! @copydoc Ros2Qml::createEmptyMessage
   Q_INVOKABLE QVariant createEmptyMessage( const QString &datatype ) const;

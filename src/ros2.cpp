@@ -12,6 +12,7 @@
 
 #include <QCoreApplication>
 #include <QJSEngine>
+#include <rcl_action/graph.h>
 #include <thread>
 
 namespace qml_ros2_plugin
@@ -89,8 +90,7 @@ QStringList Ros2Qml::queryTopics( const QString &datatype ) const
     QML_ROS2_PLUGIN_ERROR( "Tried to query topics before node was initialized!" );
     return {};
   }
-  std::map<std::string, std::vector<std::string>> topics_and_types =
-      node_->get_topic_names_and_types();
+  auto topics_and_types = node_->get_topic_names_and_types();
   QStringList result;
   std::string std_datatype = toFullyQualifiedDatatype( datatype );
   for ( const auto &[topic, types] : topics_and_types ) {
@@ -104,15 +104,14 @@ QStringList Ros2Qml::queryTopics( const QString &datatype ) const
 
 QList<TopicInfo> Ros2Qml::queryTopicInfo() const
 {
-  std::map<std::string, std::vector<std::string>> topics_and_types =
-      node_->get_topic_names_and_types();
+  auto topics_and_types = node_->get_topic_names_and_types();
   QList<TopicInfo> result;
-  for ( const auto &topic : topics_and_types ) {
-    QStringList types;
-    types.reserve( static_cast<int>( topic.second.size() ) );
-    std::transform( topic.second.begin(), topic.second.end(), std::back_inserter( types ),
+  for ( const auto &[topic, types] : topics_and_types ) {
+    QStringList result_types;
+    result_types.reserve( static_cast<int>( types.size() ) );
+    std::transform( types.begin(), types.end(), std::back_inserter( result_types ),
                     QString::fromStdString );
-    result.append( { QString::fromStdString( topic.first ), types } );
+    result.append( { QString::fromStdString( topic ), result_types } );
   }
   return result;
 }
@@ -121,19 +120,74 @@ QStringList Ros2Qml::queryTopicTypes( const QString &name ) const
 {
   if ( name.isEmpty() )
     return {};
-  std::map<std::string, std::vector<std::string>> topics_and_types =
-      node_->get_topic_names_and_types();
+  auto topics_and_types = node_->get_topic_names_and_types();
   std::string std_name = name.toStdString();
-  for ( const auto &topic : topics_and_types ) {
-    if ( std_name != topic.first )
+  for ( const auto &[topic, types] : topics_and_types ) {
+    if ( std_name != topic )
       continue;
-    QStringList types;
-    types.reserve( static_cast<int>( topic.second.size() ) );
-    std::transform( topic.second.begin(), topic.second.end(), std::back_inserter( types ),
-                    QString::fromStdString );
-    return types;
+    QStringList result;
+    result.reserve( static_cast<int>( types.size() ) );
+    std::transform( types.begin(), types.end(), std::back_inserter( result ), QString::fromStdString );
+    return result;
   }
   return {};
+}
+
+QMap<QString, QStringList> Ros2Qml::getTopicNamesAndTypes() const
+{
+  auto topics_and_types = node_->get_topic_names_and_types();
+  QMap<QString, QStringList> result;
+  for ( const auto &[topic, types] : topics_and_types ) {
+    QStringList result_types;
+    result_types.reserve( static_cast<int>( types.size() ) );
+    std::transform( types.begin(), types.end(), std::back_inserter( result_types ),
+                    QString::fromStdString );
+    result.insert( QString::fromStdString( topic ), result_types );
+  }
+  return result;
+}
+
+QMap<QString, QStringList> Ros2Qml::getServiceNamesAndTypes() const
+{
+  auto service_names_and_types = node_->get_service_names_and_types();
+  QMap<QString, QStringList> result;
+  for ( const auto &[service_name, types] : service_names_and_types ) {
+    QStringList result_types;
+    result_types.reserve( static_cast<int>( types.size() ) );
+    std::transform( types.begin(), types.end(), std::back_inserter( result_types ),
+                    QString::fromStdString );
+    result.insert( QString::fromStdString( service_name ), result_types );
+  }
+  return result;
+}
+
+QMap<QString, QStringList> Ros2Qml::getActionNamesAndTypes() const
+{
+  rcl_names_and_types_t names_and_types = rcl_get_zero_initialized_names_and_types();
+  const rcl_node_s *node_handle = node_->get_node_base_interface()->get_rcl_node_handle();
+  rcl_allocator_t allocator = rcutils_get_default_allocator();
+  if ( rcl_ret_t ret = rcl_action_get_names_and_types( node_handle, &allocator, &names_and_types );
+       ret != RCL_RET_OK ) {
+    QML_ROS2_PLUGIN_ERROR( "Failed to get action names and types: %s", rcl_get_error_string().str );
+    return {};
+  }
+  QMap<QString, QStringList> result;
+  for ( size_t i = 0; i < names_and_types.names.size; ++i ) {
+    const std::string name = names_and_types.names.data[i];
+    const auto &types = names_and_types.types[i];
+    QStringList result_types;
+    result_types.reserve( static_cast<int>( types.size ) );
+    for ( size_t j = 0; j < types.size; ++j ) {
+      result_types.append( QString::fromStdString( types.data[j] ) );
+    }
+    result.insert( QString::fromStdString( name ), result_types );
+  }
+  if ( rcl_names_and_types_fini( &names_and_types ) != RCL_RET_OK ) {
+    QML_ROS2_PLUGIN_ERROR(
+        "Failed to free action names and types: '%s'. Might have lost some memory.",
+        rcl_get_error_string().str );
+  }
+  return result;
 }
 
 QVariant Ros2Qml::createEmptyMessage( const QString &datatype ) const
@@ -252,6 +306,36 @@ QList<TopicInfo> Ros2QmlSingletonWrapper::queryTopicInfo() const
 QStringList Ros2QmlSingletonWrapper::queryTopicTypes( const QString &name ) const
 {
   return Ros2Qml::getInstance().queryTopicTypes( name );
+}
+
+QVariantMap Ros2QmlSingletonWrapper::getTopicNamesAndTypes() const
+{
+  QVariantMap result;
+  QMap<QString, QStringList> topic_names_and_types = Ros2Qml::getInstance().getTopicNamesAndTypes();
+  for ( auto it = topic_names_and_types.begin(); it != topic_names_and_types.end(); ++it ) {
+    result.insert( it.key(), QVariant( it.value() ) );
+  }
+  return result;
+}
+
+QVariantMap Ros2QmlSingletonWrapper::getServiceNamesAndTypes() const
+{
+  QVariantMap result;
+  QMap<QString, QStringList> topic_names_and_types = Ros2Qml::getInstance().getServiceNamesAndTypes();
+  for ( auto it = topic_names_and_types.begin(); it != topic_names_and_types.end(); ++it ) {
+    result.insert( it.key(), QVariant( it.value() ) );
+  }
+  return result;
+}
+
+QVariantMap Ros2QmlSingletonWrapper::getActionNamesAndTypes() const
+{
+  QVariantMap result;
+  QMap<QString, QStringList> topic_names_and_types = Ros2Qml::getInstance().getActionNamesAndTypes();
+  for ( auto it = topic_names_and_types.begin(); it != topic_names_and_types.end(); ++it ) {
+    result.insert( it.key(), QVariant( it.value() ) );
+  }
+  return result;
 }
 
 QVariant Ros2QmlSingletonWrapper::createEmptyMessage( const QString &datatype ) const

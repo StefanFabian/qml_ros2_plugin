@@ -27,18 +27,31 @@ As described in the API documentation for :cpp:func:`Ros2.init <qml_ros2_plugin:
 node name or additionally use provided command line args instead of the command
 line args provided to your executable.
 
-Query Topics
+Query Graph
 ------------
 
-You can also use the Ros2 singleton to query the available topics.
-Currently, three methods are provided:
+You can also use the Ros2 singleton to query the available topics, services and actions.
+These are available as:
+
+* | ``QVariantMap getTopicNamesAndTypes()``
+  | Retrieves a map of topic names and their types as a list of strings.
+* | ``QVariantMap getServiceNamesAndTypes()``
+  | Retrieves a map of service names and their types as a list of strings.
+* | ``QVariantMap getActionNamesAndTypes()``
+  | Retrieves a map of action names and their types as a list of strings.
+
+Note that the return value is a ``QVariantMap``, which is a wrapped ``QMap<QString, QStringList>``
+to make it compatible with QML.
+Also check out the ``graph_queries.qml`` example in the repo's examples folder.
+
+Additionally, for topics three convenience methods are also provided:
 
 * | ``QStringList queryTopics( const QString &datatype = QString())``
   | Queries a list of topics with the given datatype or all topics if no type provided.
 * | ``QList<TopicInfo> queryTopicInfo()``
-  | Retrieves a list of all advertised topics including their datatype. See :cpp:class:`TopicInfo`
-* | ``QString queryTopicType( const QString &name )``
-  | Retrieves the datatype for a given topic.
+  | Retrieves a list of all advertised topics including their datatypes. See :cpp:class:`TopicInfo`
+* | ``QString queryTopicTypes( const QString &name )``
+  | Retrieves the datatypes for a given topic.
 
 Example:
 
@@ -50,15 +63,15 @@ Example:
   var cameraTopics = []
   var topics = Ros2.queryTopicInfo()
   for (var i = 0; i < topics.length; ++i) {
-    if (topics[i].datatype == "sensor_msgs/msg/Image") cameraTopics.push(topics[i].name)
+    if (topics[i].datatypes.includes("sensor_msgs/msg/Image")) cameraTopics.push(topics[i].name)
   }
-  // The type of a specific topic can be retrieved as follows
-  var datatype = Ros2.queryTopicType("/topic/that/i/care/about")
+  // The types of a specific topic can be retrieved as follows
+  var datatypes = Ros2.queryTopicTypes("/topic/that/i/care/about")
   // Using this we can make an even worse implementation of the same functionality
   var cameraTopics = []
   var topics = Ros2.queryTopics() // Gets all topics
   for (var i = 0; i < topics.length; ++i) {
-    if (Ros2.queryTopicType(topics[i]) == "sensor_msgs/msg/Image") cameraTopics.push(topics[i])
+    if (Ros2.queryTopicTypes(topics[i]).includes("sensor_msgs/msg/Image")) cameraTopics.push(topics[i])
   }
 
 Create Empty Message
