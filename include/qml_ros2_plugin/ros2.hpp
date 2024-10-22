@@ -61,7 +61,7 @@ public:
   bool ok() const;
 
   /*!
-   * Queries the internal ndoe for its topics or using the optional datatype parameter for all topics with the given type.
+   * Queries the internal node for its topics or using the optional datatype parameter for all topics with the given type.
    * @param datatype The message type to filter topics for, e.g., sensor_msgs/Image. Omit to query for all topics.
    * @return A list of topics that matches the given datatype or all topics if no datatype provided.
    */
@@ -99,12 +99,6 @@ public:
    */
   QVariant createEmptyServiceRequest( const QString &datatype ) const;
 
-  /*!
-   * A callback queue that is guaranteed to be called on a background thread.
-   * @return A shared pointer to the callback queue.
-   */
-  //  std::shared_ptr<ros::CallbackQueue> callbackQueue();
-
   //! Increases the dependant counter.
   void registerDependant();
 
@@ -121,12 +115,8 @@ signals:
   //! Emitted when this ROS node was shut down and it is time to exit.
   void shutdown();
 
-protected slots:
-
-  //  void checkShutdown();
 
 private:
-  //  void onInitialized();
 
   std::thread executor_thread_;
   std::shared_ptr<rclcpp::Context> context_;

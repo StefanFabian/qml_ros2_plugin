@@ -23,11 +23,7 @@ Ros2Qml &Ros2Qml::getInstance()
   return instance;
 }
 
-Ros2Qml::Ros2Qml()
-{
-  babel_fish_ = BabelFishDispenser::getBabelFish();
-  count_wrappers = 0;
-}
+Ros2Qml::Ros2Qml() : count_wrappers( 0 ) { babel_fish_ = BabelFishDispenser::getBabelFish(); }
 
 bool Ros2Qml::isInitialized() const { return context_ != nullptr; }
 
@@ -65,11 +61,11 @@ void Ros2Qml::init( const QString &name, const QStringList &argv, quint32 )
   executor->add_node( node_ );
   emit initialized();
 
-  executor_thread_ = std::thread( [executor = std::move( executor )]() { executor->spin(); } );
+  executor_thread_ = std::thread( [exec = std::move( executor )]() { exec->spin(); } );
   QML_ROS2_PLUGIN_DEBUG( "QML Ros2 initialized." );
 }
 
-bool Ros2Qml::ok() const { return rclcpp::ok(); }
+bool Ros2Qml::ok() const { return rclcpp::ok( context_ ); }
 
 namespace
 {
@@ -97,11 +93,11 @@ QStringList Ros2Qml::queryTopics( const QString &datatype ) const
       node_->get_topic_names_and_types();
   QStringList result;
   std::string std_datatype = toFullyQualifiedDatatype( datatype );
-  for ( const auto &topic : topics_and_types ) {
+  for ( const auto &[topic, types] : topics_and_types ) {
     if ( !std_datatype.empty() &&
-         std::find( topic.second.begin(), topic.second.end(), std_datatype ) == topic.second.end() )
+         std::find( types.begin(), types.end(), std_datatype ) == types.end() )
       continue;
-    result.append( QString::fromStdString( topic.first ) );
+    result.append( QString::fromStdString( topic ) );
   }
   return result;
 }
@@ -347,7 +343,7 @@ QObject *Ros2QmlSingletonWrapper::createActionClient( const QString &name, const
 
 bool Ros2QmlSingletonWrapper::initLogging()
 {
-  if ( logger_.isNull() )
+  if ( !logger_.isUndefined() && !logger_.isNull() )
     return true;
   const std::shared_ptr<rclcpp::Node> &node = Ros2Qml::getInstance().node();
   if ( node == nullptr ) {
