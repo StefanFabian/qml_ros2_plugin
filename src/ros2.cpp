@@ -87,7 +87,7 @@ std::string toFullyQualifiedDatatype( const QString &datatype )
 QStringList Ros2Qml::queryTopics( const QString &datatype ) const
 {
   if ( node_ == nullptr ) {
-    QML_ROS2_PLUGIN_ERROR( "Tried to query topics before node was initialized!" );
+    QML_ROS2_PLUGIN_DEBUG( "Tried to query topics before node was initialized!" );
     return {};
   }
   auto topics_and_types = node_->get_topic_names_and_types();
@@ -104,6 +104,10 @@ QStringList Ros2Qml::queryTopics( const QString &datatype ) const
 
 QList<TopicInfo> Ros2Qml::queryTopicInfo() const
 {
+  if ( node_ == nullptr ) {
+    QML_ROS2_PLUGIN_DEBUG( "Tried to query topic info before node was initialized!" );
+    return {};
+  }
   auto topics_and_types = node_->get_topic_names_and_types();
   QList<TopicInfo> result;
   for ( const auto &[topic, types] : topics_and_types ) {
@@ -118,6 +122,10 @@ QList<TopicInfo> Ros2Qml::queryTopicInfo() const
 
 QStringList Ros2Qml::queryTopicTypes( const QString &name ) const
 {
+  if ( node_ == nullptr ) {
+    QML_ROS2_PLUGIN_DEBUG( "Tried to query topic types before node was initialized!" );
+    return {};
+  }
   if ( name.isEmpty() )
     return {};
   auto topics_and_types = node_->get_topic_names_and_types();
@@ -135,6 +143,10 @@ QStringList Ros2Qml::queryTopicTypes( const QString &name ) const
 
 QMap<QString, QStringList> Ros2Qml::getTopicNamesAndTypes() const
 {
+  if ( node_ == nullptr ) {
+    QML_ROS2_PLUGIN_DEBUG( "Tried to get topic names and types before node was initialized!" );
+    return {};
+  }
   auto topics_and_types = node_->get_topic_names_and_types();
   QMap<QString, QStringList> result;
   for ( const auto &[topic, types] : topics_and_types ) {
@@ -149,6 +161,10 @@ QMap<QString, QStringList> Ros2Qml::getTopicNamesAndTypes() const
 
 QMap<QString, QStringList> Ros2Qml::getServiceNamesAndTypes() const
 {
+  if ( node_ == nullptr ) {
+    QML_ROS2_PLUGIN_DEBUG( "Tried to get service names and types before node was initialized!" );
+    return {};
+  }
   auto service_names_and_types = node_->get_service_names_and_types();
   QMap<QString, QStringList> result;
   for ( const auto &[service_name, types] : service_names_and_types ) {
@@ -163,6 +179,10 @@ QMap<QString, QStringList> Ros2Qml::getServiceNamesAndTypes() const
 
 QMap<QString, QStringList> Ros2Qml::getActionNamesAndTypes() const
 {
+  if ( node_ == nullptr ) {
+    QML_ROS2_PLUGIN_DEBUG( "Tried to get action names and types before node was initialized!" );
+    return {};
+  }
   rcl_names_and_types_t names_and_types = rcl_get_zero_initialized_names_and_types();
   const rcl_node_s *node_handle = node_->get_node_base_interface()->get_rcl_node_handle();
   rcl_allocator_t allocator = rcutils_get_default_allocator();
