@@ -54,6 +54,10 @@ bool ServiceClient::isServiceReady() const
   return client_ != nullptr && client_->service_is_ready();
 }
 
+const QString &ServiceClient::name() const { return name_; }
+
+const QString &ServiceClient::type() const { return service_type_; }
+
 void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &callback )
 {
   if ( client_ == nullptr ) {

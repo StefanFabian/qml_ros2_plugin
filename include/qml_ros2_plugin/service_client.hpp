@@ -19,6 +19,10 @@ class ServiceClient : public QObjectRos2
   Q_OBJECT
   //! True if the ServiceClient is connected to the Service and the Service is ready, false otherwise.
   Q_PROPERTY( bool ready READ isServiceReady NOTIFY serviceReadyChanged )
+  //! The service name (topic in ROS 1).
+  Q_PROPERTY( QString name READ name CONSTANT )
+  //! The type of the service, e.g., "example_interfaces/srv/AddTwoInts".
+  Q_PROPERTY( QString type READ type CONSTANT )
 public:
   /*!
    * @param name The service topic.
@@ -28,6 +32,10 @@ public:
 
   //! Returns whether the service is ready.
   bool isServiceReady() const;
+
+  const QString &name() const;
+
+  const QString &type() const;
 
   /*!
    * Calls a service asynchronously returning immediately.
