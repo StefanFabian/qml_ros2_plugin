@@ -318,6 +318,11 @@ QVariantMap Ros2QmlSingletonWrapper::getTopicNamesAndTypes() const
   return result;
 }
 
+QStringList Ros2QmlSingletonWrapper::getTopicTypes( const QString &name ) const
+{
+  return Ros2Qml::getInstance().queryTopicTypes( name );
+}
+
 QVariantMap Ros2QmlSingletonWrapper::getServiceNamesAndTypes() const
 {
   QVariantMap result;
@@ -328,14 +333,27 @@ QVariantMap Ros2QmlSingletonWrapper::getServiceNamesAndTypes() const
   return result;
 }
 
+QStringList Ros2QmlSingletonWrapper::getServiceTypes( const QString &name ) const
+{
+  QMap<QString, QStringList> service_names_and_types =
+      Ros2Qml::getInstance().getServiceNamesAndTypes();
+  return service_names_and_types.value( name );
+}
+
 QVariantMap Ros2QmlSingletonWrapper::getActionNamesAndTypes() const
 {
   QVariantMap result;
-  QMap<QString, QStringList> topic_names_and_types = Ros2Qml::getInstance().getActionNamesAndTypes();
-  for ( auto it = topic_names_and_types.begin(); it != topic_names_and_types.end(); ++it ) {
+  QMap<QString, QStringList> action_names_and_types = Ros2Qml::getInstance().getActionNamesAndTypes();
+  for ( auto it = action_names_and_types.begin(); it != action_names_and_types.end(); ++it ) {
     result.insert( it.key(), QVariant( it.value() ) );
   }
   return result;
+}
+
+QStringList Ros2QmlSingletonWrapper::getActionTypes( const QString &name ) const
+{
+  QMap<QString, QStringList> action_names_and_types = Ros2Qml::getInstance().getActionNamesAndTypes();
+  return action_names_and_types.value( name );
 }
 
 QVariant Ros2QmlSingletonWrapper::createEmptyMessage( const QString &datatype ) const

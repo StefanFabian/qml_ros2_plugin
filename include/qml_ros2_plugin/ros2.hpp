@@ -190,11 +190,17 @@ public:
   //! @copydoc Ros2Qml::getTopicNamesAndTypes
   Q_INVOKABLE QVariantMap getTopicNamesAndTypes() const;
 
+  Q_INVOKABLE QStringList getTopicTypes( const QString &name ) const;
+
   //! @copydoc Ros2Qml::getServiceNamesAndTypes
   Q_INVOKABLE QVariantMap getServiceNamesAndTypes() const;
 
+  Q_INVOKABLE QStringList getServiceTypes( const QString &name ) const;
+
   //! @copydoc Ros2Qml::getActionNamesAndTypes
   Q_INVOKABLE QVariantMap getActionNamesAndTypes() const;
+
+  Q_INVOKABLE QStringList getActionTypes( const QString &name ) const;
 
   //! @copydoc Ros2Qml::createEmptyMessage
   Q_INVOKABLE QVariant createEmptyMessage( const QString &datatype ) const;
