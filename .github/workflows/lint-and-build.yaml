@@ -37,15 +37,10 @@ jobs:
     strategy:
       matrix:
         setup:
-          - rosdistro: foxy
-            os: ubuntu-20.04
-            babel_fish: foxy
           - rosdistro: jazzy
             os: ubuntu-latest
-            babel_fish: jazzy
           - rosdistro: rolling
             os: ubuntu-latest
-            babel_fish: jazzy
     steps:
       - name: install build tools
         run: |
@@ -54,11 +49,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: src/qml_ros2_plugin
-      - uses: actions/checkout@v4
-        with:
-          path: src/ros2_babel_fish
-          repository: 'LOEWE-emergenCITY/ros2_babel_fish'
-          ref: ${{ matrix.setup.babel_fish }}
       - name: rosdep
         run: |
           rosdep update --rosdistro ${{ matrix.setup.rosdistro }} --include-eol-distros
