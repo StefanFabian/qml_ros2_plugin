@@ -119,6 +119,16 @@ public:
    */
   QVariant createEmptyServiceRequest( const QString &datatype ) const;
 
+  /*!
+   * Creates an empty action goal request for the given action type, e.g., "example_interfaces/action/Fibonacci".
+   * If the action type is known, an empty goal request is returned with all members of the goal message set to their
+   * default values.
+   * If the action type is not found on the current machine, a warning message is printed and null is returned.
+   * @param datatype The action datatype. NOT the goal datatype.
+   * @return A goal request message with all members set to their default.
+   */
+  QVariant createEmptyActionGoal( const QString &datatype ) const;
+
   //! Increases the dependant counter.
   void registerDependant();
 
@@ -207,6 +217,9 @@ public:
 
   //! @copydoc Ros2Qml::createEmptyServiceRequest
   Q_INVOKABLE QVariant createEmptyServiceRequest( const QString &datatype ) const;
+
+  //! @copydoc Ros2Qml::createEmptyActionGoal
+  Q_INVOKABLE QVariant createEmptyActionGoal( const QString &datatype ) const;
 
   IO io() const;
 

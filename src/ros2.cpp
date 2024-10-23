@@ -234,6 +234,18 @@ QVariant Ros2Qml::createEmptyServiceRequest( const QString &datatype ) const
   return {};
 }
 
+QVariant Ros2Qml::createEmptyActionGoal( const QString &datatype ) const
+{
+  try {
+    auto message = babel_fish_.create_action_goal_shared( datatype.toStdString() );
+    return conversion::msgToMap( message );
+  } catch ( ros_babel_fish::BabelFishException &ex ) {
+    QML_ROS2_PLUGIN_WARN( "Failed to create empty action goal request for datatype '%s': %s",
+                          datatype.toStdString().c_str(), ex.what() );
+  }
+  return {};
+}
+
 void Ros2Qml::registerDependant() { ++count_wrappers; }
 
 void Ros2Qml::unregisterDependant()
@@ -384,6 +396,11 @@ QVariant Ros2QmlSingletonWrapper::createEmptyMessage( const QString &datatype ) 
 QVariant Ros2QmlSingletonWrapper::createEmptyServiceRequest( const QString &datatype ) const
 {
   return Ros2Qml::getInstance().createEmptyServiceRequest( datatype );
+}
+
+QVariant Ros2QmlSingletonWrapper::createEmptyActionGoal( const QString &datatype ) const
+{
+  return Ros2Qml::getInstance().createEmptyActionGoal( datatype );
 }
 
 IO Ros2QmlSingletonWrapper::io() const { return {}; }
