@@ -37,8 +37,6 @@ jobs:
     strategy:
       matrix:
         setup:
-          - rosdistro: foxy
-            os: ubuntu-20.04
           - rosdistro: jazzy
             os: ubuntu-latest
           - rosdistro: rolling
