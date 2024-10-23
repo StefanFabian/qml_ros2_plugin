@@ -26,6 +26,18 @@ Ros2Qml &Ros2Qml::getInstance()
 
 Ros2Qml::Ros2Qml() : count_wrappers( 0 ) { babel_fish_ = BabelFishDispenser::getBabelFish(); }
 
+Ros2Qml::~Ros2Qml()
+{
+  if ( node_ == nullptr )
+    return;
+  QML_ROS2_PLUGIN_DEBUG( "Ros2Qml destructing but context still alive. Shutting down context." );
+  node_ = nullptr;
+  rclcpp::shutdown( context_, "QML Ros2 was destroyed." );
+  if ( executor_thread_.joinable() )
+    executor_thread_.join();
+  context_ = nullptr;
+}
+
 bool Ros2Qml::isInitialized() const { return context_ != nullptr; }
 
 void Ros2Qml::init( const QString &name, quint32 options )

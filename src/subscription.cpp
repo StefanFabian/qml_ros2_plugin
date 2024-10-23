@@ -129,7 +129,7 @@ void Subscription::subscribe()
 void Subscription::try_subscribe()
 {
   std::shared_ptr<rclcpp::Node> node = Ros2Qml::getInstance().node();
-  if ( node == nullptr )
+  if ( node == nullptr || !Ros2Qml::getInstance().ok() )
     return;
   if ( user_message_type_.isEmpty() ) {
     subscription_ = babel_fish_.create_subscription(

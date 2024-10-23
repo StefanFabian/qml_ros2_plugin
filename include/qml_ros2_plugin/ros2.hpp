@@ -20,7 +20,7 @@
 namespace qml_ros2_plugin
 {
 
-class Ros2Qml : public QObject
+class Ros2Qml final : public QObject
 {
   Q_OBJECT
 private:
@@ -30,6 +30,8 @@ public:
   static Ros2Qml &getInstance();
 
   Ros2Qml( const Ros2Qml & ) = delete;
+
+  ~Ros2Qml() final;
 
   void operator=( const Ros2Qml & ) = delete;
 
