@@ -91,9 +91,9 @@ TEST( ImageTransportSubscription, testCorrectFormat )
   subscriber.setVideoSurface( &mock_surface );
   processSomeEvents();
   EXPECT_EQ( subscriber.topic().toStdString(), img_pub->get_topic_name() );
-  ASSERT_EQ( img_pub->get_subscription_count(), 1U );
+  ASSERT_TRUE( waitFor( [&img_pub]() { return img_pub->get_subscription_count() == 1U; } ) );
 
-  sensor_msgs::msg::Image::SharedPtr image = std::make_shared<sensor_msgs::msg::Image>();
+  auto image = std::make_shared<sensor_msgs::msg::Image>();
   image->width = 2;
   image->height = 3;
   image->step = 2 * 3;
@@ -124,7 +124,7 @@ TEST( ImageTransportSubscription, testWrongFormat )
   EXPECT_EQ( subscriber.topic().toStdString(), img_pub->get_topic_name() );
   ASSERT_EQ( img_pub->get_subscription_count(), 1U );
 
-  sensor_msgs::msg::Image::SharedPtr image = std::make_shared<sensor_msgs::msg::Image>();
+  auto image = std::make_shared<sensor_msgs::msg::Image>();
   image->width = 2;
   image->height = 3;
   image->step = 2 * 3;
