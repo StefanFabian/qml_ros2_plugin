@@ -387,23 +387,23 @@ public:
 
   void execute( const std::shared_ptr<rclcpp_action::ServerGoalHandle<SimpleTest>> goal_handle )
   {
-    int goal = goal_handle->get_goal()->goal;
+    int goal = goal_handle->get_goal()->target;
     for ( int i = 0; i < goal; ++i ) {
       std::this_thread::sleep_for( 1ms );
       if ( goal_handle->is_canceling() ) {
         auto result = std::make_shared<ros_babel_fish_test_msgs::action::SimpleTest::Result>();
-        result->result = goal_handle->get_goal()->goal * 2 - 1;
+        result->final_value = goal_handle->get_goal()->target * 2 - 1;
         goal_handle->canceled( result );
         return;
       }
       if ( i == goal / 2 ) {
         auto feedback = std::make_shared<ros_babel_fish_test_msgs::action::SimpleTest::Feedback>();
-        feedback->feedback = goal + 1;
+        feedback->current_value = goal + 1;
         goal_handle->publish_feedback( feedback );
       }
     }
     auto result = std::make_shared<ros_babel_fish_test_msgs::action::SimpleTest::Result>();
-    result->result = goal_handle->get_goal()->goal * 2;
+    result->final_value = goal_handle->get_goal()->target * 2;
     goal_handle->succeed( result );
   }
 
@@ -445,14 +445,14 @@ TEST( Communication, actionClient )
                          .evaluate( R"!((function(watcher) {
 return {
   onGoalResponse(gh) { watcher.onGoalResponse(gh) },
-  onFeedback(gh, fb) { watcher.onFeedback(gh, fb.feedback) },
+  onFeedback(gh, fb) { watcher.onFeedback(gh, fb.current_value) },
   onResult(result) { watcher.onResult(result) }
 }
 }))!" )
                          .call( { callback_watcher_js } );
   ASSERT_TRUE( waitFor( [&client]() { return client.isServerReady(); }, 150 ) ); // Wait max 5 seconds
   GoalHandle *handle =
-      dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "goal", 400 } }, options ) );
+      dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 400 } }, options ) );
   //  ASSERT_NE( handle, nullptr );
   ASSERT_TRUE( waitFor( [&callback_watcher]() { return !callback_watcher->goal_handles.empty(); } ) );
   handle = callback_watcher->goal_handles[0];
@@ -471,14 +471,14 @@ return {
   EXPECT_EQ( result_map["goalId"].toString(), handle->goalId() );
   ASSERT_TRUE( result_map.contains( "result" ) );
   EXPECT_EQ( result_map["result"].type(), QVariant::Map );
-  ASSERT_TRUE( result_map["result"].toMap().contains( "result" ) );
-  EXPECT_EQ( result_map["result"].toMap()["result"].type(), QVariant::Int );
-  EXPECT_EQ( result_map["result"].toMap()["result"].toInt(), 800 );
+  ASSERT_TRUE( result_map["result"].toMap().contains( "final_value" ) );
+  EXPECT_EQ( result_map["result"].toMap()["final_value"].type(), QVariant::Int );
+  EXPECT_EQ( result_map["result"].toMap()["final_value"].toInt(), 800 );
   //  delete handle;
 
   // Cancel
   callback_watcher->goal_handles.clear();
-  handle = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "goal", 300 } }, options ) );
+  handle = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 300 } }, options ) );
   //  ASSERT_NE( handle, nullptr );
   ASSERT_TRUE( waitFor( [&callback_watcher]() { return !callback_watcher->goal_handles.empty(); } ) );
   handle = callback_watcher->goal_handles[0];
@@ -494,13 +494,13 @@ return {
   // Cancel all goals
   callback_watcher->goal_handles.clear();
   GoalHandle *handle1 =
-      dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "goal", 7000 } }, options ) );
+      dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 7000 } }, options ) );
   //  ASSERT_NE( handle1, nullptr );
   GoalHandle *handle2 =
-      dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "goal", 8000 } }, options ) );
+      dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 8000 } }, options ) );
   //  ASSERT_NE( handle2, nullptr );
   GoalHandle *handle3 =
-      dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "goal", 9000 } }, options ) );
+      dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 9000 } }, options ) );
   //  ASSERT_NE( handle3, nullptr );
   ASSERT_TRUE(
       waitFor( [&callback_watcher]() { return callback_watcher->goal_handles.size() == 3; } ) );
@@ -527,17 +527,17 @@ return {
 
   // Cancel all goals before and at time
   callback_watcher->goal_handles.clear();
-  handle1 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "goal", 700 } }, options ) );
+  handle1 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 700 } }, options ) );
   //  ASSERT_NE( handle1, nullptr );
   processEvents();
   std::this_thread::sleep_for( 5ms );
-  handle2 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "goal", 800 } }, options ) );
+  handle2 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 800 } }, options ) );
   //  ASSERT_NE( handle2, nullptr );
   processEvents();
   std::this_thread::sleep_for( 5ms );
   QDateTime now = rosToQmlTime( node->now() );
   std::this_thread::sleep_for( 5ms );
-  handle3 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "goal", 190 } }, options ) );
+  handle3 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 190 } }, options ) );
   //  ASSERT_NE( handle3, nullptr );
   ASSERT_TRUE(
       waitFor( [&callback_watcher]() { return callback_watcher->goal_handles.size() == 3; } ) );
@@ -564,9 +564,9 @@ return {
   EXPECT_EQ( result_map["goalId"].toString().toStdString(), handle3->goalId().toStdString() );
   ASSERT_TRUE( result_map.contains( "result" ) );
   EXPECT_EQ( result_map["result"].type(), QVariant::Map );
-  ASSERT_TRUE( result_map["result"].toMap().contains( "result" ) );
-  EXPECT_EQ( result_map["result"].toMap()["result"].type(), QVariant::Int );
-  EXPECT_EQ( result_map["result"].toMap()["result"].toInt(), 380 );
+  ASSERT_TRUE( result_map["result"].toMap().contains( "final_value" ) );
+  EXPECT_EQ( result_map["result"].toMap()["final_value"].type(), QVariant::Int );
+  EXPECT_EQ( result_map["result"].toMap()["final_value"].toInt(), 380 );
 
   //  delete handle1;
   //  delete handle2;
