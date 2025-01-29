@@ -23,9 +23,7 @@
 
 using namespace ros_babel_fish;
 
-namespace qml_ros2_plugin
-{
-namespace conversion
+namespace qml_ros2_plugin::conversion
 {
 
 QVariantMap msgToMap( const std_msgs::msg::Header &msg )
@@ -76,8 +74,8 @@ QString uuidToString( const rclcpp_action::GoalUUID &uuid )
 {
   static constexpr char hex[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
                                     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-  static_assert( std::is_same<std::remove_const<std::remove_reference<decltype( uuid )>::type>::type,
-                              std::array<uint8_t, 16>>::value,
+  static_assert( std::is_same_v<std::remove_const_t<std::remove_reference_t<decltype( uuid )>>,
+                                std::array<uint8_t, 16>>,
                  "The UUID definition was changed. Please open an issue!" );
   QString result_uuid;
   result_uuid.resize( 36 );
@@ -139,37 +137,21 @@ struct MessageToQVariantConverter {
   template<typename T>
   QVariant operator()( const ValueMessage<T> &msg )
   {
-    return QVariant::fromValue( msg.getValue() );
-  }
-
-  QVariant operator()( const ValueMessage<std::string> &msg )
-  {
-    return QVariant::fromValue( QString::fromStdString( msg.getValue() ) );
-  }
-
-  QVariant operator()( const ValueMessage<std::wstring> &msg )
-  {
-    return QVariant::fromValue( QString::fromStdWString( msg.getValue() ) );
-  }
-
-  QVariant operator()( const ValueMessage<uint8_t> &msg )
-  {
-    return QVariant::fromValue( uint( msg.getValue() ) );
-  }
-
-  QVariant operator()( const ValueMessage<int8_t> &msg )
-  {
-    return QVariant::fromValue( int( msg.getValue() ) );
-  }
-
-  QVariant operator()( const ValueMessage<long double> &msg )
-  {
-    return QVariant::fromValue( static_cast<double>( msg.getValue() ) );
-  }
-
-  QVariant operator()( const ValueMessage<char16_t> &msg )
-  {
-    return QVariant::fromValue( QChar( msg.getValue() ) );
+    if constexpr ( std::is_same_v<T, std::string> ) {
+      return QVariant::fromValue( QString::fromStdString( msg.getValue() ) );
+    } else if constexpr ( std::is_same_v<T, std::wstring> ) {
+      return QVariant::fromValue( QString::fromStdWString( msg.getValue() ) );
+    } else if constexpr ( std::is_same_v<T, uint8_t> ) {
+      return QVariant::fromValue( quint32( msg.getValue() ) );
+    } else if constexpr ( std::is_same_v<T, int8_t> ) {
+      return QVariant::fromValue( qint32( msg.getValue() ) );
+    } else if constexpr ( std::is_same_v<T, long double> ) {
+      return QVariant::fromValue( static_cast<double>( msg.getValue() ) );
+    } else if constexpr ( std::is_same_v<T, char16_t> ) {
+      return QVariant::fromValue( QChar( msg.getValue() ) );
+    } else {
+      return QVariant::fromValue( msg.getValue() );
+    }
   }
 };
 } // namespace
@@ -204,85 +186,33 @@ namespace
 
 struct ArrayToQVariantListConverter {
 
-  template<typename T, bool BOUNDED, bool FIXED_LENGTH>
-  QVariantList operator()( const ArrayMessage_<T, BOUNDED, FIXED_LENGTH> &array )
+  template<typename T, ArraySize SIZE>
+  QVariantList operator()( const ArrayMessage_<T, SIZE> &array )
   {
     QVariantList result;
     result.reserve( array.size() );
     for ( size_t i = 0; i < array.size(); ++i ) {
-      result.append( QVariant::fromValue( array[i] ) );
+      if constexpr ( std::is_same_v<T, std::string> ) {
+        result.append( QVariant::fromValue( QString::fromStdString( array[i] ) ) );
+      } else if constexpr ( std::is_same_v<T, std::wstring> ) {
+        result.append( QVariant::fromValue( QString::fromStdWString( array[i] ) ) );
+      } else if constexpr ( std::is_same_v<T, uint8_t> ) {
+        result.append( QVariant::fromValue( quint32( array[i] ) ) );
+      } else if constexpr ( std::is_same_v<T, int8_t> ) {
+        result.append( QVariant::fromValue( qint32( array[i] ) ) );
+      } else if constexpr ( std::is_same_v<T, long double> ) {
+        result.append( QVariant::fromValue( static_cast<double>( array[i] ) ) );
+      } else if constexpr ( std::is_same_v<T, char16_t> ) {
+        result.append( QVariant::fromValue( QChar( array[i] ) ) );
+      } else {
+        result.append( QVariant::fromValue( array[i] ) );
+      }
     }
     return result;
   }
 
-  template<bool BOUNDED, bool FIXED_LENGTH>
-  QVariantList operator()( const ArrayMessage_<std::string, BOUNDED, FIXED_LENGTH> &array )
-  {
-    QVariantList result;
-    result.reserve( array.size() );
-    for ( size_t i = 0; i < array.size(); ++i ) {
-      result.append( QVariant::fromValue( QString::fromStdString( array[i] ) ) );
-    }
-    return result;
-  }
-
-  template<bool BOUNDED, bool FIXED_LENGTH>
-  QVariantList operator()( const ArrayMessage_<std::wstring, BOUNDED, FIXED_LENGTH> &array )
-  {
-    QVariantList result;
-    result.reserve( array.size() );
-    for ( size_t i = 0; i < array.size(); ++i ) {
-      result.append( QVariant::fromValue( QString::fromStdWString( array[i] ) ) );
-    }
-    return result;
-  }
-
-  template<bool BOUNDED, bool FIXED_LENGTH>
-  QVariantList operator()( const ArrayMessage_<uint8_t, BOUNDED, FIXED_LENGTH> &array )
-  {
-    QVariantList result;
-    result.reserve( array.size() );
-    for ( size_t i = 0; i < array.size(); ++i ) {
-      result.append( QVariant::fromValue( uint( array[i] ) ) );
-    }
-    return result;
-  }
-
-  template<bool BOUNDED, bool FIXED_LENGTH>
-  QVariantList operator()( const ArrayMessage_<int8_t, BOUNDED, FIXED_LENGTH> &array )
-  {
-    QVariantList result;
-    result.reserve( array.size() );
-    for ( size_t i = 0; i < array.size(); ++i ) {
-      result.append( QVariant::fromValue( int( array[i] ) ) );
-    }
-    return result;
-  }
-
-  template<bool BOUNDED, bool FIXED_LENGTH>
-  QVariantList operator()( const ArrayMessage_<long double, BOUNDED, FIXED_LENGTH> &array )
-  {
-    QVariantList result;
-    result.reserve( array.size() );
-    for ( size_t i = 0; i < array.size(); ++i ) {
-      result.append( QVariant::fromValue( static_cast<double>( array[i] ) ) );
-    }
-    return result;
-  }
-
-  template<bool BOUNDED, bool FIXED_LENGTH>
-  QVariantList operator()( const ArrayMessage_<char16_t, BOUNDED, FIXED_LENGTH> &array )
-  {
-    QVariantList result;
-    result.reserve( array.size() );
-    for ( size_t i = 0; i < array.size(); ++i ) {
-      result.append( QVariant::fromValue( QChar( array[i] ) ) );
-    }
-    return result;
-  }
-
-  template<bool BOUNDED, bool FIXED_LENGTH>
-  QVariantList operator()( const CompoundArrayMessage_<BOUNDED, FIXED_LENGTH> &array )
+  template<ArraySize SIZE>
+  QVariantList operator()( const CompoundArrayMessage_<SIZE> &array )
   {
     QVariantList result;
     result.reserve( array.size() );
@@ -747,53 +677,60 @@ bool fillMessage( Message &msg, const QVariant &value )
 namespace
 {
 
-template<bool BOUNDED>
-size_t limitCount( const ArrayMessageBase &array, int count )
+template<ArraySize SIZE>
+int limitCount( const ArrayMessageBase &array, int count )
 {
-  if ( BOUNDED && static_cast<size_t>( count ) > array.maxSize() ) {
-    QML_ROS2_PLUGIN_WARN( "Too many values for fixed size array (%d vs %lu)! Only using first %lu.",
-                          count, array.size(), array.size() );
-    return array.size();
+  if constexpr ( SIZE == ArraySize::BOUNDED || SIZE == ArraySize::FIXED_LENGTH ) {
+    if ( static_cast<size_t>( count ) > array.maxSize() ) {
+      QML_ROS2_PLUGIN_WARN(
+          "Too many values for fixed size or bounded array (%d vs %lu)! Only using first %lu.",
+          count, array.maxSize(), array.maxSize() );
+      return static_cast<int>( array.maxSize() );
+    }
   }
   return count;
 }
 
 struct QVariantListToMessageConverter {
-  template<typename T, bool BOUNDED, bool FIXED_LENGTH, typename ArrayType>
-  bool operator()( ArrayMessage_<T, BOUNDED, FIXED_LENGTH> &array, BabelFish &, const ArrayType &list )
+  template<typename T, ArraySize SIZE, typename ArrayType>
+  bool operator()( ArrayMessage_<T, SIZE> &array, BabelFish &, const ArrayType &list )
   {
-    int count = limitCount<BOUNDED>( array, list.size() );
+    int count = limitCount<SIZE>( array, list.size() );
     bool no_error = count == list.size();
-    if ( !FIXED_LENGTH )
+    if constexpr ( SIZE != ArraySize::FIXED_LENGTH )
       array.clear();
-    for ( int i = 0; i < count; ++i ) {
+    for ( int i = 0, target_i = 0; i < list.size() && target_i < count; ++i, ++target_i ) {
       const QVariant &variant = list.at( i );
       if ( !isCompatible<T>( variant ) ) {
         QML_ROS2_PLUGIN_WARN(
             "Tried to fill array of '%s' with incompatible value! Skipped. (Type: %s)",
             typeid( T ).name(), variant.typeName() );
+        --target_i;
         no_error = false;
         continue;
       }
-      if ( array.isFixedSize() )
-        array.assign( i, getValue<T>( variant ) );
-      else
+      if constexpr ( SIZE == ArraySize::FIXED_LENGTH ) {
+        array.assign( target_i, getValue<T>( variant ) );
+      } else {
         array.push_back( getValue<T>( variant ) );
+      }
     }
     return no_error;
   }
 
-  template<bool BOUNDED, bool FIXED_LENGTH, typename Array>
-  bool operator()( CompoundArrayMessage_<BOUNDED, FIXED_LENGTH> &array, BabelFish &fish,
-                   const Array &list )
+  template<ArraySize SIZE, typename Array>
+  bool operator()( CompoundArrayMessage_<SIZE> &array, BabelFish &fish, const Array &list )
   {
-    const int count = limitCount<BOUNDED>( array, list.size() );
+    const int count = limitCount<SIZE>( array, list.size() );
     bool no_error = count == list.size();
-    if ( !FIXED_LENGTH )
+    if constexpr ( SIZE != ArraySize::FIXED_LENGTH ) {
       array.clear();
-    for ( int i = 0; i < count; ++i ) {
-      const QVariant &variant = list.at( static_cast<int>( i ) );
-      auto &child = FIXED_LENGTH ? array[i] : array.appendEmpty();
+      array.resize( count );
+    }
+    int target_i = 0;
+    for ( int src_i = 0; src_i < list.size() && target_i < count; ++src_i, ++target_i ) {
+      const QVariant &variant = list.at( static_cast<int>( src_i ) );
+      auto &child = array[target_i];
       if ( variant.type() != QVariant::Map ) {
         if ( child.isTime() ) {
           if ( !isCompatible<rclcpp::Time>( variant ) ) {
@@ -801,6 +738,7 @@ struct QVariantListToMessageConverter {
                 "Tried to fill array of 'time' with incompatible value! Skipped. (Type: %s)",
                 variant.typeName() );
             no_error = false;
+            --target_i;
             continue;
           }
           child = getValue<rclcpp::Time>( variant );
@@ -812,6 +750,7 @@ struct QVariantListToMessageConverter {
                 "Tried to fill array of 'duration' with incompatible value! Skipped. (Type: %s)",
                 variant.typeName() );
             no_error = false;
+            --target_i;
             continue;
           }
           child = getValue<rclcpp::Duration>( variant );
@@ -819,28 +758,27 @@ struct QVariantListToMessageConverter {
         }
         const char *name = array.elementIntrospection()->name_;
         QML_ROS2_PLUGIN_WARN( "Tried to fill compound array '%s' with non-map value! Skipped.", name );
-        if ( !FIXED_LENGTH )
-          array.pop_back();
-        std::vector<int> test;
+        --target_i;
         no_error = false;
         continue;
       }
       fillMessage( fish, child, variant );
     }
+    if constexpr ( SIZE != ArraySize::FIXED_LENGTH )
+      array.resize( target_i ); // Limit length to actually added elements
     return no_error;
   }
 };
 
 struct QAbstractListModelToMessageConverter {
-  template<typename T, bool BOUNDED, bool FIXED_LENGTH>
-  bool operator()( ArrayMessage_<T, BOUNDED, FIXED_LENGTH> &array, BabelFish &,
-                   const QAbstractListModel &list )
+  template<typename T, ArraySize SIZE>
+  bool operator()( ArrayMessage_<T, SIZE> &array, BabelFish &, const QAbstractListModel &list )
   {
-    int count = limitCount<BOUNDED>( array, list.rowCount() );
+    int count = limitCount<SIZE>( array, list.rowCount() );
     bool no_error = count == list.rowCount();
-    if ( !FIXED_LENGTH )
+    if constexpr ( SIZE != ArraySize::FIXED_LENGTH )
       array.clear();
-    for ( int i = 0; i < count; ++i ) {
+    for ( int i = 0, target_i = 0; i < list.rowCount() && target_i < count; ++i, ++target_i ) {
       const QModelIndex &index = list.index( i, 0 );
       const QVariant &variant = list.data( index );
       if ( !isCompatible<T>( variant ) ) {
@@ -848,21 +786,22 @@ struct QAbstractListModelToMessageConverter {
             "Tried to fill array of '%s' with incompatible value! Skipped. (Type: %s)",
             typeid( T ).name(), variant.typeName() );
         no_error = false;
+        --target_i;
         continue;
       }
-      if ( FIXED_LENGTH )
-        array.assign( i, getValue<T>( variant ) );
+      if constexpr ( SIZE == ArraySize::FIXED_LENGTH )
+        array.assign( target_i, getValue<T>( variant ) );
       else
         array.push_back( getValue<T>( variant ) );
     }
     return no_error;
   }
 
-  template<bool BOUNDED, bool FIXED_LENGTH>
-  bool operator()( CompoundArrayMessage_<BOUNDED, FIXED_LENGTH> &array, BabelFish &fish,
+  template<ArraySize SIZE>
+  bool operator()( CompoundArrayMessage_<SIZE> &array, BabelFish &fish,
                    const QAbstractListModel &list )
   {
-    int count = limitCount<BOUNDED>( array, list.rowCount() );
+    int count = limitCount<SIZE>( array, list.rowCount() );
     QHash<int, QByteArray> roleNames = list.roleNames();
     if ( roleNames.empty() )
       return true;
@@ -879,7 +818,7 @@ struct QAbstractListModelToMessageConverter {
       names[it.key()] = it.value().data();
     }
     bool no_error = count == list.rowCount();
-    if ( !FIXED_LENGTH )
+    if constexpr ( SIZE != ArraySize::FIXED_LENGTH )
       array.clear();
     // Check that all keys are in message
     std::vector<std::string> compound_names;
@@ -910,40 +849,51 @@ struct QAbstractListModelToMessageConverter {
         return no_error;
       if ( members->message_name_ == std::string( "Duration" ) ) {
         no_error = true;
-        for ( int i = 0; i < count; ++i ) {
+        for ( int i = 0, target_i = 0; i < list.rowCount() && target_i < count; ++i, ++target_i ) {
           QModelIndex index = list.index( i, 0 );
           const QVariant &variant = list.data( index );
           if ( !isCompatible<rclcpp::Duration>( variant ) ) {
             QML_ROS2_PLUGIN_WARN(
                 "Tried to fill array of '%s::%s' with incompatible value! Skipped. (Type: %s)",
                 members->message_namespace_, members->message_name_, variant.typeName() );
+            --target_i;
             no_error = false;
             continue;
           }
-          auto &child = FIXED_LENGTH ? array[i] : array.appendEmpty();
-          child = getValue<rclcpp::Duration>( variant );
+          if constexpr ( SIZE == ArraySize::FIXED_LENGTH ) {
+            array[target_i] = getValue<rclcpp::Duration>( variant );
+          } else {
+            array.appendEmpty() = getValue<rclcpp::Duration>( variant );
+          }
         }
       } else if ( members->message_name_ == std::string( "Time" ) ) {
         no_error = true;
-        for ( int i = 0; i < count; ++i ) {
+        for ( int i = 0, target_i = 0; i < list.rowCount() && target_i < count; ++i, ++target_i ) {
           QModelIndex index = list.index( i, 0 );
           const QVariant &variant = list.data( index );
           if ( !isCompatible<rclcpp::Time>( variant ) ) {
             QML_ROS2_PLUGIN_WARN(
                 "Tried to fill array of '%s::%s' with incompatible value! Skipped. (Type: %s)",
                 members->message_namespace_, members->message_name_, variant.typeName() );
+            --target_i;
             no_error = false;
             continue;
           }
-          auto &child = FIXED_LENGTH ? array[i] : array.appendEmpty();
-          child = getValue<rclcpp::Time>( variant );
+          if constexpr ( SIZE == ArraySize::FIXED_LENGTH ) {
+            array[target_i] = getValue<rclcpp::Time>( variant );
+          } else {
+            array.appendEmpty() = getValue<rclcpp::Time>( variant );
+          }
         }
       }
       return no_error;
     }
+    if constexpr ( SIZE != ArraySize::FIXED_LENGTH ) {
+      array.resize( count );
+    }
     for ( int i = 0; i < count; ++i ) {
       QModelIndex index = list.index( i );
-      auto &child = FIXED_LENGTH ? array[i] : array.appendEmpty();
+      auto &child = array[i];
       for ( size_t j = 0; j < names.size(); ++j ) {
         const std::string &key = names[j];
         if ( key.empty() )
@@ -1135,5 +1085,4 @@ bool fillMessage( BabelFish &fish, Message &msg, const QVariant &value )
   }
   return false;
 }
-} // namespace conversion
-} // namespace qml_ros2_plugin
+} // namespace qml_ros2_plugin::conversion

@@ -461,9 +461,9 @@ bool valueEqual( const rclcpp::Time &a, const rclcpp::Time &b )
          1E-3; // Should differ at most by less than a millisecond
 }
 
-template<typename T, bool BOUNDED, bool FIXED_LENGTH, typename ContainerType>
+template<typename T, ArraySize SIZE, typename ContainerType>
 typename std::enable_if<!std::is_same<T, Message>::value, ::testing::AssertionResult>::type
-messageEqual( const ArrayMessage_<T, BOUNDED, FIXED_LENGTH> &arr, const ContainerType &msg,
+messageEqual( const ArrayMessage_<T, SIZE> &arr, const ContainerType &msg,
               const std::string &path = "msg", double = DEFAULT_PRECISION )
 {
   if ( arr.size() != msg.size() )
@@ -480,8 +480,8 @@ messageEqual( const ArrayMessage_<T, BOUNDED, FIXED_LENGTH> &arr, const Containe
   return ::testing::AssertionSuccess();
 }
 
-template<bool BOUNDED, bool FIXED_LENGTH, typename ContainerType>
-::testing::AssertionResult messageEqual( const CompoundArrayMessage_<BOUNDED, FIXED_LENGTH> &arr,
+template<ArraySize SIZE, typename ContainerType>
+::testing::AssertionResult messageEqual( const CompoundArrayMessage_<SIZE> &arr,
                                          const ContainerType &msg, const std::string &path,
                                          double precision = DEFAULT_PRECISION )
 {

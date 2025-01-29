@@ -5,6 +5,7 @@
 #include "qml_ros2_plugin/conversion/message_conversions.hpp"
 #include "qml_ros2_plugin/conversion/qml_ros_conversion.hpp"
 #include "qml_ros2_plugin/time.hpp"
+#include <ros_babel_fish/method_invoke_helpers.hpp>
 
 using namespace qml_ros2_plugin::conversion;
 using namespace ros_babel_fish;
@@ -41,103 +42,64 @@ void Array::setLength( int value )
 
 namespace
 {
-template<typename T, bool BOUNDED, bool FIXED_LENGTH>
-void getElement( const ArrayMessage_<T, BOUNDED, FIXED_LENGTH> &array, int index, QVariant &result,
-                 const std::shared_ptr<Array::Data> & )
-{
-  if ( static_cast<size_t>( index ) >= array.size() )
-    return;
-  result = QVariant::fromValue( array[index] );
-}
-
-template<bool BOUNDED, bool FIXED_LENGTH>
-void getElement( const ArrayMessage_<std::string, BOUNDED, FIXED_LENGTH> &array, int index,
-                 QVariant &result, const std::shared_ptr<Array::Data> & )
-{
-  if ( static_cast<size_t>( index ) >= array.size() )
-    return;
-  result = QVariant::fromValue( QString::fromStdString( array[index] ) );
-}
-
-template<bool BOUNDED, bool FIXED_LENGTH>
-void getElement( const ArrayMessage_<std::wstring, BOUNDED, FIXED_LENGTH> &array, int index,
-                 QVariant &result, const std::shared_ptr<Array::Data> & )
-{
-  if ( static_cast<size_t>( index ) >= array.size() )
-    return;
-  result = QVariant::fromValue( QString::fromStdWString( array[index] ) );
-}
-
-template<bool BOUNDED, bool FIXED_LENGTH>
-void getElement( const ArrayMessage_<uint8_t, BOUNDED, FIXED_LENGTH> &array, int index,
-                 QVariant &result, const std::shared_ptr<Array::Data> & )
-{
-  if ( static_cast<size_t>( index ) >= array.size() )
-    return;
-  result = QVariant::fromValue( uint( array[index] ) );
-}
-
-template<bool BOUNDED, bool FIXED_LENGTH>
-void getElement( const ArrayMessage_<int8_t, BOUNDED, FIXED_LENGTH> &array, int index,
-                 QVariant &result, const std::shared_ptr<Array::Data> & )
-{
-  if ( static_cast<size_t>( index ) >= array.size() )
-    return;
-  result = QVariant::fromValue( int( array[index] ) );
-}
-
-template<bool BOUNDED, bool FIXED_LENGTH>
-void getElement( const ArrayMessage_<long double, BOUNDED, FIXED_LENGTH> &array, int index,
-                 QVariant &result, const std::shared_ptr<Array::Data> & )
-{
-  if ( static_cast<size_t>( index ) >= array.size() )
-    return;
-  result = QVariant::fromValue( static_cast<double>( array[index] ) );
-}
-
-template<bool BOUNDED, bool FIXED_LENGTH>
-void getElement( const ArrayMessage_<char16_t, BOUNDED, FIXED_LENGTH> &array, int index,
-                 QVariant &result, const std::shared_ptr<Array::Data> & )
-{
-  if ( static_cast<size_t>( index ) >= array.size() )
-    return;
-  result = QVariant::fromValue( QChar( array[index] ) );
-}
-
-template<bool BOUNDED, bool FIXED_LENGTH>
-void getElement( const CompoundArrayMessage_<BOUNDED, FIXED_LENGTH> &array, int index,
-                 QVariant &result, const std::shared_ptr<Array::Data> &p )
-{
-  if ( static_cast<size_t>( index ) >= array.size() )
-    return;
-  if ( p->cache.size() <= index ) {
-    p->cache.reserve( index + 1 );
-    p->modified.reserve( index + 1 );
-    for ( int i = p->cache.size(); i <= index; ++i ) {
-      p->cache.push_back( QVariant() );
-      p->modified.push_back( false );
+struct ElementGetter {
+  template<typename T, ros_babel_fish::ArraySize SIZE>
+  QVariant operator()( const ArrayMessage_<T, SIZE> &array, int index,
+                       const std::shared_ptr<Array::Data> & )
+  {
+    if ( static_cast<size_t>( index ) >= array.size() )
+      return {};
+    if constexpr ( std::is_same_v<T, std::string> ) {
+      return QVariant::fromValue( QString::fromStdString( array[index] ) );
+    } else if constexpr ( std::is_same_v<T, std::wstring> ) {
+      return QVariant::fromValue( QString::fromStdWString( array[index] ) );
+    } else if constexpr ( std::is_same_v<T, uint8_t> ) {
+      return QVariant::fromValue( quint32( array[index] ) );
+    } else if constexpr ( std::is_same_v<T, int8_t> ) {
+      return QVariant::fromValue( qint32( array[index] ) );
+    } else if constexpr ( std::is_same_v<T, char16_t> ) {
+      return QVariant::fromValue( QChar( array[index] ) );
+    } else if constexpr ( std::is_same_v<T, long double> ) {
+      // long double is not supported by QVariant
+      return QVariant::fromValue( static_cast<double>( array[index] ) );
+    } else {
+      return QVariant::fromValue( array[index] );
     }
   }
-  if ( !p->cache[index].isValid() ) {
-    if ( static_cast<size_t>( index ) < p->message->size() )
-      p->cache[index] = msgToMap( array[index] );
-    else
-      p->cache[index] = QVariantMap();
+
+  template<ros_babel_fish::ArraySize SIZE>
+  QVariant operator()( const CompoundArrayMessage_<SIZE> &array, int index,
+                       const std::shared_ptr<Array::Data> &p )
+  {
+    if ( static_cast<size_t>( index ) >= array.size() )
+      return {};
+    if ( p->cache.size() <= index ) {
+      p->cache.reserve( index + 1 );
+      p->modified.reserve( index + 1 );
+      for ( int i = p->cache.size(); i <= index; ++i ) {
+        p->cache.push_back( QVariant() );
+        p->modified.push_back( false );
+      }
+    }
+    if ( !p->cache[index].isValid() ) {
+      if ( static_cast<size_t>( index ) < p->message->size() )
+        p->cache[index] = msgToMap( array[index] );
+      else
+        p->cache[index] = QVariantMap();
+    }
+    return p->cache[index];
   }
-  result = p->cache[index];
-}
+};
 } // namespace
 
 QVariant Array::at( int index ) const
 {
   if ( index < 0 || index >= length() ) {
-    return QVariant();
+    return {};
   }
   if ( p_->cache.size() > index && p_->cache[index].isValid() )
     return p_->cache[index];
-  QVariant result;
-  RBF2_TEMPLATE_CALL_ARRAY_TYPES( getElement, *p_->message, index, result, p_ );
-  return result;
+  return ros_babel_fish::invoke_for_array_message( *p_->message, ElementGetter{}, index, p_ );
 }
 
 void Array::spliceList( int start, int delete_count, const QVariantList &items )
