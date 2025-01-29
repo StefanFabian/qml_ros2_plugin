@@ -747,13 +747,14 @@ bool fillMessage( Message &msg, const QVariant &value )
 namespace
 {
 
-template<bool BOUNDED>
+template<bool BOUNDED, bool FIXED_LENGTH>
 size_t limitCount( const ArrayMessageBase &array, int count )
 {
-  if ( BOUNDED && static_cast<size_t>( count ) > array.maxSize() ) {
-    QML_ROS2_PLUGIN_WARN( "Too many values for fixed size array (%d vs %lu)! Only using first %lu.",
-                          count, array.size(), array.size() );
-    return array.size();
+  if ( ( BOUNDED || FIXED_LENGTH ) && static_cast<size_t>( count ) > array.maxSize() ) {
+    QML_ROS2_PLUGIN_WARN(
+        "Too many values for bounded or fixed size array (%d vs %lu)! Only using first %lu.", count,
+        array.maxSize(), array.maxSize() );
+    return array.maxSize();
   }
   return count;
 }
@@ -762,7 +763,7 @@ struct QVariantListToMessageConverter {
   template<typename T, bool BOUNDED, bool FIXED_LENGTH, typename ArrayType>
   bool operator()( ArrayMessage_<T, BOUNDED, FIXED_LENGTH> &array, BabelFish &, const ArrayType &list )
   {
-    int count = limitCount<BOUNDED>( array, list.size() );
+    int count = limitCount<BOUNDED, FIXED_LENGTH>( array, list.size() );
     bool no_error = count == list.size();
     if ( !FIXED_LENGTH )
       array.clear();
@@ -787,7 +788,7 @@ struct QVariantListToMessageConverter {
   bool operator()( CompoundArrayMessage_<BOUNDED, FIXED_LENGTH> &array, BabelFish &fish,
                    const Array &list )
   {
-    const int count = limitCount<BOUNDED>( array, list.size() );
+    const int count = limitCount<BOUNDED, FIXED_LENGTH>( array, list.size() );
     bool no_error = count == list.size();
     if ( !FIXED_LENGTH )
       array.clear();
@@ -836,7 +837,7 @@ struct QAbstractListModelToMessageConverter {
   bool operator()( ArrayMessage_<T, BOUNDED, FIXED_LENGTH> &array, BabelFish &,
                    const QAbstractListModel &list )
   {
-    int count = limitCount<BOUNDED>( array, list.rowCount() );
+    int count = limitCount<BOUNDED, FIXED_LENGTH>( array, list.rowCount() );
     bool no_error = count == list.rowCount();
     if ( !FIXED_LENGTH )
       array.clear();
@@ -862,7 +863,7 @@ struct QAbstractListModelToMessageConverter {
   bool operator()( CompoundArrayMessage_<BOUNDED, FIXED_LENGTH> &array, BabelFish &fish,
                    const QAbstractListModel &list )
   {
-    int count = limitCount<BOUNDED>( array, list.rowCount() );
+    int count = limitCount<BOUNDED, FIXED_LENGTH>( array, list.rowCount() );
     QHash<int, QByteArray> roleNames = list.roleNames();
     if ( roleNames.empty() )
       return true;
