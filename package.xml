@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="3">
   <name>qml_ros2_plugin</name>
-  <version>1.0.1</version>
+  <version>1.25.2</version>
   <description>
     A QML plugin for ROS.
     Enables full communication with ROS from QML.
