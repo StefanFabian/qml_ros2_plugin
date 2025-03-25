@@ -177,9 +177,9 @@ private:
     bool first = true;
     for ( const auto &sub_weak : subscription_handles_ ) {
       std::shared_ptr<ImageTransportSubscriptionHandle> sub = sub_weak.lock();
-      if ( sub == nullptr || sub->surface == nullptr )
+      if ( sub == nullptr )
         continue;
-      const QList<QVideoFrame::PixelFormat> surface_formats = sub->surface->supportedPixelFormats();
+      const QList<QVideoFrame::PixelFormat> &surface_formats = sub->supported_pixel_formats;
       if ( first ) {
         supported_formats_ = surface_formats;
         first = false;
@@ -240,10 +240,12 @@ ImageTransportManager &ImageTransportManager::getInstance()
   return manager;
 }
 
-std::shared_ptr<ImageTransportSubscriptionHandle> ImageTransportManager::subscribe(
-    const rclcpp::Node::SharedPtr &node, const QString &qtopic, quint32 queue_size,
-    const image_transport::TransportHints &transport_hints,
-    const std::function<void( const QVideoFrame & )> &callback, QAbstractVideoSurface *surface )
+std::shared_ptr<ImageTransportSubscriptionHandle>
+ImageTransportManager::subscribe( const rclcpp::Node::SharedPtr &node, const QString &qtopic,
+                                  quint32 queue_size,
+                                  const image_transport::TransportHints &transport_hints,
+                                  const std::function<void( const QVideoFrame & )> &callback,
+                                  const QList<QVideoFrame::PixelFormat> &supported_pixel_formats )
 {
   if ( subscription_manager_ == nullptr ) {
     subscription_manager_ = std::make_shared<SubscriptionManager>( node );
@@ -257,7 +259,7 @@ std::shared_ptr<ImageTransportSubscriptionHandle> ImageTransportManager::subscri
         break; // We could also compare transport type and hints
     }
     auto handle = std::make_shared<ImageTransportSubscriptionHandle>();
-    handle->surface = surface;
+    handle->supported_pixel_formats = supported_pixel_formats;
     handle->callback = callback;
     if ( i == subscriptions.size() ) {
       auto sub = std::make_shared<Subscription>( transport_hints );
