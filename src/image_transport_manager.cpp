@@ -45,10 +45,14 @@ public:
   {
     if ( subscriptions_.empty() )
       return;
+    // Make sure we don't subscribe twice in a row due to a race condition
+    std::unique_lock lock( subscribe_mutex_ );
+    if ( subscribe_thread.joinable() ) {
+      // Already subscribing
+      return;
+    }
     // Subscribing on background thread to reduce load on UI thread
     subscribe_thread = std::thread( [this]() {
-      // Make sure we don't subscribe twice in a row due to a race condition
-      std::lock_guard<std::mutex> lock( subscribe_mutex_ );
       if ( subscriber_ )
         return;
       try {
