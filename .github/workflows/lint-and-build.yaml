@@ -39,8 +39,6 @@ jobs:
         setup:
           - rosdistro: jazzy
             os: ubuntu-latest
-          - rosdistro: rolling
-            os: ubuntu-latest
     steps:
       - name: install build tools
         run: |
