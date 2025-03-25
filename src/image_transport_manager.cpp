@@ -35,6 +35,7 @@ public:
   std::string topic;
   ImageTransportManager *manager = nullptr;
   quint32 queue_size = 0;
+  std::thread subscribe_thread;
 
   explicit Subscription( image_transport::TransportHints hints ) : hints( std::move( hints ) ) { }
 
@@ -45,14 +46,19 @@ public:
     if ( subscriptions_.empty() )
       return;
     // Subscribing on background thread to reduce load on UI thread
-    std::thread( [this]() {
+    subscribe_thread = std::thread( [this]() {
       // Make sure we don't subscribe twice in a row due to a race condition
       std::lock_guard<std::mutex> lock( subscribe_mutex_ );
       if ( subscriber_ )
         return;
-      subscriber_ = subscription_manager->transport->subscribe(
-          topic, queue_size, &Subscription::imageCallback, this, &hints );
-    } ).detach();
+      try {
+        subscriber_ = subscription_manager->transport->subscribe(
+            topic, queue_size, &Subscription::imageCallback, this, &hints );
+      } catch ( image_transport::TransportLoadException &e ) {
+        QML_ROS2_PLUGIN_ERROR( "Failed to subscribe to topic '%s' with transport '%s': %s",
+                               topic.c_str(), hints.getTransport().c_str(), e.what() );
+      }
+    } );
   }
 
   void addSubscription( const std::shared_ptr<ImageTransportSubscriptionHandle> &sub )
@@ -252,31 +258,27 @@ ImageTransportManager::subscribe( const rclcpp::Node::SharedPtr &node, const QSt
   }
   std::string topic = qtopic.toStdString();
   std::vector<std::shared_ptr<Subscription>> &subscriptions = subscription_manager_->subscriptions;
-  try {
-    size_t i = 0;
-    for ( ; i < subscriptions.size(); ++i ) {
-      if ( subscriptions[i]->topic == topic && subscriptions[i]->queue_size == queue_size )
-        break; // We could also compare transport type and hints
-    }
-    auto handle = std::make_shared<ImageTransportSubscriptionHandle>();
-    handle->supported_pixel_formats = supported_pixel_formats;
-    handle->callback = callback;
-    if ( i == subscriptions.size() ) {
-      auto sub = std::make_shared<Subscription>( transport_hints );
-      sub->manager = this;
-      sub->subscription_manager = subscription_manager_;
-      sub->topic = topic;
-      sub->queue_size = queue_size;
-      subscriptions.emplace_back( sub );
-      QML_ROS2_PLUGIN_DEBUG( "Subscribed to '%s' with transport '%s'.", topic.c_str(),
-                             transport_hints.getTransport().c_str() );
-    }
-    handle->subscription = subscriptions[i];
-    subscriptions[i]->addSubscription( handle );
-    return handle;
-  } catch ( image_transport::TransportLoadException &ex ) {
-    QML_ROS2_PLUGIN_ERROR( "Could not subscribe to image topic: %s", ex.what() );
+  size_t i = 0;
+  for ( ; i < subscriptions.size(); ++i ) {
+    if ( subscriptions[i]->topic == topic && subscriptions[i]->queue_size == queue_size )
+      break; // We could also compare transport type and hints
   }
+  auto handle = std::make_shared<ImageTransportSubscriptionHandle>();
+  handle->supported_pixel_formats = supported_pixel_formats;
+  handle->callback = callback;
+  if ( i == subscriptions.size() ) {
+    auto sub = std::make_shared<Subscription>( transport_hints );
+    sub->manager = this;
+    sub->subscription_manager = subscription_manager_;
+    sub->topic = topic;
+    sub->queue_size = queue_size;
+    subscriptions.emplace_back( sub );
+    QML_ROS2_PLUGIN_DEBUG( "Subscribed to '%s' with transport '%s'.", topic.c_str(),
+                           transport_hints.getTransport().c_str() );
+  }
+  handle->subscription = subscriptions[i];
+  subscriptions[i]->addSubscription( handle );
+  return handle;
   return nullptr;
 }
 } // namespace qml_ros2_plugin
