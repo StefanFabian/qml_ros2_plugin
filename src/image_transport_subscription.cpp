@@ -71,7 +71,8 @@ void ImageTransportSubscription::initSubscriber()
   image_transport::TransportHints transport_hints( node.get(), default_transport_.toStdString() );
   subscription_ = ImageTransportManager::getInstance().subscribe(
       node, topic_, queue_size_, transport_hints,
-      [this]( const QVideoFrame &frame ) { presentFrame( frame ); }, surface_ );
+      [this]( const QVideoFrame &frame ) { presentFrame( frame ); },
+      surface_->supportedPixelFormats() );
   subscribed_ = subscription_ != nullptr;
   if ( !was_subscribed )
     emit subscribedChanged();

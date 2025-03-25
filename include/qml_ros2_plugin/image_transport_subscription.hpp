@@ -92,8 +92,6 @@ signals:
 
   void timeoutChanged();
 
-  void throttleRateChanged();
-
   void enabledChanged();
 
   void framerateChanged();
