@@ -123,6 +123,9 @@ QList<TopicInfo> Ros2Qml::queryTopicInfo() const
   auto topics_and_types = node_->get_topic_names_and_types();
   QList<TopicInfo> result;
   for ( const auto &[topic, types] : topics_and_types ) {
+    if ( topic.find( "/_action/" ) != std::string::npos ) {
+      continue;
+    }
     QStringList result_types;
     result_types.reserve( static_cast<int>( types.size() ) );
     std::transform( types.begin(), types.end(), std::back_inserter( result_types ),
@@ -162,6 +165,9 @@ QMap<QString, QStringList> Ros2Qml::getTopicNamesAndTypes() const
   auto topics_and_types = node_->get_topic_names_and_types();
   QMap<QString, QStringList> result;
   for ( const auto &[topic, types] : topics_and_types ) {
+    if ( topic.find( "/_action/" ) != std::string::npos ) {
+      continue;
+    }
     QStringList result_types;
     result_types.reserve( static_cast<int>( types.size() ) );
     std::transform( types.begin(), types.end(), std::back_inserter( result_types ),
@@ -180,6 +186,9 @@ QMap<QString, QStringList> Ros2Qml::getServiceNamesAndTypes() const
   auto service_names_and_types = node_->get_service_names_and_types();
   QMap<QString, QStringList> result;
   for ( const auto &[service_name, types] : service_names_and_types ) {
+    if ( service_name.find( "/_action/" ) != std::string::npos ) {
+      continue;
+    }
     QStringList result_types;
     result_types.reserve( static_cast<int>( types.size() ) );
     std::transform( types.begin(), types.end(), std::back_inserter( result_types ),
