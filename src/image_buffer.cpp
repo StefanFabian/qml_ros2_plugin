@@ -486,13 +486,15 @@ QVideoFrame::PixelFormat convertFrame( const sensor_msgs::msg::Image &img, uint8
           QVideoFrame::Format_BGR24, QVideoFrame::Format_RGB32, QVideoFrame::Format_BGR32,
           QVideoFrame::Format_ARGB32, QVideoFrame::Format_BGRA32,
           QVideoFrame::Format_ARGB32_Premultiplied, QVideoFrame::Format_BGRA32_Premultiplied } );
-  } else if ( img.encoding == sensor_msgs::image_encodings::YUYV || img.encoding == sensor_msgs::image_encodings::YUV422_YUY2 ) {
-    if ( supported_formats.contains(QVideoFrame::Format_YUYV)) {
-        return QVideoFrame::Format_YUYV;
+  } else if ( img.encoding == sensor_msgs::image_encodings::YUYV ||
+              img.encoding == sensor_msgs::image_encodings::YUV422_YUY2 ) {
+    if ( supported_formats.contains( QVideoFrame::Format_YUYV ) ) {
+      return QVideoFrame::Format_YUYV;
     }
     // No conversions implemented
-  } else if (img.encoding == sensor_msgs::image_encodings::UYVY || img.encoding == sensor_msgs::image_encodings::YUV422) {
-    if ( supported_formats.contains(QVideoFrame::Format_UYVY)) {
+  } else if ( img.encoding == sensor_msgs::image_encodings::UYVY ||
+              img.encoding == sensor_msgs::image_encodings::YUV422 ) {
+    if ( supported_formats.contains( QVideoFrame::Format_UYVY ) ) {
       return QVideoFrame::Format_UYVY;
     }
     // No conversions implemented
