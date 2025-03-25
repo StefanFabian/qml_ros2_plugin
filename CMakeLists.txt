@@ -28,16 +28,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 ## Build ##
 ###########
 
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
-include_directories(
-  include
-  ${Qt5Core_INCLUDE_DIRS}
-  ${Qt5Multimedia_INCLUDE_DIRS}
-  ${Qt5Qml_INCLUDE_DIRS}
-  ${Qt5Quick_INCLUDE_DIRS}
-)
-
 set(SOURCES
   include/qml_ros2_plugin/conversion/message_conversions.hpp
   include/qml_ros2_plugin/conversion/qml_ros_conversion.hpp
@@ -83,6 +73,16 @@ set(SOURCES
 )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_include_directories(${PROJECT_NAME} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+target_include_directories(${PROJECT_NAME} PUBLIC
+  ${Qt5Core_INCLUDE_DIRS}
+  ${Qt5Multimedia_INCLUDE_DIRS}
+  ${Qt5Qml_INCLUDE_DIRS}
+  ${Qt5Quick_INCLUDE_DIRS}
+)
 target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Multimedia Qt5::Qml Qt5::Quick ${YAML_CPP_LIBRARIES})
 ament_target_dependencies(${PROJECT_NAME} ament_index_cpp rclcpp image_transport ros_babel_fish tf2_ros)
 
@@ -168,10 +168,13 @@ else()
   message(STATUS "Installing as part of a ROS2 workspace.")
   # Register plugin to be found by QML
   ament_environment_hooks(environment_setup.dsv.in)
+  install(DIRECTORY include/ DESTINATION include)
   install(TARGETS ${PROJECT_NAME} EXPORT export_${PROJECT_NAME} DESTINATION lib/Ros2)
   install(FILES qmldir DESTINATION lib/Ros2)
   # The export is only necessary if part of a ROS2 workspace
   ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+  ament_export_include_directories(include)
+  ament_export_dependencies(ament_index_cpp rclcpp image_transport ros_babel_fish tf2_ros Qt5Core Qt5Qml Qt5Quick Qt5Multimedia)
 endif()
 
 
