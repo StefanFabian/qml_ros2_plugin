@@ -79,11 +79,12 @@ struct MockNoFormatSurface : public QAbstractVideoSurface {
 
 TEST( ImageTransportSubscription, testCorrectFormat )
 {
-  auto img_pub = node->create_publisher<sensor_msgs::msg::Image>( "image", 10 );
+  auto img_pub = node->create_publisher<sensor_msgs::msg::Image>( "qml_ros2_plugin_test_image", 10 );
   ImageTransportSubscription subscriber( "test", 10 );
   EXPECT_EQ( subscriber.topic(), "test" );
-  subscriber.setTopic( "image" );
-  EXPECT_EQ( subscriber.topic(), "image" ); // Before subscribing the topic name is not resolved.
+  subscriber.setTopic( "qml_ros2_plugin_test_image" );
+  // Before subscribing the topic name is not resolved.
+  EXPECT_EQ( subscriber.topic(), "qml_ros2_plugin_test_image" );
   EXPECT_EQ( subscriber.defaultTransport(), "compressed" ); // compressed is default
   subscriber.setDefaultTransport( "raw" );
   EXPECT_EQ( subscriber.defaultTransport(), "raw" );
@@ -112,10 +113,11 @@ TEST( ImageTransportSubscription, testCorrectFormat )
 
 TEST( ImageTransportSubscription, testWrongFormat )
 {
-  auto img_pub = node->create_publisher<sensor_msgs::msg::Image>( "wrong_image", 10 );
-  ImageTransportSubscription subscriber( "wrong_image", 10 );
-  EXPECT_EQ( subscriber.topic(),
-             "wrong_image" ); // Before subscribing the topic name is not resolved.
+  auto img_pub =
+      node->create_publisher<sensor_msgs::msg::Image>( "qml_ros2_plugin_test_wrong_image", 10 );
+  ImageTransportSubscription subscriber( "qml_ros2_plugin_test_wrong_image", 10 );
+  // Before subscribing the topic name is not resolved.
+  EXPECT_EQ( subscriber.topic(), "qml_ros2_plugin_test_wrong_image" );
   subscriber.setDefaultTransport( "raw" );
   EXPECT_EQ( subscriber.defaultTransport(), "raw" );
   MockNoFormatSurface mock_surface;
