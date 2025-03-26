@@ -77,6 +77,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
+target_compile_definitions(${PROJECT_NAME} PRIVATE RCLCPP_MAJOR_VERSION=${rclcpp_VERSION_MAJOR})
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${Qt5Core_INCLUDE_DIRS}
   ${Qt5Multimedia_INCLUDE_DIRS}

@@ -486,14 +486,22 @@ QVideoFrame::PixelFormat convertFrame( const sensor_msgs::msg::Image &img, uint8
           QVideoFrame::Format_BGR24, QVideoFrame::Format_RGB32, QVideoFrame::Format_BGR32,
           QVideoFrame::Format_ARGB32, QVideoFrame::Format_BGRA32,
           QVideoFrame::Format_ARGB32_Premultiplied, QVideoFrame::Format_BGRA32_Premultiplied } );
+#if RCLCPP_VERSION_MAJOR >= 28
   } else if ( img.encoding == sensor_msgs::image_encodings::YUYV ||
               img.encoding == sensor_msgs::image_encodings::YUV422_YUY2 ) {
+#else
+  } else if ( img.encoding == sensor_msgs::image_encodings::YUV422_YUY2 ) {
+#endif
     if ( supported_formats.contains( QVideoFrame::Format_YUYV ) ) {
       return QVideoFrame::Format_YUYV;
     }
     // No conversions implemented
+#if RCLCPP_VERSION_MAJOR >= 28
   } else if ( img.encoding == sensor_msgs::image_encodings::UYVY ||
               img.encoding == sensor_msgs::image_encodings::YUV422 ) {
+#else
+  } else if ( img.encoding == sensor_msgs::image_encodings::YUV422 ) {
+#endif
     if ( supported_formats.contains( QVideoFrame::Format_UYVY ) ) {
       return QVideoFrame::Format_UYVY;
     }
