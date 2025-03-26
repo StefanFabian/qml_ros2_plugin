@@ -64,7 +64,9 @@ void Ros2Qml::init( const QString &name, const QStringList &argv, quint32 )
   context_->init( argc, p_args.data() ); // TODO init options
   rclcpp::NodeOptions node_options;
   node_options.context( context_ );
+#if RCLCPP_VERSION_MAJOR >= 28
   node_options.enable_logger_service( true );
+#endif
   node_ = rclcpp::Node::make_shared( name.toStdString(),
                                      node_options ); // TODO namespace and init options
   rclcpp::ExecutorOptions executor_options;
