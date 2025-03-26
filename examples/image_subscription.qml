@@ -23,9 +23,9 @@ ApplicationWindow {
     id: imageSubscription
     // Enter a valid image topic here
     topic: "/image_raw"
-    // This is the default transport, change if compressed is not available
-    // Requires the compressed_image_transport package to be installed
-    defaultTransport: "compressed"
+    // This is the default transport, typically, I would advise to use a compressed stream.
+    // However, at least for yuyv and uyvy the compressed transport is bugged.
+    defaultTransport: "raw"
   }
   GridLayout {
     anchors.fill: parent
