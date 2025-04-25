@@ -47,8 +47,8 @@ has more properties to give you more fine-grained control.
 .. code-block:: qml
   :linenos:
 
-  Subscriber {
-    id: mySubscriber
+  Subscription {
+    id: mySubscription
     topic: "/intval"
     // Using messageType sets the type explicitly, will not connect to a
     //  publisher if the type does not match
