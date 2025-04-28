@@ -40,7 +40,7 @@ void Subscription::initTimers()
 
 QString Subscription::topic() const
 {
-  return subscription_ == nullptr ? QString() : QString( subscription_->get_topic_name() );
+  return subscription_ == nullptr ? topic_ : QString( subscription_->get_topic_name() );
 }
 
 void Subscription::setTopic( const QString &value )
