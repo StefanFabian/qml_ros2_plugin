@@ -58,9 +58,13 @@ public:
       try {
         subscriber_ = subscription_manager->transport->subscribe(
             topic, queue_size, &Subscription::imageCallback, this, &hints );
-      } catch ( image_transport::TransportLoadException &e ) {
+      } catch ( std::exception &ex ) {
         QML_ROS2_PLUGIN_ERROR( "Failed to subscribe to topic '%s' with transport '%s': %s",
-                               topic.c_str(), hints.getTransport().c_str(), e.what() );
+                               topic.c_str(), hints.getTransport().c_str(), ex.what() );
+      } catch ( ... ) {
+        QML_ROS2_PLUGIN_ERROR(
+            "Failed to subscribe to topic '%s' with transport '%s': Unknown error", topic.c_str(),
+            hints.getTransport().c_str() );
       }
     } );
   }

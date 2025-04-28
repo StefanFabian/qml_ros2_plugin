@@ -83,6 +83,10 @@ void Publisher::advertise()
     emit advertised();
   } catch ( BabelFishException &ex ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to create publisher: %s", ex.what() );
+  } catch ( std::exception &ex ) {
+    QML_ROS2_PLUGIN_ERROR( "Failed to create publisher: %s", ex.what() );
+  } catch ( ... ) {
+    QML_ROS2_PLUGIN_ERROR( "Failed to create publisher: Unknown error" );
   }
 }
 } // namespace qml_ros2_plugin

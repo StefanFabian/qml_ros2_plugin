@@ -535,6 +535,7 @@ return {
   //  ASSERT_NE( handle2, nullptr );
   processEvents();
   std::this_thread::sleep_for( 5ms );
+  processEvents();
   QDateTime now = rosToQmlTime( node->now() );
   std::this_thread::sleep_for( 5ms );
   handle3 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 190 } }, options ) );

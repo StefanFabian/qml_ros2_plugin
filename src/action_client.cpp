@@ -35,6 +35,14 @@ void ActionClient::onRos2Initialized()
     QML_ROS2_PLUGIN_ERROR( "Could not create ActionClient: %s", ex.what() );
     client_ = nullptr;
     return;
+  } catch ( std::exception &ex ) {
+    QML_ROS2_PLUGIN_ERROR( "Could not create ActionClient: %s", ex.what() );
+    client_ = nullptr;
+    return;
+  } catch ( ... ) {
+    QML_ROS2_PLUGIN_ERROR( "Could not create ActionClient: Unknown error." );
+    client_ = nullptr;
+    return;
   }
   connect_timer_.setInterval( 16 );
   connect_timer_.setSingleShot( false );

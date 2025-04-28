@@ -131,22 +131,30 @@ void Subscription::try_subscribe()
   std::shared_ptr<rclcpp::Node> node = Ros2Qml::getInstance().node();
   if ( node == nullptr || !Ros2Qml::getInstance().ok() )
     return;
-  if ( user_message_type_.isEmpty() ) {
-    subscription_ = babel_fish_.create_subscription(
-        *node, topic_.toStdString(), queue_size_,
-        [this]( ros_babel_fish::CompoundMessage::SharedPtr msg ) { messageCallback( msg ); },
-        nullptr, {}, std::chrono::nanoseconds( 0 ) );
-  } else {
-    subscription_ = babel_fish_.create_subscription(
-        *node, topic_.toStdString(), user_message_type_.toStdString(), queue_size_,
-        [this]( ros_babel_fish::CompoundMessage::SharedPtr msg ) { messageCallback( msg ); },
-        nullptr, {} );
+  try {
+    if ( user_message_type_.isEmpty() ) {
+      subscription_ = babel_fish_.create_subscription(
+          *node, topic_.toStdString(), queue_size_,
+          [this]( ros_babel_fish::CompoundMessage::SharedPtr msg ) { messageCallback( msg ); },
+          nullptr, {}, std::chrono::nanoseconds( 0 ) );
+    } else {
+      subscription_ = babel_fish_.create_subscription(
+          *node, topic_.toStdString(), user_message_type_.toStdString(), queue_size_,
+          [this]( ros_babel_fish::CompoundMessage::SharedPtr msg ) { messageCallback( msg ); },
+          nullptr, {} );
+    }
+  } catch ( const std::exception &e ) {
+    QML_ROS2_PLUGIN_ERROR( "Failed to create subscription: %s", e.what() );
+    return;
+  } catch ( ... ) {
+    QML_ROS2_PLUGIN_ERROR( "Failed to create subscription: Unknown error." );
+    return;
   }
   if ( subscription_ == nullptr )
     return;
   subscribe_timer_.stop();
-  const QString new_message_type = QString::fromStdString( subscription_->get_message_type() );
-  if ( new_message_type != message_type_ ) {
+  if ( const QString new_message_type = QString::fromStdString( subscription_->get_message_type() );
+       new_message_type != message_type_ ) {
     message_type_ = new_message_type;
     emit messageTypeChanged();
   }
