@@ -79,9 +79,13 @@ void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &ca
                                      Q_ARG( QVariant, msgToMap( response.get() ) ) );
         } );
     return;
-  } catch ( BabelFishException &ex ) {
+  } catch ( const BabelFishException &ex ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to call service: %s", ex.what() );
-  } catch ( std::exception &ex ) {
+  } catch ( const std::invalid_argument &ex ) {
+    QML_ROS2_PLUGIN_ERROR( "Invalid argument while calling service: %s", ex.what() );
+  } catch ( const std::runtime_error &ex ) {
+    QML_ROS2_PLUGIN_ERROR( "Runtime error while calling service: %s", ex.what() );
+  } catch ( const std::exception &ex ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to call service: %s", ex.what() );
   } catch ( ... ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to call service: Unknown error." );

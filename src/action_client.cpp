@@ -31,11 +31,19 @@ void ActionClient::onRos2Initialized()
     rclcpp::Node &node = *Ros2Qml::getInstance().node();
     client_ =
         babel_fish_.create_action_client( node, name_.toStdString(), action_type_.toStdString() );
-  } catch ( BabelFishException &ex ) {
+  } catch ( const BabelFishException &ex ) {
     QML_ROS2_PLUGIN_ERROR( "Could not create ActionClient: %s", ex.what() );
     client_ = nullptr;
     return;
-  } catch ( std::exception &ex ) {
+  } catch ( const std::invalid_argument &ex ) {
+    QML_ROS2_PLUGIN_ERROR( "Invalid argument while creating ActionClient: %s", ex.what() );
+    client_ = nullptr;
+    return;
+  } catch ( const std::runtime_error &ex ) {
+    QML_ROS2_PLUGIN_ERROR( "Runtime error while creating ActionClient: %s", ex.what() );
+    client_ = nullptr;
+    return;
+  } catch ( const std::exception &ex ) {
     QML_ROS2_PLUGIN_ERROR( "Could not create ActionClient: %s", ex.what() );
     client_ = nullptr;
     return;

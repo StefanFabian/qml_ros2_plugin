@@ -143,6 +143,12 @@ void Subscription::try_subscribe()
           [this]( ros_babel_fish::CompoundMessage::SharedPtr msg ) { messageCallback( msg ); },
           nullptr, {} );
     }
+  } catch ( const std::invalid_argument &e ) {
+    QML_ROS2_PLUGIN_ERROR( "Invalid argument while creating subscription: %s", e.what() );
+    return;
+  } catch ( const std::runtime_error &e ) {
+    QML_ROS2_PLUGIN_ERROR( "Runtime error while creating subscription: %s", e.what() );
+    return;
   } catch ( const std::exception &e ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to create subscription: %s", e.what() );
     return;

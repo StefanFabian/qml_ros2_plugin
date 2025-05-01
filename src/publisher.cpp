@@ -81,9 +81,13 @@ void Publisher::advertise()
     advertise_timer_.stop();
     is_advertised_ = true;
     emit advertised();
-  } catch ( BabelFishException &ex ) {
+  } catch ( const BabelFishException &ex ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to create publisher: %s", ex.what() );
-  } catch ( std::exception &ex ) {
+  } catch ( const std::invalid_argument &ex ) {
+    QML_ROS2_PLUGIN_ERROR( "Invalid argument while creating publisher: %s", ex.what() );
+  } catch ( const std::runtime_error &ex ) {
+    QML_ROS2_PLUGIN_ERROR( "Runtime error while creating publisher: %s", ex.what() );
+  } catch ( const std::exception &ex ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to create publisher: %s", ex.what() );
   } catch ( ... ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to create publisher: Unknown error" );
