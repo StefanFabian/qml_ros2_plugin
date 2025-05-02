@@ -39,11 +39,7 @@ void ActionClient::onRos2Initialized()
     QML_ROS2_PLUGIN_ERROR( "Invalid argument while creating ActionClient: %s", ex.what() );
     client_ = nullptr;
     return;
-  } catch ( const std::runtime_error &ex ) {
-    QML_ROS2_PLUGIN_ERROR( "Runtime error while creating ActionClient: %s", ex.what() );
-    client_ = nullptr;
-    return;
-  } catch ( const std::exception &ex ) {
+  } catch ( const std::system_error &ex ) {
     QML_ROS2_PLUGIN_ERROR( "Could not create ActionClient: %s", ex.what() );
     client_ = nullptr;
     return;

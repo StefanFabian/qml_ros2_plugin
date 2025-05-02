@@ -146,10 +146,7 @@ void Subscription::try_subscribe()
   } catch ( const std::invalid_argument &e ) {
     QML_ROS2_PLUGIN_ERROR( "Invalid argument while creating subscription: %s", e.what() );
     return;
-  } catch ( const std::runtime_error &e ) {
-    QML_ROS2_PLUGIN_ERROR( "Runtime error while creating subscription: %s", e.what() );
-    return;
-  } catch ( const std::exception &e ) {
+  } catch ( const std::system_error &e ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to create subscription: %s", e.what() );
     return;
   } catch ( ... ) {

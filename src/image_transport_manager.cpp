@@ -59,17 +59,16 @@ public:
         subscriber_ = subscription_manager->transport->subscribe(
             topic, queue_size, &Subscription::imageCallback, this, &hints );
       } catch ( const std::invalid_argument &ex ) {
-	      QML_ROS2_PLUGIN_ERROR( "Invalid argument while subscribing to topic '%s' with transport '%s': %s", 
-                                topic.c_str(), hints.getTransport().c_str(), ex.what() );
-      } catch ( const std::runtime_error &ex ) {
-	      QML_ROS2_PLUGIN_ERROR( "Runtime error while subscribing to topic '%s' with transport '%s': %s",
-                                topic.c_str(), hints.getTransport().c_str(), ex.what() );
-      } catch ( const std::exception &ex ) {
+        QML_ROS2_PLUGIN_ERROR(
+            "Invalid argument while subscribing to topic '%s' with transport '%s': %s",
+            topic.c_str(), hints.getTransport().c_str(), ex.what() );
+      } catch ( const std::system_error &ex ) {
         QML_ROS2_PLUGIN_ERROR( "Failed to subscribe to topic '%s' with transport '%s': %s",
-                                topic.c_str(), hints.getTransport().c_str(), ex.what() );
+                               topic.c_str(), hints.getTransport().c_str(), ex.what() );
       } catch ( ... ) {
-        QML_ROS2_PLUGIN_ERROR( "Failed to subscribe to topic '%s' with transport '%s': Unknown error", 
-                                topic.c_str(), hints.getTransport().c_str() );
+        QML_ROS2_PLUGIN_ERROR(
+            "Failed to subscribe to topic '%s' with transport '%s': Unknown error", topic.c_str(),
+            hints.getTransport().c_str() );
       }
     } );
   }

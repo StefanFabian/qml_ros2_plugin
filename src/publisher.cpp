@@ -85,9 +85,7 @@ void Publisher::advertise()
     QML_ROS2_PLUGIN_ERROR( "Failed to create publisher: %s", ex.what() );
   } catch ( const std::invalid_argument &ex ) {
     QML_ROS2_PLUGIN_ERROR( "Invalid argument while creating publisher: %s", ex.what() );
-  } catch ( const std::runtime_error &ex ) {
-    QML_ROS2_PLUGIN_ERROR( "Runtime error while creating publisher: %s", ex.what() );
-  } catch ( const std::exception &ex ) {
+  } catch ( const std::system_error &ex ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to create publisher: %s", ex.what() );
   } catch ( ... ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to create publisher: Unknown error" );
