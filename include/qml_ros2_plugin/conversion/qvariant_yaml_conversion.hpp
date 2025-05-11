@@ -165,13 +165,18 @@ struct convert<QVariant> {
   static Node encode( const QVariant &variant )
   {
     YAML::Node result;
-    if ( variant.type() == QVariant::UserType && variant.userType() == qMetaTypeId<QJSValue>() ) {
+    if ( variant.typeId() == QMetaType::User && variant.userType() == qMetaTypeId<QJSValue>() ) {
       // Need to unwrap QJSValue because it can be cast to both QVariantList and QVariantMap but
       // will be empty if it is not the contained type.
       result = variant.value<QJSValue>().toVariant();
       return result;
     }
-    if ( variant.canConvert<QVariantList>() ) {
+    if (variant.typeId() == QMetaType::QString) {
+      const auto &str = variant.value<QString>();
+      result = str.toStdString();
+      result.SetTag( "tag:yaml.org,2002:str" );
+      return result;
+    } else if ( variant.canConvert<QVariantList>() ) {
       const auto &list = variant.value<QVariantList>();
       result = list;
       return result;
@@ -204,8 +209,6 @@ struct convert<QVariant> {
     }
     QString sval = variant.toString();
     result = ( sval.toStdString() );
-    if ( variant.type() == QVariant::String )
-      result.SetTag( "tag:yaml.org,2002:str" );
     return result;
   }
 

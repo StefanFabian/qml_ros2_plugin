@@ -60,11 +60,11 @@ TEST( IO, yaml )
       "/dev/null/i_really_hope_this_fails_on_your_machine_for_your_own_sake.mission", map ) );
   EXPECT_FALSE( io.writeYaml( "https://somewebserver.org/mission.mission", map ) );
   file = io.readYaml( "https://somewebserver.org/mission.mission" );
-  EXPECT_EQ( file.type(), QVariant::Bool );
+  EXPECT_EQ( file.typeId(), QMetaType::Bool );
   EXPECT_FALSE( file.toBool() );
   file =
       io.readYaml( "/usr/bin/i_really_hope_this_fails_on_your_machine_for_your_own_sake.mission" );
-  EXPECT_EQ( file.type(), QVariant::Bool );
+  EXPECT_EQ( file.typeId(), QMetaType::Bool );
   EXPECT_FALSE( file.toBool() );
 
   QQmlEngine engine;
@@ -91,58 +91,58 @@ QtObject {
   ASSERT_TRUE( io.writeYaml( QString::fromStdString( path ), QVariant::fromValue( obj.get() ) ) );
 
   file = io.readYaml( QString::fromStdString( path ) );
-  ASSERT_EQ( file.type(), QVariant::Map );
+  ASSERT_EQ( file.typeId(), QMetaType::QVariantMap );
   QVariantMap content = file.toMap();
   ASSERT_TRUE( content.contains( "b" ) );
-  ASSERT_EQ( content["b"].type(), QVariant::Bool );
+  ASSERT_EQ( content["b"].typeId(), QMetaType::Bool );
   EXPECT_FALSE( content["b"].toBool() );
   ASSERT_TRUE( content.contains( "ui8" ) );
   bool ok = false;
   EXPECT_EQ( content["ui8"].toULongLong( &ok ), 42ULL );
   EXPECT_TRUE( ok );
   ASSERT_TRUE( content.contains( "point_arr" ) );
-  ASSERT_EQ( content["point_arr"].type(), QVariant::List );
+  ASSERT_EQ( content["point_arr"].typeId(), QMetaType::QVariantList );
   QVariantList arr = content["point_arr"].toList();
   ASSERT_EQ( arr.length(), 4 );
-  std::vector<std::tuple<QVariant::Type, double, QVariant::Type, double, QVariant::Type, double>>
+  std::vector<std::tuple<QMetaType::Type, double, QMetaType::Type, double, QMetaType::Type, double>>
       expected_points = {
-          { QVariant::ULongLong, 1, QVariant::ULongLong, 2, QVariant::ULongLong, 3 },
-          { QVariant::ULongLong, 3, QVariant::ULongLong, 2, QVariant::ULongLong, 3 },
-          { QVariant::ULongLong, 1, QVariant::Double, 3.14, QVariant::ULongLong, 1 },
-          { QVariant::ULongLong, 10000, QVariant::LongLong, -2, QVariant::LongLong, -300 },
+          { QMetaType::ULongLong, 1, QMetaType::ULongLong, 2, QMetaType::ULongLong, 3 },
+          { QMetaType::ULongLong, 3, QMetaType::ULongLong, 2, QMetaType::ULongLong, 3 },
+          { QMetaType::ULongLong, 1, QMetaType::Double, 3.14, QMetaType::ULongLong, 1 },
+          { QMetaType::ULongLong, 10000, QMetaType::LongLong, -2, QMetaType::LongLong, -300 },
       };
   for ( int i = 0; i < 4; ++i ) {
-    ASSERT_EQ( arr[i].type(), QVariant::Map );
+    ASSERT_EQ( arr[i].typeId(), QMetaType::QVariantMap );
     QVariantMap entry = arr[i].toMap();
     ASSERT_TRUE( entry.contains( "x" ) );
-    ASSERT_EQ( entry["x"].type(), std::get<0>( expected_points[i] ) );
+    ASSERT_EQ( entry["x"].typeId(), std::get<0>( expected_points[i] ) );
     ASSERT_DOUBLE_EQ( entry["x"].toDouble(), std::get<1>( expected_points[i] ) );
     ASSERT_TRUE( entry.contains( "y" ) );
-    ASSERT_EQ( entry["y"].type(), std::get<2>( expected_points[i] ) );
+    ASSERT_EQ( entry["y"].typeId(), std::get<2>( expected_points[i] ) );
     ASSERT_DOUBLE_EQ( entry["y"].toDouble(), std::get<3>( expected_points[i] ) );
     ASSERT_TRUE( entry.contains( "z" ) );
-    ASSERT_EQ( entry["z"].type(), std::get<4>( expected_points[i] ) );
+    ASSERT_EQ( entry["z"].typeId(), std::get<4>( expected_points[i] ) );
     ASSERT_DOUBLE_EQ( entry["z"].toDouble(), std::get<5>( expected_points[i] ) );
   }
 
   ASSERT_TRUE( content.contains( "string_arr" ) );
-  ASSERT_EQ( content["string_arr"].type(), QVariant::List );
+  ASSERT_EQ( content["string_arr"].typeId(), QMetaType::QVariantList );
   arr = content["string_arr"].toList();
   ASSERT_EQ( arr.length(), 2 );
-  ASSERT_EQ( arr[0].type(), QVariant::String );
+  ASSERT_EQ( arr[0].typeId(), QMetaType::QString );
   ASSERT_EQ( arr[0].toString(), "first" );
-  ASSERT_EQ( arr[1].type(), QVariant::String );
+  ASSERT_EQ( arr[1].typeId(), QMetaType::QString );
   ASSERT_EQ( arr[1].toString(), "second" );
 
   path =
       ament_index_cpp::get_package_share_directory( "qml_ros2_plugin" ) + "/test/test_io/test.yaml";
   file = io.readYaml( QString::fromStdString( path ) );
-  ASSERT_EQ( file.type(), QVariant::Map );
+  ASSERT_EQ( file.typeId(), QMetaType::QVariantMap );
   content = file.toMap();
   ASSERT_TRUE( content.contains( "first" ) );
   EXPECT_EQ( content["first"], QVariant() );
   ASSERT_TRUE( content.contains( "second" ) );
-  ASSERT_EQ( content["second"].type(), QVariant::String );
+  ASSERT_EQ( content["second"].typeId(), QMetaType::QString );
   EXPECT_EQ( content["second"].toString(), "A string without tag" );
 
   EXPECT_FALSE( io.writeYaml( "", QVariant() ) );

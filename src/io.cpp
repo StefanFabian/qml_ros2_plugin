@@ -8,6 +8,7 @@
 
 #include <QAbstractListModel>
 #include <QMetaProperty>
+#include <QRegularExpression>
 
 #include <fstream>
 #include <yaml-cpp/yaml.h>
@@ -17,7 +18,7 @@ namespace qml_ros2_plugin
 
 bool IO::writeYaml( QString path, const QVariant &value )
 {
-  if ( path.contains( QRegExp( "-*://" ) ) && !path.startsWith( "file://" ) ) {
+  if ( path.contains( QRegularExpression( "-*://" ) ) && !path.startsWith( "file://" ) ) {
     QML_ROS2_PLUGIN_ERROR( "Unsupported file path: %s", qPrintable( path ) );
     return false;
   }
@@ -41,7 +42,7 @@ bool IO::writeYaml( QString path, const QVariant &value )
 
 QVariant IO::readYaml( QString path )
 {
-  if ( path.contains( QRegExp( "-*://" ) ) && !path.startsWith( "file://" ) ) {
+  if ( path.contains( QRegularExpression( "-*://" ) ) && !path.startsWith( "file://" ) ) {
     QML_ROS2_PLUGIN_ERROR( "Unsupported file path: %s", qPrintable( path ) );
     return false;
   }

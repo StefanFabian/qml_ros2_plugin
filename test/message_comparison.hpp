@@ -60,7 +60,7 @@ template<typename ElementType>
 mapAndMessageEqual( const QVariant &map, const std::vector<ElementType> msg,
                     const std::string &path = "msg", double precision = DEFAULT_PRECISION )
 {
-  if ( map.type() == QVariant::List ) {
+  if ( map.typeId() == QMetaType::QVariantList ) {
     return mapAndMessageEqualArray( map.toList(), msg, path, precision );
   }
   return mapAndMessageEqualArray( map.value<Array>(), msg, path, precision );
@@ -71,7 +71,7 @@ template<typename ElementType, unsigned long N>
 mapAndMessageEqual( const QVariant &map, const rosidl_runtime_cpp::BoundedVector<ElementType, N> &msg,
                     const std::string &path = "msg", double precision = DEFAULT_PRECISION )
 {
-  if ( map.type() == QVariant::List ) {
+  if ( map.typeId() == QMetaType::QVariantList ) {
     return mapAndMessageEqualArray( map.toList(), msg, path, precision );
   }
   return mapAndMessageEqualArray( map.value<Array>(), msg, path, precision );
@@ -82,7 +82,7 @@ template<typename ElementType, unsigned long N>
 mapAndMessageEqual( const QVariant &map, const std::array<ElementType, N> &msg,
                     const std::string &path = "msg", double precision = DEFAULT_PRECISION )
 {
-  if ( map.type() == QVariant::List ) {
+  if ( map.typeId() == QMetaType::QVariantList ) {
     return mapAndMessageEqualArray( map.toList(), msg, path, precision );
   }
   return mapAndMessageEqualArray( map.value<Array>(), msg, path, precision );
