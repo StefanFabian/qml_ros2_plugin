@@ -541,7 +541,6 @@ QtObject {
     ListElement { value: "is" }
     ListElement { value: "a" }
     ListElement { value: "test" }
-
   }
   Component.onCompleted: {
     stringModel.append({ 'x': "An object", 'y': "that's not a string"})
@@ -573,7 +572,9 @@ QtObject {
       rclcpp::Duration::from_seconds( -0.002 ), rclcpp::Duration::from_seconds( 0.003 ),
       rclcpp::Duration::from_seconds( -0.003 ), rclcpp::Duration::from_seconds( -0.004 ),
       rclcpp::Duration::from_seconds( 0.004 ),  rclcpp::Duration::from_seconds( 0.005 ) };
-  test_array.strings = { "This", "is", "a", "test" };
+  test_array.strings = {
+      "This", "is", "a", "test",
+      "" /* since Qt6 the invalid element will also add a QString for the value role which is empty */ };
   EXPECT_TRUE( messageEqual( msg->as<CompoundMessage>(), test_array ) );
 }
 

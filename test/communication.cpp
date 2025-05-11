@@ -314,9 +314,9 @@ TEST( Communication, serviceCallAsync )
   ASSERT_TRUE( obj.hasProperty( "result" ) );
   QVariant result = obj.property( "result" ).toVariant();
   EXPECT_TRUE( service_called ) << "Service was not called!";
-  ASSERT_EQ( result.type(), QVariant::Map )
+  ASSERT_EQ( result.typeId(), QMetaType::QVariantMap )
       << "Result was not map. Did the request fail? "
-      << ( result.type() == QVariant::Bool && !result.toBool() ? "Yes" : "No" ) << std::endl
+      << ( result.typeId() == QMetaType::Bool && !result.toBool() ? "Yes" : "No" ) << std::endl
       << "Typename: " << result.typeName();
   EXPECT_EQ( result.toMap()["sum"].toInt(), 4 )
       << "Contains 'sum'? " << ( result.toMap().contains( "sum" ) ? "Yes" : "No" );
@@ -349,7 +349,7 @@ TEST( Communication, serviceCallAsync )
   ASSERT_TRUE( obj.hasProperty( "result" ) );
   result = obj.property( "result" ).toVariant();
   // In ROS2 each message needs at least one member, hence empty will add a filler byte member
-  ASSERT_EQ( result.type(), QVariant::Map )
+  ASSERT_EQ( result.typeId(), QMetaType::QVariantMap )
       << "Result was not QVariantMap. Typename: " << result.typeName();
 }
 
@@ -467,12 +467,12 @@ return {
   QVariantMap result_map = callback_watcher->results[handle->goalId()];
   ASSERT_TRUE( result_map.contains( "goalId" ) )
       << "Keys: " << result_map.keys().join( ", " ).toStdString();
-  EXPECT_EQ( result_map["goalId"].type(), QVariant::String );
+  EXPECT_EQ( result_map["goalId"].typeId(), QMetaType::QString );
   EXPECT_EQ( result_map["goalId"].toString(), handle->goalId() );
   ASSERT_TRUE( result_map.contains( "result" ) );
-  EXPECT_EQ( result_map["result"].type(), QVariant::Map );
+  EXPECT_EQ( result_map["result"].typeId(), QMetaType::QVariantMap );
   ASSERT_TRUE( result_map["result"].toMap().contains( "final_value" ) );
-  EXPECT_EQ( result_map["result"].toMap()["final_value"].type(), QVariant::Int );
+  EXPECT_EQ( result_map["result"].toMap()["final_value"].typeId(), QMetaType::Int );
   EXPECT_EQ( result_map["result"].toMap()["final_value"].toInt(), 800 );
   //  delete handle;
 
@@ -560,12 +560,12 @@ return {
   } ) );
   result_map = callback_watcher->results[handle3->goalId()];
   ASSERT_TRUE( result_map.contains( "goalId" ) );
-  EXPECT_EQ( result_map["goalId"].type(), QVariant::String );
+  EXPECT_EQ( result_map["goalId"].typeId(), QMetaType::QString );
   EXPECT_EQ( result_map["goalId"].toString().toStdString(), handle3->goalId().toStdString() );
   ASSERT_TRUE( result_map.contains( "result" ) );
-  EXPECT_EQ( result_map["result"].type(), QVariant::Map );
+  EXPECT_EQ( result_map["result"].typeId(), QMetaType::QVariantMap );
   ASSERT_TRUE( result_map["result"].toMap().contains( "final_value" ) );
-  EXPECT_EQ( result_map["result"].toMap()["final_value"].type(), QVariant::Int );
+  EXPECT_EQ( result_map["result"].toMap()["final_value"].typeId(), QMetaType::Int );
   EXPECT_EQ( result_map["result"].toMap()["final_value"].toInt(), 380 );
 
   //  delete handle1;
@@ -641,14 +641,14 @@ TEST( Communication, tfTransform )
                     0.577 );
 
   QVariant can_transform = wrapper.canTransform( "base", "world" ).toBool();
-  ASSERT_EQ( can_transform.type(), QVariant::Bool ) << can_transform.toString().toStdString();
+  ASSERT_EQ( can_transform.typeId(), QMetaType::Bool ) << can_transform.toString().toStdString();
   EXPECT_TRUE( can_transform.toBool() );
   can_transform = wrapper.canTransform( "millionaire", "inheritance", QDateTime(), 500 );
-  EXPECT_TRUE( can_transform.type() != QVariant::Bool || !can_transform.toBool() )
+  EXPECT_TRUE( can_transform.typeId() != QMetaType::Bool || !can_transform.toBool() )
       << "Inheritance shouldn't be able to transform to millionaire!";
   can_transform = wrapper.canTransform( "base", last_transform_datetime, "world",
                                         last_transform_datetime, "world" );
-  ASSERT_EQ( can_transform.type(), QVariant::Bool ) << can_transform.toString().toStdString();
+  ASSERT_EQ( can_transform.typeId(), QMetaType::Bool ) << can_transform.toString().toStdString();
   EXPECT_TRUE( can_transform.toBool() );
 
   EXPECT_TRUE( mapAndMessageEqual( wrapper.lookUpTransform( "world", "base", QDateTime(), 500 ),
@@ -671,13 +671,13 @@ TEST( Communication, tfTransform )
   EXPECT_EQ( wrapper
                  .canTransform( "world", QDateTime::currentDateTime(), "base",
                                 QDateTime::currentDateTime(), "world" )
-                 .type(),
-             QVariant::String );
+                 .typeId(),
+             QMetaType::QString );
   EXPECT_EQ( wrapper
                  .canTransform( "world", QDateTime::currentDateTime(), "base",
                                 QDateTime::currentDateTime(), "world", 500 )
-                 .type(),
-             QVariant::String );
+                 .typeId(),
+             QMetaType::QString );
   EXPECT_EQ( wrapper
                  .lookUpTransform( "world", QDateTime::currentDateTime(), "base",
                                    QDateTime::currentDateTime(), "world" )["exception"]

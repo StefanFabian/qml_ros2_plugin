@@ -447,7 +447,7 @@ typename std::enable_if<std::is_unsigned<TVal>::value, bool>::type inBounds( TVa
 template<typename T>
 bool isCompatible( const QVariant &variant )
 {
-  switch ( (int)variant.type() ) {
+  switch ( variant.typeId() ) {
   case QMetaType::UChar: {
     auto val = variant.value<uint8_t>();
     return inBounds<T>( val );
@@ -456,7 +456,7 @@ bool isCompatible( const QVariant &variant )
     auto val = variant.value<uint16_t>();
     return inBounds<T>( val );
   }
-  case QVariant::UInt: {
+  case QMetaType::UInt: {
     uint val = variant.toUInt();
     return inBounds<T>( val );
   }
@@ -464,7 +464,7 @@ bool isCompatible( const QVariant &variant )
     auto val = variant.value<unsigned long>();
     return inBounds<T>( val );
   }
-  case QVariant::ULongLong: {
+  case QMetaType::ULongLong: {
     qulonglong val = variant.toULongLong();
     return inBounds<T>( val );
   }
@@ -477,7 +477,7 @@ bool isCompatible( const QVariant &variant )
     auto val = variant.value<int16_t>();
     return inBounds<T>( val );
   }
-  case QVariant::Int: {
+  case QMetaType::Int: {
     int val = variant.toInt();
     return inBounds<T>( val );
   }
@@ -485,7 +485,7 @@ bool isCompatible( const QVariant &variant )
     auto val = variant.value<long>();
     return inBounds<T>( val );
   }
-  case QVariant::LongLong: {
+  case QMetaType::LongLong: {
     qlonglong val = variant.toLongLong();
     return inBounds<T>( val );
   }
@@ -494,7 +494,7 @@ bool isCompatible( const QVariant &variant )
     return val == std::round( val ) && std::numeric_limits<T>::min() <= val &&
            val <= std::numeric_limits<T>::max();
   }
-  case QVariant::Double: {
+  case QMetaType::Double: {
     double val = variant.toDouble();
     return val == std::round( val ) && std::numeric_limits<T>::min() <= val &&
            val <= std::numeric_limits<T>::max();
@@ -508,31 +508,31 @@ bool isCompatible( const QVariant &variant )
 template<>
 bool isCompatible<bool>( const QVariant &variant )
 {
-  return variant.type() == QVariant::Bool;
+  return variant.typeId() == QMetaType::Bool;
 }
 
 template<>
 bool isCompatible<float>( const QVariant &variant )
 {
-  return (int)variant.type() == QMetaType::Float || variant.type() == QVariant::Double ||
-         variant.type() == QVariant::UInt || variant.type() == QVariant::Int ||
-         variant.type() == QVariant::ULongLong || variant.type() == QVariant::LongLong;
+  return variant.typeId() == QMetaType::Float || variant.typeId() == QMetaType::Double ||
+         variant.typeId() == QMetaType::UInt || variant.typeId() == QMetaType::Int ||
+         variant.typeId() == QMetaType::ULongLong || variant.typeId() == QMetaType::LongLong;
 }
 
 template<>
 bool isCompatible<double>( const QVariant &variant )
 {
-  return (int)variant.type() == QMetaType::Float || variant.type() == QVariant::Double ||
-         variant.type() == QVariant::UInt || variant.type() == QVariant::Int ||
-         variant.type() == QVariant::ULongLong || variant.type() == QVariant::LongLong;
+  return variant.typeId() == QMetaType::Float || variant.typeId() == QMetaType::Double ||
+         variant.typeId() == QMetaType::UInt || variant.typeId() == QMetaType::Int ||
+         variant.typeId() == QMetaType::ULongLong || variant.typeId() == QMetaType::LongLong;
 }
 
 template<>
 bool isCompatible<long double>( const QVariant &variant )
 {
-  return (int)variant.type() == QMetaType::Float || variant.type() == QVariant::Double ||
-         variant.type() == QVariant::UInt || variant.type() == QVariant::Int ||
-         variant.type() == QVariant::ULongLong || variant.type() == QVariant::LongLong;
+  return variant.typeId() == QMetaType::Float || variant.typeId() == QMetaType::Double ||
+         variant.typeId() == QMetaType::UInt || variant.typeId() == QMetaType::Int ||
+         variant.typeId() == QMetaType::ULongLong || variant.typeId() == QMetaType::LongLong;
 }
 
 template<>
@@ -550,26 +550,26 @@ bool isCompatible<std::wstring>( const QVariant &variant )
 template<>
 bool isCompatible<rclcpp::Time>( const QVariant &variant )
 {
-  return variant.type() == QVariant::Double || variant.type() == QVariant::UInt ||
-         variant.type() == QVariant::Int || variant.type() == QVariant::ULongLong ||
-         variant.type() == QVariant::LongLong || variant.type() == QVariant::DateTime ||
+  return variant.typeId() == QMetaType::Double || variant.typeId() == QMetaType::UInt ||
+         variant.typeId() == QMetaType::Int || variant.typeId() == QMetaType::ULongLong ||
+         variant.typeId() == QMetaType::LongLong || variant.typeId() == QMetaType::QDateTime ||
          variant.typeName() == std::string( "qml_ros2_plugin::Time" );
 }
 
 template<>
 bool isCompatible<rclcpp::Duration>( const QVariant &variant )
 {
-  return variant.type() == QVariant::Double || variant.type() == QVariant::UInt ||
-         variant.type() == QVariant::Int || variant.type() == QVariant::ULongLong ||
-         variant.type() == QVariant::LongLong ||
+  return variant.typeId() == QMetaType::Double || variant.typeId() == QMetaType::UInt ||
+         variant.typeId() == QMetaType::Int || variant.typeId() == QMetaType::ULongLong ||
+         variant.typeId() == QMetaType::LongLong ||
          variant.typeName() == std::string( "qml_ros2_plugin::Duration" );
 }
 
 template<typename T>
 T getValue( const QVariant &variant )
 {
-  switch ( (int)variant.type() ) {
-  case QVariant::Bool:
+  switch ( variant.typeId() ) {
+  case QMetaType::Bool:
     return variant.toBool();
   case QMetaType::SChar:
     return static_cast<T>( variant.value<int8_t>() );
@@ -579,21 +579,21 @@ T getValue( const QVariant &variant )
     return static_cast<T>( variant.value<int16_t>() );
   case QMetaType::UShort:
     return static_cast<T>( variant.value<uint16_t>() );
-  case QVariant::Int:
+  case QMetaType::Int:
     return static_cast<T>( variant.toInt() );
-  case QVariant::UInt:
+  case QMetaType::UInt:
     return static_cast<T>( variant.toUInt() );
   case QMetaType::Long:
     return static_cast<T>( variant.value<long>() );
   case QMetaType::ULong:
     return static_cast<T>( variant.value<unsigned long>() );
-  case QVariant::LongLong:
+  case QMetaType::LongLong:
     return static_cast<T>( variant.toLongLong() );
-  case QVariant::ULongLong:
+  case QMetaType::ULongLong:
     return static_cast<T>( variant.toULongLong() );
   case QMetaType::Float:
     return static_cast<T>( variant.value<float>() );
-  case QVariant::Double:
+  case QMetaType::Double:
     return static_cast<T>( variant.toDouble() );
   default:
     QML_ROS2_PLUGIN_WARN( "Tried to get '%s' from incompatible type! Type: %s", typeid( T ).name(),
@@ -617,21 +617,21 @@ std::wstring getValue<std::wstring>( const QVariant &variant )
 template<>
 rclcpp::Time getValue<rclcpp::Time>( const QVariant &variant )
 {
-  switch ( variant.type() ) {
-  case QVariant::Int:
+  switch ( variant.typeId() ) {
+  case QMetaType::Int:
     return qmlToRos2Time( variant.toInt() );
-  case QVariant::UInt:
+  case QMetaType::UInt:
     return qmlToRos2Time( variant.toUInt() );
-  case QVariant::LongLong:
+  case QMetaType::LongLong:
     return qmlToRos2Time( variant.toLongLong() );
-  case QVariant::ULongLong:
+  case QMetaType::ULongLong:
     return qmlToRos2Time( variant.toULongLong() );
-  case QVariant::Double:
+  case QMetaType::Double:
     return qmlToRos2Time( variant.toDouble() );
-  case QVariant::DateTime:
+  case QMetaType::QDateTime:
     return qmlToRos2Time( variant.toDateTime().toMSecsSinceEpoch() );
-  case QVariant::Date:
-  case QVariant::Time:
+  case QMetaType::QDate:
+  case QMetaType::QTime:
   default:
     if ( variant.canConvert<Time>() )
       return variant.value<Time>().getTime();
@@ -644,20 +644,20 @@ rclcpp::Time getValue<rclcpp::Time>( const QVariant &variant )
 template<>
 rclcpp::Duration getValue<rclcpp::Duration>( const QVariant &variant )
 {
-  switch ( variant.type() ) {
-  case QVariant::Int:
+  switch ( variant.typeId() ) {
+  case QMetaType::Int:
     return qmlToRos2Duration( variant.toInt() );
-  case QVariant::UInt:
+  case QMetaType::UInt:
     return qmlToRos2Duration( variant.toUInt() );
-  case QVariant::LongLong:
+  case QMetaType::LongLong:
     return qmlToRos2Duration( variant.toLongLong() );
-  case QVariant::ULongLong:
+  case QMetaType::ULongLong:
     return qmlToRos2Duration( variant.toULongLong() );
-  case QVariant::Double:
+  case QMetaType::Double:
     return qmlToRos2Duration( variant.toDouble() );
-  case QVariant::Date:
-  case QVariant::Time:
-  case QVariant::DateTime:
+  case QMetaType::QDate:
+  case QMetaType::QTime:
+  case QMetaType::QDateTime:
   default:
     if ( variant.canConvert<Duration>() )
       return variant.value<Duration>().getDuration();
@@ -731,7 +731,7 @@ struct QVariantListToMessageConverter {
     for ( int src_i = 0; src_i < list.size() && target_i < count; ++src_i, ++target_i ) {
       const QVariant &variant = list.at( static_cast<int>( src_i ) );
       auto &child = array[target_i];
-      if ( variant.type() != QVariant::Map ) {
+      if ( variant.typeId() != QMetaType::QVariantMap ) {
         if ( child.isTime() ) {
           if ( !isCompatible<rclcpp::Time>( variant ) ) {
             QML_ROS2_PLUGIN_WARN(
@@ -962,7 +962,7 @@ bool fillMessage( BabelFish &fish, Message &msg, const QVariant &value )
       }
       return no_error;
     }
-  } else if ( value.type() == QVariant::Vector2D && msg.type() == MessageTypes::Compound ) {
+  } else if ( value.typeId() == QMetaType::QVector2D && msg.type() == MessageTypes::Compound ) {
     auto vector = value.value<QVector2D>();
     auto &compound = msg.as<CompoundMessage>();
     bool no_error = true;
@@ -977,7 +977,7 @@ bool fillMessage( BabelFish &fish, Message &msg, const QVariant &value )
       no_error &= fillMessage( fish, compound[key], vector[i++] );
     }
     return no_error;
-  } else if ( value.type() == QVariant::Vector3D && msg.type() == MessageTypes::Compound ) {
+  } else if ( value.typeId() == QMetaType::QVector3D && msg.type() == MessageTypes::Compound ) {
     auto vector = value.value<QVector3D>();
     auto &compound = msg.as<CompoundMessage>();
     bool no_error = true;
@@ -992,7 +992,7 @@ bool fillMessage( BabelFish &fish, Message &msg, const QVariant &value )
       no_error &= fillMessage( fish, compound[key], vector[i++] );
     }
     return no_error;
-  } else if ( value.type() == QVariant::Vector4D && msg.type() == MessageTypes::Compound ) {
+  } else if ( value.typeId() == QMetaType::QVector4D && msg.type() == MessageTypes::Compound ) {
     auto vector = value.value<QVector4D>();
     auto &compound = msg.as<CompoundMessage>();
     bool no_error = true;
@@ -1007,7 +1007,7 @@ bool fillMessage( BabelFish &fish, Message &msg, const QVariant &value )
       no_error &= fillMessage( fish, compound[key], vector[i++] );
     }
     return no_error;
-  } else if ( value.type() == QVariant::Quaternion && msg.type() == MessageTypes::Compound ) {
+  } else if ( value.typeId() == QMetaType::QQuaternion && msg.type() == MessageTypes::Compound ) {
     auto quaternion = value.value<QQuaternion>();
     auto &compound = msg.as<CompoundMessage>();
     bool no_error = true;
@@ -1031,47 +1031,48 @@ bool fillMessage( BabelFish &fish, Message &msg, const QVariant &value )
   }
 
   if ( msg.type() == MessageTypes::Array ) {
-    QML_ROS2_PLUGIN_WARN( "Invalid type for array message: %s (%u)", value.typeName(), value.type() );
+    QML_ROS2_PLUGIN_WARN( "Invalid type for array message: %s (%u)", value.typeName(),
+                          value.typeId() );
     return false;
   }
   if ( msg.type() == MessageTypes::Compound && !msg.isTime() && !msg.isDuration() ) {
     QML_ROS2_PLUGIN_WARN( "Invalid type for compound message: %s (%u)", value.typeName(),
-                          value.type() );
+                          value.typeId() );
     return false;
   }
-  switch ( (int)value.type() ) {
+  switch ( value.typeId() ) {
 
-  case QVariant::Invalid:
+  case QMetaType::UnknownType:
     break;
-  case QVariant::Bool:
+  case QMetaType::Bool:
     return fillValue<bool>( msg, value.toBool() );
   case QMetaType::Short:
   case QMetaType::SChar:
-  case QVariant::Int:
+  case QMetaType::Int:
     return fillValue<int>( msg, value.toInt() );
   case QMetaType::UShort:
   case QMetaType::UChar:
-  case QVariant::UInt:
+  case QMetaType::UInt:
     return fillValue<uint>( msg, value.toUInt() );
   case QMetaType::Long:
-  case QVariant::LongLong:
+  case QMetaType::LongLong:
     return fillValue<qlonglong>( msg, value.toLongLong() );
   case QMetaType::ULong:
-  case QVariant::ULongLong:
+  case QMetaType::ULongLong:
     return fillValue<qulonglong>( msg, value.toULongLong() );
   case QMetaType::Float:
     return fillValue( msg, value.toFloat() );
-  case QVariant::Double:
+  case QMetaType::Double:
     return fillValue<double>( msg, value.toDouble() );
-  case QVariant::String:
+  case QMetaType::QString:
     return fillValue<std::string>( msg, value.toString().toStdString() );
-  case QVariant::Url:
+  case QMetaType::QUrl:
     return fillValue<std::string>( msg, value.toUrl().toString().toStdString() );
-  case QVariant::DateTime:
+  case QMetaType::QDateTime:
     return fillValue<rclcpp::Time>( msg, qmlToRos2Time( value.toDateTime() ) );
-  case QVariant::Date: // Not sure if any of these types should be supported
-  case QVariant::Time:
-  case QVariant::Char:
+  case QMetaType::QDate: // Not sure if any of these types should be supported
+  case QMetaType::QTime:
+  case QMetaType::Char:
   default:
     if ( value.canConvert<Time>() ) {
       return fillValue<rclcpp::Time>( msg, value.value<Time>().getTime() );

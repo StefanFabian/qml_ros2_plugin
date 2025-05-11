@@ -5,7 +5,6 @@
 #include "qml_ros2_plugin/ament_index.hpp"
 #include "qml_ros2_plugin/array.hpp"
 #include "qml_ros2_plugin/goal_handle.hpp"
-#include "qml_ros2_plugin/image_transport_subscription.hpp"
 #include "qml_ros2_plugin/logger.hpp"
 #include "qml_ros2_plugin/publisher.hpp"
 #include "qml_ros2_plugin/ros2.hpp"
@@ -30,15 +29,10 @@ public:
   {
     Q_ASSERT( uri == QLatin1String( "Ros2" ) );
 
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 14, 0 )
     qmlRegisterAnonymousType<Array>( "Ros2", 1 );
     qmlRegisterAnonymousType<Logger>( "Ros2", 1 );
     qmlRegisterAnonymousType<IO>( "Ros2", 1 );
-#else
-    qmlRegisterType<Array>();
-    qmlRegisterType<Logger>();
-    qmlRegisterType<IO>();
-#endif
+
     QMetaType::registerConverter<Array, QVariantList>( &Array::toVariantList );
     qmlRegisterUncreatableMetaObject( ros2_logger_levels::staticMetaObject, "Ros2", 1, 0,
                                       "Ros2LoggerLevel", "Error: Can not create enum object." );
@@ -55,7 +49,7 @@ public:
           return new AmentIndex;
         } );
     qmlRegisterUncreatableType<TopicInfo>(
-        "Ros2", 1, 0, "TopicInfo",
+        "Ros2", 1, 0, "topicInfo",
         "Error: No point in creating TopicInfo in QML and it's not supported." );
     qmlRegisterUncreatableType<Publisher>(
         "Ros2", 1, 0,
@@ -70,9 +64,6 @@ public:
           return new TfTransformListenerWrapper;
         } );
     qmlRegisterType<TfTransform>( "Ros2", 1, 0, "TfTransform" );
-
-    // Image transport
-    qmlRegisterType<ImageTransportSubscription>( "Ros2", 1, 0, "ImageTransportSubscription" );
 
     // Action Client
     qmlRegisterUncreatableMetaObject( action_goal_status::staticMetaObject, "Ros2", 1, 0,

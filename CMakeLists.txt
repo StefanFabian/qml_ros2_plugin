@@ -16,7 +16,7 @@ find_package(image_transport REQUIRED)
 find_package(ros_babel_fish REQUIRED)
 find_package(tf2_ros REQUIRED)
 
-find_package(Qt5 COMPONENTS Core Multimedia Qml Quick REQUIRED)
+find_package(Qt6 COMPONENTS Core Multimedia Qml Quick REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(YAML_CPP yaml-cpp)
@@ -37,9 +37,6 @@ set(SOURCES
   include/qml_ros2_plugin/babel_fish_dispenser.hpp
   include/qml_ros2_plugin/goal_handle.hpp
   include/qml_ros2_plugin/goal_status.hpp
-  include/qml_ros2_plugin/image_buffer.hpp
-  include/qml_ros2_plugin/image_transport_manager.hpp
-  include/qml_ros2_plugin/image_transport_subscription.hpp
   include/qml_ros2_plugin/io.hpp
   include/qml_ros2_plugin/logger.hpp
   include/qml_ros2_plugin/publisher.hpp
@@ -56,9 +53,6 @@ set(SOURCES
   src/ament_index.cpp
   src/babel_fish_dispenser.cpp
   src/goal_handle.cpp
-  src/image_buffer.cpp
-  src/image_transport_manager.cpp
-  src/image_transport_subscription.cpp
   src/io.cpp
   src/logger.cpp
   src/message_conversions.cpp
@@ -77,13 +71,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-target_include_directories(${PROJECT_NAME} PUBLIC
-  ${Qt5Core_INCLUDE_DIRS}
-  ${Qt5Multimedia_INCLUDE_DIRS}
-  ${Qt5Qml_INCLUDE_DIRS}
-  ${Qt5Quick_INCLUDE_DIRS}
-)
-target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Multimedia Qt5::Qml Qt5::Quick ${YAML_CPP_LIBRARIES})
+target_compile_definitions(${PROJECT_NAME} PRIVATE RCLCPP_MAJOR_VERSION=${rclcpp_VERSION_MAJOR})
+target_link_libraries(${PROJECT_NAME} Qt6::Core Qt6::Multimedia Qt6::Qml Qt6::Quick ${YAML_CPP_LIBRARIES})
 ament_target_dependencies(${PROJECT_NAME} ament_index_cpp rclcpp image_transport ros_babel_fish tf2_ros)
 
 #############
@@ -98,21 +87,13 @@ if(BUILD_TESTING)
   find_package(ros_babel_fish_test_msgs REQUIRED)
   find_package(example_interfaces REQUIRED)
   find_package(std_srvs REQUIRED)
-  find_package(Qt5Test REQUIRED)
+  find_package(Qt6Test REQUIRED)
 
   set(TEST_DEPENDENCIES example_interfaces ros_babel_fish_test_msgs std_srvs)
 
   ament_add_gtest(test_communication test/communication.cpp)
   ament_target_dependencies(test_communication ${TEST_DEPENDENCIES})
-  target_link_libraries(test_communication ${PROJECT_NAME} Qt5::Test)
-
-  ament_add_gtest(test_image_conversions test/image_conversions.cpp)
-  ament_target_dependencies(test_image_conversions  ${TEST_DEPENDENCIES})
-  target_link_libraries(test_image_conversions ${PROJECT_NAME})
-
-  ament_add_gtest(test_image_transport_subscriber test/image_transport_subscriber.cpp)
-  ament_target_dependencies(test_image_transport_subscriber  ${TEST_DEPENDENCIES})
-  target_link_libraries(test_image_transport_subscriber ${PROJECT_NAME})
+  target_link_libraries(test_communication ${PROJECT_NAME} Qt6::Test)
 
   ament_add_gtest(test_message_conversions test/message_conversions.cpp)
   ament_target_dependencies(test_message_conversions  ${TEST_DEPENDENCIES})
@@ -154,7 +135,7 @@ if(${GLOBAL_INSTALL})
   # https://github.com/4rtzel/cmake-qml-plugin-example/issues/1
   set(URI Ros2)
   string(REPLACE "." "/" TARGETPATH ${URI})
-  execute_process(COMMAND qmake -qt5 -query QT_INSTALL_QML
+  execute_process(COMMAND qmake -qt=qt6 -query QT_INSTALL_QML
     OUTPUT_VARIABLE QT_INSTALL_QML_RAW)
   string(REPLACE "\n" "" QT_INSTALL_QML ${QT_INSTALL_QML_RAW})
   if("${QT_INSTALL_QML}" STREQUAL "**Unknown**")
@@ -174,7 +155,7 @@ else()
   # The export is only necessary if part of a ROS2 workspace
   ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
   ament_export_include_directories(include)
-  ament_export_dependencies(ament_index_cpp rclcpp image_transport ros_babel_fish tf2_ros Qt5Core Qt5Qml Qt5Quick Qt5Multimedia)
+  ament_export_dependencies(ament_index_cpp rclcpp image_transport ros_babel_fish tf2_ros Qt6Core Qt6Qml Qt6Quick Qt6Multimedia)
 endif()
 
 
