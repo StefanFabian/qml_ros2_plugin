@@ -171,7 +171,7 @@ struct convert<QVariant> {
       result = variant.value<QJSValue>().toVariant();
       return result;
     }
-    if (variant.typeId() == QMetaType::QString) {
+    if ( variant.typeId() == QMetaType::QString ) {
       const auto &str = variant.value<QString>();
       result = str.toStdString();
       result.SetTag( "tag:yaml.org,2002:str" );

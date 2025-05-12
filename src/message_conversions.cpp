@@ -1082,7 +1082,8 @@ bool fillMessage( BabelFish &fish, Message &msg, const QVariant &value )
   }
 
   if ( msg.type() == MessageTypes::Array ) {
-    QML_ROS2_PLUGIN_WARN( "Invalid type for array message: %s (%u)", value.typeName(), value.typeId() );
+    QML_ROS2_PLUGIN_WARN( "Invalid type for array message: %s (%u)", value.typeName(),
+                          value.typeId() );
     return false;
   }
   if ( msg.type() == MessageTypes::Compound && !msg.isTime() && !msg.isDuration() ) {
