@@ -30,6 +30,7 @@
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>example_interfaces</test_depend>
   <test_depend>qml6-module-qtquick</test_depend>
+  <test_depend>qml6-module-qtqml-workerscript</test_depend>
   <test_depend>ros_babel_fish_test_msgs</test_depend>
   <test_depend>std_srvs</test_depend>
 
