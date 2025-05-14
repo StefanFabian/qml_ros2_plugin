@@ -1,9 +1,9 @@
 name: Build & Test
 on:
   push:
-    branches: [ jazzy-qt6 ]
+    branches: [ rolling-qt6 ]
   pull_request:
-    branches: [ jazzy-qt6 ]
+    branches: [ rolling-qt6 ]
 defaults:
   run:
     shell: bash
@@ -37,8 +37,6 @@ jobs:
     strategy:
       matrix:
         setup:
-          - rosdistro: jazzy
-            os: ubuntu-latest
           - rosdistro: rolling
             os: ubuntu-latest
     steps:
