@@ -35,6 +35,9 @@ public:
 
   void operator=( const Ros2Qml & ) = delete;
 
+  //! Returns the hostname of the current machine.
+  QString hostname() const;
+
   /*!
    * Checks whether ROS is initialized.
    * @return True if ROS is initialized, false otherwise.
@@ -158,6 +161,7 @@ private:
 class Ros2QmlSingletonWrapper : public QObject
 {
   Q_OBJECT
+  Q_PROPERTY( QString hostname READ hostname CONSTANT )
   Q_PROPERTY( qml_ros2_plugin::IO io READ io CONSTANT )
   Q_PROPERTY( QJSValue debug READ debug CONSTANT )
   Q_PROPERTY( QJSValue info READ info CONSTANT )
@@ -168,6 +172,9 @@ public:
   Ros2QmlSingletonWrapper();
 
   ~Ros2QmlSingletonWrapper() override;
+
+  //! @copydoc Ros2Qml::hostname
+  QString hostname() const;
 
   //! @copydoc Ros2Qml::isRosInitialized
   Q_INVOKABLE bool isInitialized() const;
