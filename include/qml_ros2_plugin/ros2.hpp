@@ -6,6 +6,7 @@
 
 #include "qml_ros2_plugin/io.hpp"
 #include "qml_ros2_plugin/logger.hpp"
+#include "qml_ros2_plugin/ros2_init_options.hpp"
 #include "qml_ros2_plugin/time.hpp"
 #include "qml_ros2_plugin/topic_info.hpp"
 
@@ -49,7 +50,7 @@ public:
    * @param name The name of the ROS node.
    * @param options The options passed to ROS, see ros_init_options::Ros2InitOption.
    */
-  void init( const QString &name, quint32 options = 0 );
+  void init( const QString &name, Ros2InitOptions *options = nullptr );
 
   /*!
    * Initializes the ros node with the given args.
@@ -57,7 +58,7 @@ public:
    * @param args The args that are passed to ROS. Normally, these would be the command line arguments see init(const QString &, quint32)
    * @param options The options passed to ROS, see ros_init_options::Ros2InitOption.
    */
-  void init( const QString &name, const QStringList &args, quint32 options = 0 );
+  void init( const QString &name, const QStringList &args, Ros2InitOptions *options = nullptr );
 
   /*!
    * Can be used to query the state of ROS.
@@ -176,14 +177,17 @@ public:
   //! @copydoc Ros2Qml::hostname
   QString hostname() const;
 
+  //! Create a Ros2InitOptions object.
+  Q_INVOKABLE QObject *createInitOptions();
+
   //! @copydoc Ros2Qml::isRosInitialized
   Q_INVOKABLE bool isInitialized() const;
 
-  //! @copydoc Ros2Qml::init(const QString &, quint32)
-  Q_INVOKABLE void init( const QString &name, quint32 options = 0 );
+  //! @copydoc Ros2Qml::init(const QString &, Ros2InitOptions)
+  Q_INVOKABLE void init( const QString &name, QObject *options = nullptr );
 
-  //! @copydoc Ros2Qml::init(const QStringList &, const QString &, quint32)
-  Q_INVOKABLE void init( const QString &name, const QStringList &args, quint32 options );
+  //! @copydoc Ros2Qml::init(const QStringList &, const QString &, Ros2InitOptions)
+  Q_INVOKABLE void init( const QString &name, const QStringList &args, QObject *options = nullptr );
 
   //! @copydoc Ros2Qml::ok
   Q_INVOKABLE bool ok() const;

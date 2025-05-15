@@ -27,6 +27,17 @@ As described in the API documentation for :cpp:func:`Ros2.init <qml_ros2_plugin:
 node name or additionally use provided command line args instead of the command
 line args provided to your executable.
 
+Additionally, you can use the init options to set options for the node, such as the namespace or domain id.
+
+.. code-block:: qml
+
+  Component.onCompleted: {
+    let initOptions = Ros2.createInitOptions()
+    initOptions.setNamespace("/my_namespace")
+    initOptions.setDomainId(42) // or initOptions.useDefaultDomainId()
+    Ros2.init("node_name", initOptions)
+  }
+
 Query Graph
 ------------
 
@@ -110,6 +121,9 @@ You can also save and read data that can be serialized in the yaml format using:
 
 API
 ---
+
+.. doxygenclass:: qml_ros2_plugin::Ros2InitOptions
+  :members:
 
 .. doxygenclass:: qml_ros2_plugin::TopicInfo
   :members:
