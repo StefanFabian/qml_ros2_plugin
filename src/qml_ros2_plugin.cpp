@@ -42,6 +42,11 @@ public:
     QMetaType::registerConverter<Array, QVariantList>( &Array::toVariantList );
     qmlRegisterUncreatableMetaObject( ros2_logger_levels::staticMetaObject, "Ros2", 1, 0,
                                       "Ros2LoggerLevel", "Error: Can not create enum object." );
+    qmlRegisterUncreatableType<qml_ros2_plugin::Ros2InitOptions>(
+        "Ros2", 1, 0, "Ros2InitOptions",
+        "Error: Can not create Ros2InitOptions manually. A Ros2InitOptions is obtained as a return "
+        "value of "
+        "Ros2.createInitOptions()." );
     qmlRegisterSingletonType<Ros2QmlSingletonWrapper>(
         "Ros2", 1, 0, "Ros2", []( QQmlEngine *engine, QJSEngine *scriptEngine ) -> QObject * {
           Q_UNUSED( engine );
