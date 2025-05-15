@@ -42,6 +42,7 @@ set(SOURCES
   include/qml_ros2_plugin/publisher.hpp
   include/qml_ros2_plugin/qobject_ros2.hpp
   include/qml_ros2_plugin/ros2.hpp
+  include/qml_ros2_plugin/ros2_init_options.hpp
   include/qml_ros2_plugin/service_client.hpp
   include/qml_ros2_plugin/subscription.hpp
   include/qml_ros2_plugin/tf_transform.hpp
@@ -60,6 +61,7 @@ set(SOURCES
   src/qml_ros2_plugin.cpp
   src/qobject_ros2.cpp
   src/ros2.cpp
+  src/ros2_init_options.cpp
   src/service_client.cpp
   src/subscription.cpp
   src/tf_transform.cpp
