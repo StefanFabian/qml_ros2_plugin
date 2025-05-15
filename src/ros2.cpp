@@ -11,6 +11,7 @@
 #include "qml_ros2_plugin/subscription.hpp"
 
 #include <QCoreApplication>
+#include <QHostInfo>
 #include <QJSEngine>
 #include <rcl_action/graph.h>
 #include <thread>
@@ -37,6 +38,8 @@ Ros2Qml::~Ros2Qml()
     executor_thread_.join();
   context_ = nullptr;
 }
+
+QString Ros2Qml::hostname() const { return QHostInfo::localHostName(); }
 
 bool Ros2Qml::isInitialized() const { return context_ != nullptr; }
 
@@ -308,6 +311,8 @@ Ros2QmlSingletonWrapper::~Ros2QmlSingletonWrapper()
 {
   Ros2Qml::getInstance().unregisterDependant();
 }
+
+QString Ros2QmlSingletonWrapper::hostname() const { return Ros2Qml::getInstance().hostname(); }
 
 bool Ros2QmlSingletonWrapper::isInitialized() const
 {
