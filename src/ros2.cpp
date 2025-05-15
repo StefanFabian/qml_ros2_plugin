@@ -43,13 +43,13 @@ QString Ros2Qml::hostname() const { return QHostInfo::localHostName(); }
 
 bool Ros2Qml::isInitialized() const { return context_ != nullptr; }
 
-void Ros2Qml::init( const QString &name, quint32 options )
+void Ros2Qml::init( const QString &name, Ros2InitOptions *options )
 {
   const QStringList &arguments = QCoreApplication::arguments();
   init( name, arguments, options );
 }
 
-void Ros2Qml::init( const QString &name, const QStringList &argv, quint32 )
+void Ros2Qml::init( const QString &name, const QStringList &argv, Ros2InitOptions *options )
 {
   if ( context_ != nullptr ) {
     QML_ROS2_PLUGIN_WARN( "Was already initialized. Second call to init ignored." );
@@ -59,19 +59,23 @@ void Ros2Qml::init( const QString &name, const QStringList &argv, quint32 )
   int argc = argv.size();
   std::vector<const char *> p_args( argc );
   std::vector<std::string> args( argc );
+  std::string arg_debug_string;
   for ( int i = 0; i < argv.size(); ++i ) {
     args[i] = argv[i].toStdString();
+    arg_debug_string += args[i] + " ";
     p_args[i] = args[i].c_str();
   }
+  QML_ROS2_PLUGIN_DEBUG( "Initializing QML Ros2 with args: %s", arg_debug_string.c_str() );
   context_ = rclcpp::Context::make_shared();
-  context_->init( argc, p_args.data() ); // TODO init options
+  context_->init( argc, p_args.data(),
+                  options ? options->rclcppInitOptions() : rclcpp::InitOptions() );
   rclcpp::NodeOptions node_options;
   node_options.context( context_ );
 #if RCLCPP_VERSION_MAJOR >= 28
   node_options.enable_logger_service( true );
 #endif
-  node_ = rclcpp::Node::make_shared( name.toStdString(),
-                                     node_options ); // TODO namespace and init options
+  std::string node_namespace = options ? options->getNamespace().toStdString() : "";
+  node_ = rclcpp::Node::make_shared( name.toStdString(), node_namespace, node_options );
   rclcpp::ExecutorOptions executor_options;
   executor_options.context = context_;
   // StaticSingleThreadedExecutor may be a bit faster but will keep a reference to the subscription
@@ -316,19 +320,21 @@ Ros2QmlSingletonWrapper::~Ros2QmlSingletonWrapper()
 
 QString Ros2QmlSingletonWrapper::hostname() const { return Ros2Qml::getInstance().hostname(); }
 
+QObject *Ros2QmlSingletonWrapper::createInitOptions() { return new Ros2InitOptions; }
+
 bool Ros2QmlSingletonWrapper::isInitialized() const
 {
   return Ros2Qml::getInstance().isInitialized();
 }
 
-void Ros2QmlSingletonWrapper::init( const QString &name, quint32 options )
+void Ros2QmlSingletonWrapper::init( const QString &name, QObject *options )
 {
-  Ros2Qml::getInstance().init( name, options );
+  Ros2Qml::getInstance().init( name, qobject_cast<Ros2InitOptions *>( options ) );
 }
 
-void Ros2QmlSingletonWrapper::init( const QString &name, const QStringList &args, quint32 options )
+void Ros2QmlSingletonWrapper::init( const QString &name, const QStringList &args, QObject *options )
 {
-  Ros2Qml::getInstance().init( name, args, options );
+  Ros2Qml::getInstance().init( name, args, qobject_cast<Ros2InitOptions *>( options ) );
 }
 
 bool Ros2QmlSingletonWrapper::ok() const { return Ros2Qml::getInstance().ok(); }
