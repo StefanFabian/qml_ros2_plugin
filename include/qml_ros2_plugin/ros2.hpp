@@ -291,14 +291,14 @@ public:
    * @return A Publisher instance.
    */
   Q_INVOKABLE QObject *createPublisher( const QString &topic, const QString &type,
-                                        const qml_ros2_plugin::QoSWrapper &qos = {} );
+                                        const qml_ros2_plugin::QoSWrapper &qos );
 
   /*!
    * @see createPublisher(const QString &, const QString &, const qml_ros2_plugin::QoSWrapper &)
    * @param queue_size Sets the keep_last history of the qos to the given value.
    */
   Q_INVOKABLE QObject *createPublisher( const QString &topic, const QString &type,
-                                        quint32 queue_size );
+                                        quint32 queue_size = 10 );
 
   /*!
    * Creates a Subscriber to createSubscription to ROS messages.

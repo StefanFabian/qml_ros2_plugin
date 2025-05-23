@@ -518,7 +518,7 @@ QObject *Ros2QmlSingletonWrapper::createPublisher( const QString &topic, const Q
 QObject *Ros2QmlSingletonWrapper::createPublisher( const QString &topic, const QString &type,
                                                    quint32 queue_size )
 {
-  return createPublisher( topic, type, QoSWrapper().keep_last( queue_size ) );
+  return createPublisher( topic, type, QoSWrapper().reliable().keep_last( queue_size ) );
 }
 
 QObject *Ros2QmlSingletonWrapper::createSubscription( const QString &topic, const QoSWrapper &qos )
