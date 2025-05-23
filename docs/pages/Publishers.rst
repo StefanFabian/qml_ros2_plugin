@@ -17,10 +17,14 @@ created using a factory method of the Ros2 singleton.
   ApplicationWindow {
     property var intPublisher: Ros2.createPublisher("/intval", "example_interfaces/msg/Int32", 10)
     /* ... */
+    property var intTransientLocalPublisher: Ros2.createPublisher("/intval_tl", "example_interfaces/msg/Int32", Ros2.QoS().transient_local())
   }
 
-In order, the arguments are the ``topic``, the ``type`` and the ``queueSize`` (defaults to 1).
-Additional QoS options are currently not supported.
+In order, the arguments are the ``topic``, the ``type`` and the ``qos``.
+For backward compatibility and convenience, you can also pass an integer which will set the `history_policy` of the QoS to
+``keep_last`` and the ``depth`` to the integer value.
+If you only pass the topic and type, the default QoS will be used which are best effort, durability volatile and depth 1.
+See the Ros2 singleton for different preconfigured QoS profiles.
 
 To publish a message using our Publisher, we can simply use the ``intPublisher`` variable defined earlier.
 
@@ -46,4 +50,7 @@ API
 Publisher
 =========
 .. doxygenclass:: qml_ros2_plugin::Publisher
+  :members:
+
+.. doxygenclass:: qml_ros2_plugin::QoSWrapper
   :members:
