@@ -60,8 +60,8 @@ has more properties to give you more fine-grained control.
     onNewMessage: doStuff(message)
   }
 
-Note that due to the ``throttleRate`` messages may be dropped even if the ``qos`` is changed to keep more than 1.
-To avoid this, set the throttleRate to 0.
+Note that due to the ``throttleRate``, messages may be dropped even if the ``qos`` is changed to keep more than 1.
+To avoid this, if you want to process all received messages up to the ``keep_last`` history depth, set the throttleRate to 0.
 
 The ``throttleRate`` limits the rate in which QML receives updates from the given topic.
 By default the Subscriber polls with 20 Hz on the UI thread and will notify of property changes

@@ -21,7 +21,7 @@ created using a factory method of the Ros2 singleton.
   }
 
 In order, the arguments are the ``topic``, the ``type`` and the ``qos``.
-For backward compatibility and convenience, you can also pass an integer which will set the `history_policy` of the QoS to
+For backward compatibility and convenience, you can also pass an integer which will set the ``history_policy`` of the QoS to
 ``keep_last`` and the ``depth`` to the integer value.
 If you only pass the topic and type, the default QoS will be used which are best effort, durability volatile and depth 1.
 See the Ros2 singleton for different preconfigured QoS profiles.
