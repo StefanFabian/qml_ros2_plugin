@@ -138,8 +138,8 @@ void Subscription::subscribe()
   }
 
   QML_ROS2_PLUGIN_DEBUG( "All required information available, starting subscription process." );
-  subscribe_timer_.start();
   try_subscribe();
+  if (!is_subscribed_) subscribe_timer_.start();
 }
 
 void Subscription::try_subscribe()
