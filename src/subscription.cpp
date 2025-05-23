@@ -18,9 +18,9 @@ Subscription::Subscription()
   initTimers();
 }
 
-Subscription::Subscription( QString topic, QString message_type, quint32 queue_size, bool enabled )
-    : topic_( std::move( topic ) ), user_message_type_( std::move( message_type ) ),
-      queue_size_( queue_size ), running_( enabled )
+Subscription::Subscription( QString topic, QString message_type, const QoSWrapper &qos, bool enabled )
+    : qos_( qos ), topic_( std::move( topic ) ), user_message_type_( std::move( message_type ) ),
+      running_( enabled )
 {
   babel_fish_ = BabelFishDispenser::getBabelFish();
   initTimers();
@@ -50,13 +50,19 @@ void Subscription::setTopic( const QString &value )
   emit topicChanged();
 }
 
-quint32 Subscription::queueSize() const { return queue_size_; }
+quint32 Subscription::queueSize() const { return qos_.depth(); }
+void Subscription::setQueueSize( quint32 value ) { setQoS( qos_.keep_last( value ) ); }
 
-void Subscription::setQueueSize( quint32 value )
+const QoSWrapper &Subscription::qos() const { return qos_; }
+void Subscription::setQoS( const QoSWrapper &qos )
 {
-  queue_size_ = value;
+  int previous_depth = qos_.depth();
+  qos_ = qos;
   subscribe();
-  emit queueSizeChanged();
+  emit qosChanged();
+  if ( qos_.depth() != previous_depth ) {
+    emit queueSizeChanged();
+  }
 }
 
 bool Subscription::enabled() const { return running_; }
@@ -134,12 +140,12 @@ void Subscription::try_subscribe()
   try {
     if ( user_message_type_.isEmpty() ) {
       subscription_ = babel_fish_.create_subscription(
-          *node, topic_.toStdString(), queue_size_,
+          *node, topic_.toStdString(), qos_.rclcppQoS(),
           [this]( ros_babel_fish::CompoundMessage::SharedPtr msg ) { messageCallback( msg ); },
           nullptr, {}, std::chrono::nanoseconds( 0 ) );
     } else {
       subscription_ = babel_fish_.create_subscription(
-          *node, topic_.toStdString(), user_message_type_.toStdString(), queue_size_,
+          *node, topic_.toStdString(), user_message_type_.toStdString(), qos_.rclcppQoS(),
           [this]( ros_babel_fish::CompoundMessage::SharedPtr msg ) { messageCallback( msg ); },
           nullptr, {} );
     }
@@ -158,8 +164,9 @@ void Subscription::try_subscribe()
     message_type_ = new_message_type;
     emit messageTypeChanged();
   }
-  QML_ROS2_PLUGIN_DEBUG( "Subscribed to '%s' with type: '%s'.", topic_.toStdString().c_str(),
-                         message_type_.toStdString().c_str() );
+  QML_ROS2_PLUGIN_DEBUG( "Subscribed to '%s' with type: '%s' (QoS: %s).",
+                         topic_.toStdString().c_str(), message_type_.toStdString().c_str(),
+                         qos_.toString().c_str() );
   is_subscribed_ = true;
   emit subscribedChanged();
   throttle_timer_.start();

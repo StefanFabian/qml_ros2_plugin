@@ -6,6 +6,7 @@
 
 #include "qml_ros2_plugin/io.hpp"
 #include "qml_ros2_plugin/logger.hpp"
+#include "qml_ros2_plugin/qos.hpp"
 #include "qml_ros2_plugin/ros2_init_options.hpp"
 #include "qml_ros2_plugin/time.hpp"
 #include "qml_ros2_plugin/topic_info.hpp"
@@ -180,6 +181,25 @@ public:
   //! Create a Ros2InitOptions object.
   Q_INVOKABLE QObject *createInitOptions();
 
+  //! Creates a default QoS object with Stefan Fabian's recommended settings for UIs:
+  //! best_effort and volatile with a history depth of 1.
+  Q_INVOKABLE qml_ros2_plugin::QoSWrapper QoS();
+
+  //! Creates a QoS wrapper with the settings for BestAvailable from rclcpp.
+  Q_INVOKABLE qml_ros2_plugin::QoSWrapper BestAvailableQoS();
+
+  //! Creates a QoS wrapper with the settings for Clock from rclcpp.
+  Q_INVOKABLE qml_ros2_plugin::QoSWrapper ClockQoS();
+
+  //! Creates a QoS wrapper with the settings for SensorData from rclcpp.
+  Q_INVOKABLE qml_ros2_plugin::QoSWrapper SensorDataQoS();
+
+  //! Creates a QoS wrapper with the settings for Services from rclcpp.
+  Q_INVOKABLE qml_ros2_plugin::QoSWrapper ServicesQoS();
+
+  //! Creates a QoS wrapper with the settings for SystemDefaults from rclcpp.
+  Q_INVOKABLE qml_ros2_plugin::QoSWrapper SystemDefaultsQoS();
+
   //! @copydoc Ros2Qml::isRosInitialized
   Q_INVOKABLE bool isInitialized() const;
 
@@ -268,19 +288,32 @@ public:
    *
    * @param type The type of the messages published using this publisher.
    * @param topic The topic on which the messages are published.
-   * @param queue_size The maximum number of outgoing messages to be queued for delivery to subscribers.
    * @return A Publisher instance.
    */
   Q_INVOKABLE QObject *createPublisher( const QString &topic, const QString &type,
-                                        quint32 queue_size = 1 );
+                                        const qml_ros2_plugin::QoSWrapper &qos = {} );
+
+  /*!
+   * @see createPublisher(const QString &, const QString &, const qml_ros2_plugin::QoSWrapper &)
+   * @param queue_size Sets the keep_last history of the qos to the given value.
+   */
+  Q_INVOKABLE QObject *createPublisher( const QString &topic, const QString &type,
+                                        quint32 queue_size );
 
   /*!
    * Creates a Subscriber to createSubscription to ROS messages.
    * Convenience function to create a subscriber in a single line.
    *
    * @param topic The topic to createSubscription to.
-   * @param queue_size The maximum number of incoming messages to be queued for processing.
+   * @param qos The QoS settings for the subscription.
    * @return A Subscriber instance.
+   */
+  Q_INVOKABLE QObject *createSubscription( const QString &topic,
+                                           const qml_ros2_plugin::QoSWrapper &qos );
+
+  /*!
+   * @see createSubscription(const QString &, const qml_ros2_plugin::QoSWrapper &)
+   * @param queue_size The keep_last history of the qos. Default: 1
    */
   Q_INVOKABLE QObject *createSubscription( const QString &topic, quint32 queue_size = 1 );
 
@@ -294,6 +327,13 @@ public:
    * @return A Subscriber instance.
    */
   Q_INVOKABLE QObject *createSubscription( const QString &topic, const QString &message_type,
+                                           const qml_ros2_plugin::QoSWrapper &qos );
+
+  /*!
+   * @see createSubscription(const QString &, const QString &, const qml_ros2_plugin::QoSWrapper &)
+   * @param queue_size The keep_last history of the qos. Default: 1
+   */
+  Q_INVOKABLE QObject *createSubscription( const QString &topic, const QString &message_type,
                                            quint32 queue_size = 1 );
 
   /*!
@@ -303,6 +343,13 @@ public:
    * @return An instance of ServiceClient.
    */
   Q_INVOKABLE QObject *createServiceClient( const QString &name, const QString &type );
+
+  /*!
+   * @copydoc createServiceClient(const QString &, const QString &)
+   * @param qos The QoS settings for the service client.
+   */
+  Q_INVOKABLE QObject *createServiceClient( const QString &name, const QString &type,
+                                            const qml_ros2_plugin::QoSWrapper &qos );
 
   /*!
    * Creates an ActionClient for the given type and the given name.

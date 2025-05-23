@@ -19,10 +19,9 @@ namespace qml_ros2_plugin
 {
 
 ActionClient::ActionClient( const QString &name, const QString &action_type )
+    : action_type_( action_type ), name_( name )
 {
   babel_fish_ = BabelFishDispenser::getBabelFish();
-  action_type_ = action_type;
-  name_ = name;
 }
 
 void ActionClient::onRos2Initialized()

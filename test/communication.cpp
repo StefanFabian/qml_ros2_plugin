@@ -323,7 +323,7 @@ TEST( Communication, serviceCallAsync )
   delete service;
 
   service = dynamic_cast<ServiceClient *>(
-      wrapper.createServiceClient( "/service_empty", "std_srvs/srv/Empty" ) );
+      wrapper.createServiceClient( "/service_empty", "std_srvs/srv/Empty", {} ) );
   engine.newQObject( service );
   ASSERT_NE( service, nullptr );
   service_called = false;

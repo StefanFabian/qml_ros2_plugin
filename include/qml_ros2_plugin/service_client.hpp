@@ -5,6 +5,7 @@
 #define QML_ROS2_PLUGIN_SERVICE_CLIENT_HPP
 
 #include "qml_ros2_plugin/qobject_ros2.hpp"
+#include "qml_ros2_plugin/qos.hpp"
 #include <QJSValue>
 #include <QTimer>
 #include <QVariant>
@@ -28,7 +29,7 @@ public:
    * @param name The service topic.
    * @param type The type of the service, e.g., "example_interfaces/srv/AddTwoInts"
    */
-  ServiceClient( QString name, QString type );
+  ServiceClient( QString name, QString type, const QoSWrapper &qos = {} );
 
   //! Returns whether the service is ready.
   bool isServiceReady() const;
@@ -64,6 +65,7 @@ private slots:
 
 private:
   ros_babel_fish::BabelFish babel_fish_;
+  QoSWrapper qos_;
   QString name_;
   QString service_type_;
   ros_babel_fish::BabelFishServiceClient::SharedPtr client_;
