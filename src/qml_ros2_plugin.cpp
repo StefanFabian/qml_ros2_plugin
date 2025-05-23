@@ -8,6 +8,7 @@
 #include "qml_ros2_plugin/image_transport_subscription.hpp"
 #include "qml_ros2_plugin/logger.hpp"
 #include "qml_ros2_plugin/publisher.hpp"
+#include "qml_ros2_plugin/qos.hpp"
 #include "qml_ros2_plugin/ros2.hpp"
 #include "qml_ros2_plugin/service_client.hpp"
 #include "qml_ros2_plugin/subscription.hpp"
@@ -45,8 +46,7 @@ public:
     qmlRegisterUncreatableType<qml_ros2_plugin::Ros2InitOptions>(
         "Ros2", 1, 0, "Ros2InitOptions",
         "Error: Can not create Ros2InitOptions manually. A Ros2InitOptions is obtained as a return "
-        "value of "
-        "Ros2.createInitOptions()." );
+        "value of Ros2.createInitOptions()." );
     qmlRegisterSingletonType<Ros2QmlSingletonWrapper>(
         "Ros2", 1, 0, "Ros2", []( QQmlEngine *engine, QJSEngine *scriptEngine ) -> QObject * {
           Q_UNUSED( engine );
@@ -96,6 +96,7 @@ public:
         "Error: Can not create ServiceClient manually in QML. Use the "
         "Ros2.createServiceClient(name, type) factory method." );
 
+    qRegisterMetaType<QoSWrapper>();
     // Time
     qRegisterMetaType<Time>();
     qRegisterMetaType<Duration>();
