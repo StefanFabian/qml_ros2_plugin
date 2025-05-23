@@ -17,6 +17,7 @@
 #include <example_interfaces/srv/add_two_ints.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 #include <ros_babel_fish_test_msgs/action/simple_test.hpp>
+#include <std_msgs/msg/int32.hpp>
 #include <std_srvs/srv/empty.hpp>
 
 #include <QCoreApplication>
@@ -208,6 +209,76 @@ TEST( Communication, subscriber )
   ASSERT_FALSE( std::abs( subscriber_ns->message().toMap()["position"].toMap()["z"].toDouble() -
                           1.0 ) < 1E-4 );
   delete subscriber_ns;
+}
+
+class Receiver : public QObject
+{
+  Q_OBJECT
+public slots:
+  void callback( const QVariant & ) { ++receive_count; }
+
+public:
+  int receive_count = 0;
+};
+
+TEST( Communication, throttleRate )
+{
+  Ros2QmlSingletonWrapper wrapper;
+  auto pub_pns = node->create_publisher<std_msgs::msg::Int32>( "~/test_throttle_rate",
+                                                               rclcpp::QoS( 5 ).transient_local() );
+  ASSERT_EQ( pub_pns->get_topic_name(), std::string( "/communication/test_throttle_rate" ) );
+  auto subscriber_pns = dynamic_cast<qml_ros2_plugin::Subscription *>( wrapper.createSubscription(
+      "/communication/test_throttle_rate", QoSWrapper().keep_last( 5 ) ) );
+  std::unique_ptr<Receiver> receiver = std::make_unique<Receiver>();
+  QObject::connect( subscriber_pns, &qml_ros2_plugin::Subscription::newMessage, receiver.get(),
+                    &Receiver::callback );
+  processEvents();
+  EXPECT_TRUE( subscriber_pns->isRosInitialized() );
+  EXPECT_TRUE( subscriber_pns->enabled() );
+  EXPECT_TRUE(
+      waitFor( [&subscriber_pns]() { return subscriber_pns->getPublisherCount() == 1U; }, 10 ) );
+  ASSERT_EQ( subscriber_pns->topic().toStdString(), "/communication/test_throttle_rate" );
+  EXPECT_EQ( subscriber_pns->queueSize(), 5U );
+  if ( !waitFor( [&]() { return pub_pns->get_subscription_count() > 0; } ) )
+    FAIL() << "Timout while waiting for subscriber num increasing.";
+  std_msgs::msg::Int32 msg;
+  msg.data = 2;
+  pub_pns->publish( msg );
+  msg.data = 3;
+  pub_pns->publish( msg );
+  if ( !waitFor( [&]() {
+         return subscriber_pns->message().isValid() &&
+                subscriber_pns->message().toMap()["data"].toInt() == 3;
+       } ) )
+    FAIL() << "Did not receive message in time.";
+  ASSERT_EQ( receiver->receive_count, 1 )
+      << "Should only have received one message due to throttling.";
+
+  receiver->receive_count = 0;
+  subscriber_pns->setThrottleRate( 0 );
+  msg.data = 4;
+  pub_pns->publish( msg );
+  msg.data = 5;
+  pub_pns->publish( msg );
+  if ( !waitFor( [&]() {
+         return subscriber_pns->message().isValid() &&
+                subscriber_pns->message().toMap()["data"].toInt() == 5;
+       } ) )
+    FAIL() << "Did not receive message in time.";
+  ASSERT_EQ( receiver->receive_count, 2 )
+      << "Should have received both messages with throttling disabled.";
+
+  receiver->receive_count = 0;
+  subscriber_pns->setQoS( QoSWrapper().transient_local().keep_last( 5 ) );
+  if ( !waitFor( [&]() {
+         return subscriber_pns->message().isValid() &&
+                subscriber_pns->message().toMap()["data"].toInt() == 5;
+       } ) )
+    FAIL() << "Did not receive message in time.";
+  ASSERT_EQ( receiver->receive_count, 4 )
+      << "Should have received all messages with transient local QoS.";
+
+  delete subscriber_pns;
 }
 
 TEST( Communication, queryTopics )
@@ -549,11 +620,11 @@ return {
   EXPECT_NE( handle2->status(), action_goal_status::Succeeded );
   EXPECT_NE( handle3->status(), action_goal_status::Succeeded );
   client.cancelGoalsBefore( now );
-  EXPECT_TRUE( waitFor( [&handle1]() { return handle1->status() == action_goal_status::Canceled; } ) )
+  EXPECT_TRUE( waitFor( [&handle1]() { return handle1->status() == action_goal_status::Canceled; }, 20 ) )
       << handle1->status();
-  EXPECT_TRUE( waitFor( [&handle2]() { return handle2->status() == action_goal_status::Canceled; } ) )
+  EXPECT_TRUE( waitFor( [&handle2]() { return handle2->status() == action_goal_status::Canceled; }, 20 ) )
       << handle2->status();
-  EXPECT_TRUE( waitFor( [&handle3]() { return handle3->status() == action_goal_status::Succeeded; } ) )
+  EXPECT_TRUE( waitFor( [&handle3]() { return handle3->status() == action_goal_status::Succeeded; }, 20 ) )
       << handle3->status();
 
   ASSERT_TRUE( waitFor( [&callback_watcher, handle3]() {

@@ -35,7 +35,10 @@ void Subscription::initTimers()
   subscribe_timer_.setInterval( std::chrono::milliseconds( 100 ) );
   connect( &throttle_timer_, &QTimer::timeout, this, &Subscription::updateMessage );
   throttle_timer_.setSingleShot( false );
-  throttle_timer_.setInterval( 1000 / throttle_rate_ );
+  if ( throttle_rate_ == 0 )
+    throttle_timer_.stop();
+  else
+    throttle_timer_.setInterval( 1000 / throttle_rate_ );
 }
 
 QString Subscription::topic() const
@@ -83,8 +86,15 @@ int Subscription::throttleRate() const { return throttle_rate_; }
 
 void Subscription::setThrottleRate( int value )
 {
+  if ( value == throttle_rate_ )
+    return;
   throttle_rate_ = value;
-  throttle_timer_.setInterval( 1000 / throttle_rate_ );
+  if ( throttle_rate_ == 0 ) {
+    throttle_timer_.stop();
+  } else {
+    throttle_timer_.setInterval( 1000 / throttle_rate_ );
+    throttle_timer_.start();
+  }
   emit throttleRateChanged();
 }
 
@@ -179,25 +189,37 @@ void Subscription::shutdown()
   subscription_.reset();
   throttle_timer_.stop();
   is_subscribed_ = false;
+  message_ = QVariant();
   emit subscribedChanged();
 }
 
 void Subscription::messageCallback( const ros_babel_fish::CompoundMessage::SharedPtr &msg )
 {
-  std::lock_guard<std::mutex> lock( message_mutex_ );
-  last_message_ = msg;
+  std::unique_lock lock( message_mutex_ );
+  if ( throttle_rate_ == 0 ) {
+    if ( qos_.rclcppQoS().history() == rclcpp::HistoryPolicy::KeepLast &&
+         int( message_queue_.size() ) > qos_.depth() ) {
+      message_queue_.erase( message_queue_.begin() );
+    }
+    message_queue_.push_back( msg );
+    lock.unlock();
+    QMetaObject::invokeMethod( this, "updateMessage", Qt::QueuedConnection );
+    return;
+  }
+  message_queue_.clear();
+  message_queue_.push_back( msg );
 }
 
 void Subscription::updateMessage()
 {
-  std::unique_lock<std::mutex> lock( message_mutex_ );
-  if ( last_message_ == nullptr )
+  std::unique_lock lock( message_mutex_ );
+  if ( message_queue_.empty() )
     return;
-  ros_babel_fish::CompoundMessage::ConstSharedPtr msg = std::move( last_message_ );
-  last_message_ = nullptr;
-  lock.unlock(); // Don't need the mutex anymore
-  message_ = msgToMap( *msg );
-  emit messageChanged();
-  emit newMessage( message_ );
+  for ( const auto &msg : message_queue_ ) {
+    message_ = msgToMap( *msg );
+    emit messageChanged();
+    emit newMessage( message_ );
+  }
+  message_queue_.clear();
 }
 } // namespace qml_ros2_plugin

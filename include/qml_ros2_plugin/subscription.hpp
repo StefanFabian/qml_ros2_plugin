@@ -37,6 +37,7 @@ class Subscription : public QObjectRos2
   Q_PROPERTY( QString messageType READ messageType WRITE setMessageType NOTIFY messageTypeChanged )
 
   //! Limits the frequency in which the notification for an updated message is emitted. Default: 20 Hz
+  //! Set to 0 to disable throttling and receive all messages.
   Q_PROPERTY( int throttleRate READ throttleRate WRITE setThrottleRate NOTIFY throttleRateChanged )
 
   //! Controls whether or not the subscriber is currently enabled, i.e., able to receive messages. Default: true
@@ -128,7 +129,7 @@ protected:
   QTimer subscribe_timer_;
   ros_babel_fish::BabelFish babel_fish_;
   ros_babel_fish::BabelFishSubscription::SharedPtr subscription_;
-  ros_babel_fish::CompoundMessage::ConstSharedPtr last_message_;
+  std::vector<ros_babel_fish::CompoundMessage::ConstSharedPtr> message_queue_;
   std::mutex message_mutex_;
   QTimer throttle_timer_;
 
