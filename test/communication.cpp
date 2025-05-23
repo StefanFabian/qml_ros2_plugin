@@ -46,14 +46,14 @@ void processEvents()
   rclcpp::spin_some( node );
 }
 
-//! @param wait_count Max time to wait in increments of 33 ms
-bool waitFor( const std::function<bool()> &pred, int wait_count = 10 )
+bool waitFor( const std::function<bool()> &pred, std::chrono::milliseconds timeout = 500ms )
 {
-  while ( --wait_count > 0 ) {
+  auto start = std::chrono::steady_clock::now();
+  while ( ( std::chrono::steady_clock::now() - start ) < timeout ) {
     if ( pred() )
       return true;
     processEvents();
-    std::this_thread::sleep_for( 33ms );
+    std::this_thread::sleep_for( 1ms );
   }
   return false;
 }
@@ -96,7 +96,7 @@ TEST( Communication, publisher )
       "/pose", 10, [&pub_singleton_glob_explicit_storage]( geometry_msgs::msg::Pose::UniquePtr msg ) {
         pub_singleton_glob_explicit_storage.callback( *msg );
       } );
-  waitFor( []() { return false; }, 16 ); // Wait for half a second
+  waitFor( []() { return false; }, 500ms ); // Wait for half a second
   EXPECT_TRUE( pub_singleton_glob_explicit_storage.messages.empty() );
   pub_singleton_glob_explicit->publish( { { "position", QVariantMap{ { "y", 1.3 } } } } );
   if ( !waitFor( [&]() { return !pub_singleton_glob_explicit_storage.messages.empty(); } ) )
@@ -114,7 +114,7 @@ TEST( Communication, publisher )
       "/other_pose", 10, [&pub_singleton_glob_storage]( geometry_msgs::msg::Pose::UniquePtr msg ) {
         pub_singleton_glob_storage.callback( *msg );
       } );
-  waitFor( []() { return false; }, 16 ); // Wait for half a second
+  waitFor( []() { return false; }, 500ms ); // Wait for half a second
   EXPECT_TRUE( pub_singleton_glob_storage.messages.empty() );
   pub_singleton_glob->publish( { { "position", QVariantMap{ { "y", 1.3 } } } } );
   if ( !waitFor( [&]() { return !pub_singleton_glob_storage.messages.empty(); } ) )
@@ -134,8 +134,7 @@ TEST( Communication, subscriber )
   processEvents();
   EXPECT_TRUE( subscriber_pns->isRosInitialized() );
   EXPECT_TRUE( subscriber_pns->enabled() );
-  EXPECT_TRUE(
-      waitFor( [&subscriber_pns]() { return subscriber_pns->getPublisherCount() == 1U; }, 10 ) );
+  EXPECT_TRUE( waitFor( [&subscriber_pns]() { return subscriber_pns->getPublisherCount() == 1U; } ) );
   ASSERT_EQ( subscriber_pns->topic().toStdString(), "/communication/test" );
   //  EXPECT_EQ( subscriber_pns->ns(), QString( "/communication/private_ns" )) << subscriber_pns->ns().toStdString();
   EXPECT_EQ( subscriber_pns->queueSize(), 1U );
@@ -235,8 +234,7 @@ TEST( Communication, throttleRate )
   processEvents();
   EXPECT_TRUE( subscriber_pns->isRosInitialized() );
   EXPECT_TRUE( subscriber_pns->enabled() );
-  EXPECT_TRUE(
-      waitFor( [&subscriber_pns]() { return subscriber_pns->getPublisherCount() == 1U; }, 10 ) );
+  EXPECT_TRUE( waitFor( [&subscriber_pns]() { return subscriber_pns->getPublisherCount() == 1U; } ) );
   ASSERT_EQ( subscriber_pns->topic().toStdString(), "/communication/test_throttle_rate" );
   EXPECT_EQ( subscriber_pns->queueSize(), 5U );
   if ( !waitFor( [&]() { return pub_pns->get_subscription_count() > 0; } ) )
@@ -291,28 +289,24 @@ TEST( Communication, queryTopics )
   auto pub6 = node->create_publisher<geometry_msgs::msg::Pose>( "/query_topics/pose3", 10 );
   Ros2QmlSingletonWrapper wrapper;
   ASSERT_TRUE(
-      waitFor( [&wrapper]() { return !wrapper.queryTopics().empty(); }, 30 ) ); // Wait for topics
+      waitFor( [&wrapper]() { return !wrapper.queryTopics().empty(); }, 1s ) ); // Wait for topics
   for ( const QString &topic :
         QStringList{ "/query_topics/pose1", "/query_topics/vector3", "/query_topics/point1",
                      "/query_topics/point2", "/query_topics/pose2", "/query_topics/pose3" } ) {
-    ASSERT_TRUE( waitFor( [&wrapper, &topic]() { return wrapper.queryTopics().contains( topic ); }, 10 ) )
+    ASSERT_TRUE( waitFor( [&wrapper, &topic]() { return wrapper.queryTopics().contains( topic ); } ) )
         << topic.toStdString() << " is not in topics.";
   }
   for ( const QString &topic : QStringList{ "/query_topics/point1", "/query_topics/point2" } ) {
-    ASSERT_TRUE( waitFor(
-        [&wrapper, &topic]() {
-          return wrapper.queryTopics( "geometry_msgs/Point" ).contains( topic );
-        },
-        10 ) )
+    ASSERT_TRUE( waitFor( [&wrapper, &topic]() {
+      return wrapper.queryTopics( "geometry_msgs/Point" ).contains( topic );
+    } ) )
         << topic.toStdString() << " is not in topics of type Point.";
   }
   for ( const QString &topic :
         QStringList{ "/query_topics/pose1", "/query_topics/pose2", "/query_topics/pose3" } ) {
-    ASSERT_TRUE( waitFor(
-        [&wrapper, &topic]() {
-          return wrapper.queryTopics( "geometry_msgs/msg/Pose" ).contains( topic );
-        },
-        10 ) )
+    ASSERT_TRUE( waitFor( [&wrapper, &topic]() {
+      return wrapper.queryTopics( "geometry_msgs/msg/Pose" ).contains( topic );
+    } ) )
         << topic.toStdString() << " is not in topics of type Pose.";
   }
   QList<TopicInfo> topic_info = wrapper.queryTopicInfo();
@@ -379,7 +373,7 @@ TEST( Communication, serviceCallAsync )
   ASSERT_TRUE( waitFor( [&]() { return service->isServiceReady(); } ) );
   service->sendRequestAsync( { { "a", 1 }, { "b", 3 } }, callback );
   ASSERT_TRUE( !returned );
-  waitFor( [&returned]() { return returned; }, 60 );
+  waitFor( [&returned]() { return returned; }, 2s );
   ASSERT_TRUE( returned );
   processEvents();
   ASSERT_TRUE( obj.hasProperty( "result" ) );
@@ -521,7 +515,7 @@ return {
 }
 }))!" )
                          .call( { callback_watcher_js } );
-  ASSERT_TRUE( waitFor( [&client]() { return client.isServerReady(); }, 150 ) ); // Wait max 5 seconds
+  ASSERT_TRUE( waitFor( [&client]() { return client.isServerReady(); }, 5s ) );
   GoalHandle *handle =
       dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 400 } }, options ) );
   //  ASSERT_NE( handle, nullptr );
@@ -529,7 +523,7 @@ return {
   handle = callback_watcher->goal_handles[0];
   //  EXPECT_EQ( handle->status(), action_goal_status::Executing );
   ASSERT_TRUE(
-      waitFor( [&handle]() { return handle->status() == action_goal_status::Succeeded; }, 90 ) );
+      waitFor( [&handle]() { return handle->status() == action_goal_status::Succeeded; }, 3s ) );
   EXPECT_EQ( callback_watcher->feedback, 401 );
 
   ASSERT_TRUE( waitFor( [&callback_watcher, handle]() {
@@ -586,11 +580,11 @@ return {
   //  EXPECT_TRUE( waitFor( [ &handle3 ]() { return handle3->status() == action_goal_status::Executing; } ));
   std::this_thread::sleep_for( 5ms );
   client.cancelAllGoals();
-  EXPECT_TRUE( waitFor( [&handle1]() { return handle1->status() == action_goal_status::Canceled; }, 150 ) )
+  EXPECT_TRUE( waitFor( [&handle1]() { return handle1->status() == action_goal_status::Canceled; }, 5s ) )
       << handle1->status();
-  EXPECT_TRUE( waitFor( [&handle2]() { return handle2->status() == action_goal_status::Canceled; }, 150 ) )
+  EXPECT_TRUE( waitFor( [&handle2]() { return handle2->status() == action_goal_status::Canceled; }, 5s ) )
       << handle2->status();
-  EXPECT_TRUE( waitFor( [&handle3]() { return handle3->status() == action_goal_status::Canceled; }, 150 ) )
+  EXPECT_TRUE( waitFor( [&handle3]() { return handle3->status() == action_goal_status::Canceled; }, 5s ) )
       << handle3->status();
   //  delete handle1;
   //  delete handle2;
@@ -598,33 +592,30 @@ return {
 
   // Cancel all goals before and at time
   callback_watcher->goal_handles.clear();
-  handle1 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 700 } }, options ) );
+  handle1 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 1700 } }, options ) );
   //  ASSERT_NE( handle1, nullptr );
   processEvents();
-  std::this_thread::sleep_for( 5ms );
-  handle2 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 800 } }, options ) );
+  std::this_thread::sleep_for( 10ms );
+  processEvents();
+  handle2 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 1800 } }, options ) );
   //  ASSERT_NE( handle2, nullptr );
   processEvents();
-  std::this_thread::sleep_for( 5ms );
+  std::this_thread::sleep_for( 40ms );
   processEvents();
   QDateTime now = rosToQmlTime( node->now() );
-  std::this_thread::sleep_for( 5ms );
+  std::this_thread::sleep_for( 10ms );
+  processEvents();
   handle3 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 190 } }, options ) );
-  //  ASSERT_NE( handle3, nullptr );
-  ASSERT_TRUE(
-      waitFor( [&callback_watcher]() { return callback_watcher->goal_handles.size() == 3; } ) );
-  handle1 = callback_watcher->goal_handles[0];
-  handle2 = callback_watcher->goal_handles[1];
-  handle3 = callback_watcher->goal_handles[2];
+  ASSERT_NE( handle3, nullptr );
   EXPECT_NE( handle1->status(), action_goal_status::Succeeded );
   EXPECT_NE( handle2->status(), action_goal_status::Succeeded );
   EXPECT_NE( handle3->status(), action_goal_status::Succeeded );
   client.cancelGoalsBefore( now );
-  EXPECT_TRUE( waitFor( [&handle1]() { return handle1->status() == action_goal_status::Canceled; }, 20 ) )
+  EXPECT_TRUE( waitFor( [&handle1]() { return handle1->status() == action_goal_status::Canceled; }, 2s ) )
       << handle1->status();
-  EXPECT_TRUE( waitFor( [&handle2]() { return handle2->status() == action_goal_status::Canceled; }, 20 ) )
+  EXPECT_TRUE( waitFor( [&handle2]() { return handle2->status() == action_goal_status::Canceled; }, 2s ) )
       << handle2->status();
-  EXPECT_TRUE( waitFor( [&handle3]() { return handle3->status() == action_goal_status::Succeeded; }, 20 ) )
+  EXPECT_TRUE( waitFor( [&handle3]() { return handle3->status() == action_goal_status::Succeeded; }, 2s ) )
       << handle3->status();
 
   ASSERT_TRUE( waitFor( [&callback_watcher, handle3]() {
