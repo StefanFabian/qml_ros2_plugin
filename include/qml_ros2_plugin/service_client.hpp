@@ -29,7 +29,8 @@ public:
    * @param name The service topic.
    * @param type The type of the service, e.g., "example_interfaces/srv/AddTwoInts"
    */
-  ServiceClient( QString name, QString type, const QoSWrapper &qos = {} );
+  ServiceClient( QString name, QString type,
+                 const QoSWrapper &qos = QoSWrapper( rclcpp::ServicesQoS() ) );
 
   //! Returns whether the service is ready.
   bool isServiceReady() const;
