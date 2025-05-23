@@ -267,14 +267,10 @@ TEST( Communication, throttleRate )
       << "Should have received both messages with throttling disabled.";
 
   receiver->receive_count = 0;
-  subscriber_pns->setQoS( QoSWrapper().transient_local().keep_last( 5 ) );
-  if ( !waitFor( [&]() {
-         return subscriber_pns->message().isValid() &&
-                subscriber_pns->message().toMap()["data"].toInt() == 5;
-       } ) )
-    FAIL() << "Did not receive message in time.";
-  ASSERT_EQ( receiver->receive_count, 4 )
-      << "Should have received all messages with transient local QoS.";
+  subscriber_pns->setQoS( QoSWrapper().reliable().transient_local().keep_last( 5 ) );
+  EXPECT_TRUE( waitFor( [&]() { return receiver->receive_count == 4; }, 1s ) )
+      << "Should have received all messages with transient local QoS. Received: "
+      << receiver->receive_count;
 
   delete subscriber_pns;
 }
@@ -388,7 +384,7 @@ TEST( Communication, serviceCallAsync )
   delete service;
 
   service = dynamic_cast<ServiceClient *>(
-      wrapper.createServiceClient( "/service_empty", "std_srvs/srv/Empty", {} ) );
+      wrapper.createServiceClient( "/service_empty", "std_srvs/srv/Empty", wrapper.ServicesQoS() ) );
   engine.newQObject( service );
   ASSERT_NE( service, nullptr );
   service_called = false;
@@ -405,7 +401,7 @@ TEST( Communication, serviceCallAsync )
           .evaluate( "(function (watcher) { return function (resp) { watcher.result = resp; }; })" )
           .call( { obj } );
 
-  ASSERT_TRUE( waitFor( [&]() { return service->isServiceReady(); } ) );
+  ASSERT_TRUE( waitFor( [&]() { return service->isServiceReady(); }, 1s ) );
   service->sendRequestAsync( {}, callback );
   ASSERT_TRUE( !returned );
   waitFor( [&returned]() { return returned; } );
