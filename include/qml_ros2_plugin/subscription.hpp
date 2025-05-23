@@ -36,8 +36,8 @@ class Subscription : public QObjectRos2
   //! automatically detected and if the topic has multiple available types, one is arbitrarily selected.
   Q_PROPERTY( QString messageType READ messageType WRITE setMessageType NOTIFY messageTypeChanged )
 
-  //! Limits the frequency in which the notification for an updated message is emitted. Default: 20 Hz
-  //! Set to 0 to disable throttling and receive all messages.
+  //! Limits the frequency in which the notification for an updated message is emitted.
+  //! Set to 0 to disable throttling and receive all messages.  Default: 20Hz
   Q_PROPERTY( int throttleRate READ throttleRate WRITE setThrottleRate NOTIFY throttleRateChanged )
 
   //! Controls whether or not the subscriber is currently enabled, i.e., able to receive messages. Default: true
