@@ -5,6 +5,7 @@
 #define QML_ROS2_PLUGIN_PUBLISHER_HPP
 
 #include "qml_ros2_plugin/qobject_ros2.hpp"
+#include "qml_ros2_plugin/qos.hpp"
 #include <QMap>
 #include <QTimer>
 #include <QVariant>
@@ -21,13 +22,15 @@ class Publisher : public QObjectRos2
   Q_PROPERTY( QString type READ type )
   //! The topic this Publisher publishes messages on. This property is only valid if the publisher is already advertised! (readonly)
   Q_PROPERTY( QString topic READ topic )
-  //! The queue size of this Publisher. This is the maximum number of messages that are queued for delivery to subscribers at a time. (readonly)
+  //! The queue size of this Publisher. This is the depth if the history policy of the QoS is set to keep_last. (readonly)
   Q_PROPERTY( quint32 queueSize READ queueSize )
+  //! The Quality of Service settings of this publisher.
+  Q_PROPERTY( QoSWrapper qos READ qos )
   //! Whether or not this publisher has advertised its existence on its topic.
   //! Reasons for not being advertised include ROS not being initialized yet. (readonly)
   Q_PROPERTY( bool isAdvertised READ isAdvertised NOTIFY advertised )
 public:
-  Publisher( QString topic, QString type, uint32_t queue_size );
+  Publisher( QString topic, QString type, const QoSWrapper &qos );
 
   ~Publisher() override;
 
@@ -36,6 +39,8 @@ public:
   const QString &type() const;
 
   quint32 queueSize() const;
+
+  const QoSWrapper &qos() const;
 
   bool isAdvertised() const;
 
@@ -68,12 +73,12 @@ protected:
   QTimer advertise_timer_;
   ros_babel_fish::BabelFish babel_fish_;
   ros_babel_fish::BabelFishPublisher::SharedPtr publisher_;
+  QoSWrapper qos_;
 
-  bool is_advertised_;
   QString type_;
   std::string std_type_;
   QString topic_;
-  uint32_t queue_size_;
+  bool is_advertised_;
 };
 } // namespace qml_ros2_plugin
 

@@ -19,10 +19,9 @@ namespace qml_ros2_plugin
 {
 
 ActionClient::ActionClient( const QString &name, const QString &action_type )
+    : action_type_( action_type ), name_( name )
 {
   babel_fish_ = BabelFishDispenser::getBabelFish();
-  action_type_ = action_type;
-  name_ = name;
 }
 
 void ActionClient::onRos2Initialized()
@@ -162,7 +161,7 @@ QObject *ActionClient::sendGoalAsync( const QVariantMap &goal, QJSValue options 
               Q_ARG( ros_babel_fish::CompoundMessage::ConstSharedPtr, result.result ) );
         };
     auto goal_handle = client_->async_send_goal( message, goal_options );
-    return nullptr; // TODO add promise or something like that
+    return new GoalHandle( client_, std::move( goal_handle ) );
   } catch ( BabelFishException &ex ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to send Action goal: %s", ex.what() );
   }

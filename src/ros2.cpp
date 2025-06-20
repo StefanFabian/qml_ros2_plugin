@@ -7,6 +7,7 @@
 #include "qml_ros2_plugin/conversion/message_conversions.hpp"
 #include "qml_ros2_plugin/helpers/logging.hpp"
 #include "qml_ros2_plugin/publisher.hpp"
+#include "qml_ros2_plugin/qos.hpp"
 #include "qml_ros2_plugin/service_client.hpp"
 #include "qml_ros2_plugin/subscription.hpp"
 
@@ -322,6 +323,26 @@ QString Ros2QmlSingletonWrapper::hostname() const { return Ros2Qml::getInstance(
 
 QObject *Ros2QmlSingletonWrapper::createInitOptions() { return new Ros2InitOptions; }
 
+QoSWrapper Ros2QmlSingletonWrapper::QoS() { return {}; }
+
+QoSWrapper Ros2QmlSingletonWrapper::BestAvailableQoS()
+{
+  return QoSWrapper( rclcpp::BestAvailableQoS() );
+}
+QoSWrapper Ros2QmlSingletonWrapper::ClockQoS() { return QoSWrapper( rclcpp::ClockQoS() ); }
+
+QoSWrapper Ros2QmlSingletonWrapper::SensorDataQoS()
+{
+  return QoSWrapper( rclcpp::SensorDataQoS() );
+}
+
+QoSWrapper Ros2QmlSingletonWrapper::ServicesQoS() { return QoSWrapper( rclcpp::ServicesQoS() ); }
+
+QoSWrapper Ros2QmlSingletonWrapper::SystemDefaultsQoS()
+{
+  return QoSWrapper( rclcpp::SystemDefaultsQoS() );
+}
+
 bool Ros2QmlSingletonWrapper::isInitialized() const
 {
   return Ros2Qml::getInstance().isInitialized();
@@ -489,25 +510,49 @@ QJSValue Ros2QmlSingletonWrapper::fatal()
 }
 
 QObject *Ros2QmlSingletonWrapper::createPublisher( const QString &topic, const QString &type,
+                                                   const qml_ros2_plugin::QoSWrapper &qos )
+{
+  return new Publisher( topic, type, qos );
+}
+
+QObject *Ros2QmlSingletonWrapper::createPublisher( const QString &topic, const QString &type,
                                                    quint32 queue_size )
 {
-  return new Publisher( topic, type, queue_size );
+  return createPublisher( topic, type, QoSWrapper().reliable().keep_last( queue_size ) );
+}
+
+QObject *Ros2QmlSingletonWrapper::createSubscription( const QString &topic, const QoSWrapper &qos )
+{
+  return new Subscription( topic, QString(), qos );
 }
 
 QObject *Ros2QmlSingletonWrapper::createSubscription( const QString &topic, quint32 queue_size )
 {
-  return new Subscription( topic, QString(), queue_size );
+  return createSubscription( topic, QoSWrapper().keep_last( queue_size ) );
+}
+
+QObject *Ros2QmlSingletonWrapper::createSubscription( const QString &topic,
+                                                      const QString &message_type,
+                                                      const QoSWrapper &qos )
+{
+  return new Subscription( topic, message_type, qos );
 }
 
 QObject *Ros2QmlSingletonWrapper::createSubscription( const QString &topic,
                                                       const QString &message_type, quint32 queue_size )
 {
-  return new Subscription( topic, message_type, queue_size );
+  return createSubscription( topic, message_type, QoSWrapper().keep_last( queue_size ) );
 }
 
 QObject *Ros2QmlSingletonWrapper::createServiceClient( const QString &name, const QString &type )
 {
-  return new ServiceClient( name, type );
+  return createServiceClient( name, type, QoSWrapper( rclcpp::ServicesQoS() ) );
+}
+
+QObject *Ros2QmlSingletonWrapper::createServiceClient( const QString &name, const QString &type,
+                                                       const qml_ros2_plugin::QoSWrapper &qos )
+{
+  return new ServiceClient( name, type, qos );
 }
 
 QObject *Ros2QmlSingletonWrapper::createActionClient( const QString &name, const QString &type )

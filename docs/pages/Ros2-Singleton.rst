@@ -131,5 +131,8 @@ API
 .. doxygenclass:: qml_ros2_plugin::IO
   :members:
 
+.. doxygenclass:: qml_ros2_plugin::QoSWrapper
+  :members:
+
 .. doxygenclass:: qml_ros2_plugin::Ros2QmlSingletonWrapper
   :members:
