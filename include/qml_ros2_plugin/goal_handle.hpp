@@ -22,8 +22,11 @@ class GoalHandle : public QObjectRos2
   Q_PROPERTY( QString goalId READ goalId )
   Q_PROPERTY( qml_ros2_plugin::Time goalStamp READ goalStamp )
 public:
-  explicit GoalHandle( ros_babel_fish::BabelFishActionClient::SharedPtr client,
-                       ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr handle );
+  GoalHandle( ros_babel_fish::BabelFishActionClient::SharedPtr client,
+              ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr handle );
+
+  GoalHandle( ros_babel_fish::BabelFishActionClient::SharedPtr client,
+              std::shared_future<ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr> handle );
 
   qml_ros2_plugin::action_goal_status::GoalStatus status() const;
 
@@ -38,10 +41,13 @@ protected:
   void onRos2Shutdown() override;
 
 private:
+  void checkFuture() const;
+
   ros_babel_fish::BabelFish babel_fish_;
   // Store the client to make sure its destructed after the goal handles
   ros_babel_fish::BabelFishActionClient::SharedPtr client_;
-  ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr goal_handle_;
+  mutable ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr goal_handle_;
+  mutable std::shared_future<ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr> goal_handle_future_;
 };
 } // namespace qml_ros2_plugin
 

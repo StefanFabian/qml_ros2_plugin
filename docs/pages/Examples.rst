@@ -5,17 +5,17 @@ Examples
 You can find the described example QML files in the
 `qml_ros2_plugin repo examples directory <https://github.com/StefanFabian/qml_ros2_plugin/tree/master/examples>`_.
 
-Subscriber
+Subscription
 ==========
 
-The subscriber example demonstrates how to create a ``Subscriber`` in QML
+The subscriber example demonstrates how to create a ``Subscription`` in QML
 using the *QML ROS Plugin*.
 
 You can run the example using the ``qmlscene`` executable:
 
 .. code-block::
 
-  qmlscene subscriber.qml
+  qmlscene subscription.qml
 
 Publisher
 =========
