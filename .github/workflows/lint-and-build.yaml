@@ -1,9 +1,9 @@
 name: Build & Test
 on:
   push:
-    branches: [ master ]
+    branches: [ rolling ]
   pull_request:
-    branches: [ master ]
+    branches: [ rolling ]
 defaults:
   run:
     shell: bash
@@ -37,8 +37,6 @@ jobs:
     strategy:
       matrix:
         setup:
-          - rosdistro: jazzy
-            os: ubuntu-latest
           - rosdistro: rolling
             os: ubuntu-latest
     steps:
