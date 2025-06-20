@@ -5,6 +5,7 @@
 #define QML_ROS2_PLUGIN_SUBSCRIPTION_HPP
 
 #include "qml_ros2_plugin/qobject_ros2.hpp"
+#include "qml_ros2_plugin/qos.hpp"
 
 #include <QMap>
 #include <QTimer>
@@ -25,6 +26,9 @@ class Subscription : public QObjectRos2
   //! The maximum number of messages that are queued for processing. Default: 10
   Q_PROPERTY( quint32 queueSize READ queueSize WRITE setQueueSize NOTIFY queueSizeChanged )
 
+  //! The QoS settings for this subscription. Use ``Ros2.QoS()`` to create QoS settings.
+  Q_PROPERTY( qml_ros2_plugin::QoSWrapper qos READ qos WRITE setQoS NOTIFY qosChanged )
+
   //! The last message that was received by this subscriber.
   Q_PROPERTY( QVariant message READ message NOTIFY messageChanged )
 
@@ -32,7 +36,8 @@ class Subscription : public QObjectRos2
   //! automatically detected and if the topic has multiple available types, one is arbitrarily selected.
   Q_PROPERTY( QString messageType READ messageType WRITE setMessageType NOTIFY messageTypeChanged )
 
-  //! Limits the frequency in which the notification for an updated message is emitted. Default: 20 Hz
+  //! Limits the frequency in which the notification for an updated message is emitted.
+  //! Set to 0 to disable throttling and receive all messages.  Default: 20Hz
   Q_PROPERTY( int throttleRate READ throttleRate WRITE setThrottleRate NOTIFY throttleRateChanged )
 
   //! Controls whether or not the subscriber is currently enabled, i.e., able to receive messages. Default: true
@@ -43,7 +48,7 @@ class Subscription : public QObjectRos2
 public:
   Subscription();
 
-  Subscription( QString topic, QString message_type, quint32 queue_size, bool enabled = true );
+  Subscription( QString topic, QString message_type, const QoSWrapper &qos, bool enabled = true );
 
   ~Subscription() override;
 
@@ -54,6 +59,10 @@ public:
   quint32 queueSize() const;
 
   void setQueueSize( quint32 value );
+
+  const QoSWrapper &qos() const;
+
+  void setQoS( const QoSWrapper &qos );
 
   bool enabled() const;
 
@@ -81,6 +90,8 @@ signals:
   void topicChanged();
 
   void queueSizeChanged();
+
+  void qosChanged();
 
   void throttleRateChanged();
 
@@ -118,15 +129,15 @@ protected:
   QTimer subscribe_timer_;
   ros_babel_fish::BabelFish babel_fish_;
   ros_babel_fish::BabelFishSubscription::SharedPtr subscription_;
-  ros_babel_fish::CompoundMessage::ConstSharedPtr last_message_;
+  std::vector<ros_babel_fish::CompoundMessage::ConstSharedPtr> message_queue_;
   std::mutex message_mutex_;
   QTimer throttle_timer_;
 
+  QoSWrapper qos_;
   QString topic_;
   QString user_message_type_;
   QString message_type_;
   QVariant message_;
-  quint32 queue_size_ = 10;
   int throttle_rate_ = 20;
   bool running_ = true;
   bool is_subscribed_ = false;
