@@ -54,14 +54,14 @@ has more properties to give you more fine-grained control.
     //  publisher if the type does not match
     messageType: "example_interfaces/msg/Int32"
     throttleRate: 30 // Update rate of message property in Hz. Default: 20
-    queueSize: 10
+    // QoS settings, defaults to best_effort, durability_volatile and history depth of 1
+    qos: Ros2.QoS().reliable().transient_local().keep_last(10)
     enabled: true // Can be used to pause/unpause the subscription
     onNewMessage: doStuff(message)
   }
 
-The ``queueSize`` property controls how many incoming messages are queued for
-processing before the oldest are dropped.
-Note that due to the ``throttleRate`` messages may be dropped even if the ``queueSize`` is large enough.
+Note that due to the ``throttleRate``, messages may be dropped even if the ``qos`` is changed to keep more than 1.
+To avoid this, if you want to process all received messages up to the ``keep_last`` history depth, set the throttleRate to 0.
 
 The ``throttleRate`` limits the rate in which QML receives updates from the given topic.
 By default the Subscriber polls with 20 Hz on the UI thread and will notify of property changes
