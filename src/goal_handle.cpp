@@ -19,6 +19,9 @@ GoalHandle::GoalHandle( BabelFishActionClient::SharedPtr client,
     : client_( std::move( client ) ), goal_handle_( std::move( handle ) )
 {
   babel_fish_ = BabelFishDispenser::getBabelFish();
+  QObject::connect( &status_timer_, &QTimer::timeout, this, &GoalHandle::updateStatus );
+  status_timer_.setInterval( 50 );
+  status_timer_.start();
 }
 
 GoalHandle::GoalHandle(
@@ -27,6 +30,9 @@ GoalHandle::GoalHandle(
     : client_( std::move( client ) ), goal_handle_future_( std::move( handle ) )
 {
   babel_fish_ = BabelFishDispenser::getBabelFish();
+  QObject::connect( &status_timer_, &QTimer::timeout, this, &GoalHandle::updateStatus );
+  status_timer_.setInterval( 50 );
+  status_timer_.start();
 }
 
 void GoalHandle::cancel()
@@ -83,6 +89,40 @@ void GoalHandle::checkFuture() const
   auto status = goal_handle_future_.wait_for( std::chrono::milliseconds( 0 ) );
   if ( status == std::future_status::ready ) {
     goal_handle_ = goal_handle_future_.get();
+  }
+}
+
+namespace
+{
+bool isTerminalState( action_goal_status::GoalStatus status )
+{
+  switch ( status ) {
+  case action_goal_status::Aborted:
+  case action_goal_status::Canceled:
+  case action_goal_status::Succeeded:
+    return true;
+  case action_goal_status::Accepted:
+  case action_goal_status::Canceling:
+  case action_goal_status::Executing:
+  case action_goal_status::Unknown:
+  default:
+    return false;
+  }
+}
+} // namespace
+
+void GoalHandle::updateStatus()
+{
+  checkFuture();
+  if ( goal_handle_ == nullptr )
+    return;
+  auto new_status = static_cast<action_goal_status::GoalStatus>( goal_handle_->get_status() );
+  if ( new_status != status_ ) {
+    status_ = new_status;
+    emit statusChanged( status_ );
+  }
+  if ( isTerminalState( new_status ) ) {
+    status_timer_.stop();
   }
 }
 
