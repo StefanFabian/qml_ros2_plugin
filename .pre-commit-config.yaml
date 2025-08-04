@@ -1,0 +1,16 @@
+repos:
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v18.1.3
+    hooks:
+      - id: clang-format
+        name: Clang Format
+        args: [--style=file]
+        files: \.(cpp|hpp|h|c|cc)$
+  - repo: local
+    hooks:
+      - id: cppcheck
+        name: Cppcheck
+        entry: cppcheck --force --quiet --inline-suppr --library=qt --error-exitcode=1 --language=c++
+        language: system
+        types: [c, c++]
+        files: \.(cpp|hpp|h|c|cc)$
