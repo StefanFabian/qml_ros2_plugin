@@ -21,6 +21,8 @@ ServiceClient::ServiceClient( QString name, QString type, const QoSWrapper &qos 
   babel_fish_ = BabelFishDispenser::getBabelFish();
 }
 
+ServiceClient::~ServiceClient() { stop_ = true; }
+
 void ServiceClient::onRos2Initialized()
 {
   try {
@@ -39,7 +41,11 @@ void ServiceClient::onRos2Initialized()
   connect_timer_.start();
 }
 
-void ServiceClient::onRos2Shutdown() { client_.reset(); }
+void ServiceClient::onRos2Shutdown()
+{
+  stop_ = true;
+  client_.reset();
+}
 
 void ServiceClient::checkServiceReady()
 {
@@ -59,14 +65,36 @@ const QString &ServiceClient::name() const { return name_; }
 
 const QString &ServiceClient::type() const { return service_type_; }
 
+int ServiceClient::connectionTimeout() const { return connection_timeout_; }
+
+void ServiceClient::setConnectionTimeout( int timeout )
+{
+  if ( connection_timeout_ == timeout )
+    return;
+  connection_timeout_ = timeout;
+  emit connectionTimeoutChanged();
+}
+
 void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &callback )
 {
+  using clock = std::chrono::steady_clock;
   if ( client_ == nullptr ) {
-    QML_ROS2_PLUGIN_ERROR( "Tried to send goal when ServiceClient was not connected!" );
-    if ( !callback.isCallable() )
-      return;
-    QMetaObject::invokeMethod( this, "invokeCallback", Qt::AutoConnection,
-                               Q_ARG( QJSValue, callback ), Q_ARG( QVariant, QVariant( false ) ) );
+    waiting_threads_.emplace_back( [this, req, callback] {
+      auto now = clock::now();
+      while ( !isServiceReady() ) {
+        if ( clock::now() - now > std::chrono::milliseconds( connection_timeout_ ) ) {
+          QMetaObject::invokeMethod( this, "invokeCallback", Qt::AutoConnection,
+                                     Q_ARG( QJSValue, callback ),
+                                     Q_ARG( QVariant, QVariant( false ) ) );
+          return;
+        }
+        std::this_thread::sleep_for( std::chrono::milliseconds( 5 ) );
+        if ( stop_ )
+          return;
+      }
+      QMetaObject::invokeMethod( this, "sendRequestAsync", Qt::AutoConnection,
+                                 Q_ARG( QVariantMap, req ), Q_ARG( QJSValue, callback ) );
+    } );
     return;
   }
   CompoundMessage::SharedPtr message;
