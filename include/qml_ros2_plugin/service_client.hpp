@@ -24,6 +24,8 @@ class ServiceClient : public QObjectRos2
   Q_PROPERTY( QString name READ name CONSTANT )
   //! The type of the service, e.g., "example_interfaces/srv/AddTwoInts".
   Q_PROPERTY( QString type READ type CONSTANT )
+  //! Connection timeout in ms to wait for the service to become available when sending a request.
+  Q_PROPERTY( int connectionTimeout READ connectionTimeout WRITE setConnectionTimeout NOTIFY connectionTimeoutChanged )
 public:
   /*!
    * @param name The service topic.
@@ -32,12 +34,18 @@ public:
   ServiceClient( QString name, QString type,
                  const QoSWrapper &qos = QoSWrapper( rclcpp::ServicesQoS() ) );
 
+  ~ServiceClient();
+
   //! Returns whether the service is ready.
   bool isServiceReady() const;
 
   const QString &name() const;
 
   const QString &type() const;
+
+  int connectionTimeout() const;
+
+  void setConnectionTimeout( int timeout );
 
   /*!
    * Calls a service asynchronously returning immediately.
@@ -52,6 +60,8 @@ public:
 signals:
 
   void serviceReadyChanged();
+
+  void connectionTimeoutChanged();
 
 protected:
   void onRos2Initialized() override;
@@ -71,6 +81,9 @@ private:
   QString service_type_;
   ros_babel_fish::BabelFishServiceClient::SharedPtr client_;
   QTimer connect_timer_;
+  std::vector<std::thread> waiting_threads_;
+  std::atomic<bool> stop_;
+  int connection_timeout_ = 10'000; // Default connection timeout in ms
 };
 } // namespace qml_ros2_plugin
 
