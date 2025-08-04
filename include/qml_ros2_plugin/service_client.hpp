@@ -25,7 +25,8 @@ class ServiceClient : public QObjectRos2
   //! The type of the service, e.g., "example_interfaces/srv/AddTwoInts".
   Q_PROPERTY( QString type READ type CONSTANT )
   //! Connection timeout in ms to wait for the service to become available when sending a request.
-  Q_PROPERTY( int connectionTimeout READ connectionTimeout WRITE setConnectionTimeout NOTIFY connectionTimeoutChanged )
+  Q_PROPERTY( int connectionTimeout READ connectionTimeout WRITE setConnectionTimeout NOTIFY
+                  connectionTimeoutChanged )
 public:
   /*!
    * @param name The service topic.
