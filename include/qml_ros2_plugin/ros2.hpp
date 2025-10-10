@@ -95,11 +95,25 @@ public:
   QMap<QString, QStringList> getTopicNamesAndTypes() const;
 
   /*!
+   * Queries the internal node for its services or using the optional datatype parameter for all services with the given type.
+   * @param datatype The message type to filter services for, e.g., std_srvs/srv/SetBool. Omit to query for all services.
+   * @return A list of services that matches the given datatype or all services if no datatype provided.
+   */
+  QStringList queryServices( const QString &datatype = QString() ) const;
+
+  /*!
    * Queries the internal node for its known services and their types.
    * See rclcpp::Node::get_service_names_and_types() for more information.
    * @return A map with the service names as keys and the types as values.
    */
   QMap<QString, QStringList> getServiceNamesAndTypes() const;
+
+  /*!
+   * Queries the internal node for all available actions or using the optional datatype parameter for all actions with the given type.
+   * @param datatype The message type to filter actions for, e.g., control_msgs/action/FollowJointTrajectory. Omit to query for all actions.
+   * @return A list of actions that matches the given datatype or all actions if no datatype provided.
+   */
+  QStringList queryActions( const QString &datatype = QString() ) const;
 
   /*!
    * Queries the internal node for its known actions and their types.
@@ -235,10 +249,16 @@ public:
 
   Q_INVOKABLE QStringList getTopicTypes( const QString &name ) const;
 
+  //! @copydoc Ros2Qml::queryServices
+  Q_INVOKABLE QStringList queryServices( const QString &datatype = QString() ) const;
+
   //! @copydoc Ros2Qml::getServiceNamesAndTypes
   Q_INVOKABLE QVariantMap getServiceNamesAndTypes() const;
 
   Q_INVOKABLE QStringList getServiceTypes( const QString &name ) const;
+
+  //! @copydoc Ros2Qml::queryActions
+  Q_INVOKABLE QStringList queryActions( const QString &datatype = QString() ) const;
 
   //! @copydoc Ros2Qml::getActionNamesAndTypes
   Q_INVOKABLE QVariantMap getActionNamesAndTypes() const;
