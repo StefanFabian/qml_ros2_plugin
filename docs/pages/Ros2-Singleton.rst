@@ -64,6 +64,13 @@ Additionally, for topics three convenience methods are also provided:
 * | ``QString queryTopicTypes( const QString &name )``
   | Retrieves the datatypes for a given topic.
 
+And for actions and services:
+
+* | ``QStringList queryServices( const QString &datatype = QString())``
+  | Queries a list of services with the given datatype or all services if no type provided.
+* | ``QStringList queryActions( const QString &datatype = QString())``
+  | Queries a list of actions with the given datatype or all actions if no type provided.
+
 Example:
 
 .. code-block:: qml

@@ -93,17 +93,17 @@ bool Ros2Qml::ok() const { return rclcpp::ok( context_ ); }
 
 namespace
 {
-//! Converts QString datatype to std::string and adds /msg/ if it is missing.
-std::string toFullyQualifiedDatatype( const QString &datatype )
+//! Converts datatype to std::string and adds /msg/ if it is missing.
+std::string toFullyQualifiedDatatype( const std::string &datatype, const std::string &type = "msg" )
 {
-  std::string result = datatype.toStdString();
+  std::string result = datatype;
   std::string::size_type sep = result.find( '/' );
   if ( sep == std::string::npos )
     return result;
-  if ( sep + 4 < result.size() && result[sep + 1] == 'm' && result[sep + 2] == 's' &&
-       result[sep + 3] == 'g' && result[sep + 4] == '/' )
+  if ( sep + type.size() + 1 < result.size() &&
+       result.substr( sep + 1, type.size() + 1 ) == type + "/" )
     return result;
-  return result.substr( 0, sep ) + "/msg" + result.substr( sep );
+  return result.substr( 0, sep ) + "/" + type + result.substr( sep );
 }
 } // namespace
 
@@ -115,7 +115,7 @@ QStringList Ros2Qml::queryTopics( const QString &datatype ) const
   }
   auto topics_and_types = node_->get_topic_names_and_types();
   QStringList result;
-  std::string std_datatype = toFullyQualifiedDatatype( datatype );
+  std::string std_datatype = toFullyQualifiedDatatype( datatype.toStdString() );
   for ( const auto &[topic, types] : topics_and_types ) {
     if ( !std_datatype.empty() &&
          std::find( types.begin(), types.end(), std_datatype ) == types.end() )
@@ -188,6 +188,24 @@ QMap<QString, QStringList> Ros2Qml::getTopicNamesAndTypes() const
   return result;
 }
 
+QStringList Ros2Qml::queryServices( const QString &datatype ) const
+{
+  if ( node_ == nullptr ) {
+    QML_ROS2_PLUGIN_DEBUG( "Tried to query services before node was initialized!" );
+    return {};
+  }
+  auto service_names_and_types = node_->get_service_names_and_types();
+  QStringList result;
+  std::string std_datatype = toFullyQualifiedDatatype( datatype.toStdString(), "srv" );
+  for ( const auto &[topic, types] : service_names_and_types ) {
+    if ( !std_datatype.empty() &&
+         std::find( types.begin(), types.end(), std_datatype ) == types.end() )
+      continue;
+    result.append( QString::fromStdString( topic ) );
+  }
+  return result;
+}
+
 QMap<QString, QStringList> Ros2Qml::getServiceNamesAndTypes() const
 {
   if ( node_ == nullptr ) {
@@ -205,6 +223,26 @@ QMap<QString, QStringList> Ros2Qml::getServiceNamesAndTypes() const
     std::transform( types.begin(), types.end(), std::back_inserter( result_types ),
                     QString::fromStdString );
     result.insert( QString::fromStdString( service_name ), result_types );
+  }
+  return result;
+}
+
+QStringList Ros2Qml::queryActions( const QString &datatype ) const
+{
+  if ( node_ == nullptr ) {
+    QML_ROS2_PLUGIN_DEBUG( "Tried to query actions before node was initialized!" );
+    return {};
+  }
+  // Get all actions
+  QStringList result;
+  auto full_datatype =
+      QString::fromStdString( toFullyQualifiedDatatype( datatype.toStdString(), "action" ) );
+  QMap<QString, QStringList> action_names_and_types = getActionNamesAndTypes();
+  for ( auto it = action_names_and_types.begin(); it != action_names_and_types.end(); ++it ) {
+    if ( !full_datatype.isEmpty() &&
+         std::find( it.value().begin(), it.value().end(), full_datatype ) == it.value().end() )
+      continue;
+    result.append( it.key() );
   }
   return result;
 }
@@ -411,6 +449,11 @@ QStringList Ros2QmlSingletonWrapper::getTopicTypes( const QString &name ) const
   return Ros2Qml::getInstance().queryTopicTypes( name );
 }
 
+QStringList Ros2QmlSingletonWrapper::queryServices( const QString &datatype ) const
+{
+  return Ros2Qml::getInstance().queryServices( datatype );
+}
+
 QVariantMap Ros2QmlSingletonWrapper::getServiceNamesAndTypes() const
 {
   QVariantMap result;
@@ -426,6 +469,11 @@ QStringList Ros2QmlSingletonWrapper::getServiceTypes( const QString &name ) cons
   QMap<QString, QStringList> service_names_and_types =
       Ros2Qml::getInstance().getServiceNamesAndTypes();
   return service_names_and_types.value( name );
+}
+
+QStringList Ros2QmlSingletonWrapper::queryActions( const QString &datatype ) const
+{
+  return Ros2Qml::getInstance().queryActions( datatype );
 }
 
 QVariantMap Ros2QmlSingletonWrapper::getActionNamesAndTypes() const
