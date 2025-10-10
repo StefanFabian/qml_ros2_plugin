@@ -38,10 +38,10 @@ public:
    *
    * @param goal The goal that is sent to the action server.
    * @param options An object with optional callback members for:
-   *   * goal_response: onGoalResponse(goal_handle)
+   *   * onGoalResponse(goal_handle)
    *       goal_handle will be null if goal was rejected
-   *   * feedback: onFeedback(goal_handle, feedback_message)
-   *   * result: onResult(wrapped_result)
+   *   * onFeedback(goal_handle, feedback_message)
+   *   * onResult(wrapped_result)
    *       where wrapped_result has a *goalId*, result *code* and *result* message.
    * @return null if the action server is not connected, otherwise a GoalHandle keeping track of the state of the goal.
    */

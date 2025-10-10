@@ -121,45 +121,45 @@ QObject *ActionClient::sendGoalAsync( const QVariantMap &goal, QJSValue options 
     if ( !fillMessage( message, goal ) )
       return nullptr;
     BabelFishActionClient::SendGoalOptions goal_options;
-    goal_options.goal_response_callback =
-        [options, this]( const BabelFishActionClient::GoalHandle::SharedPtr &gh ) {
-          if ( !options.hasProperty( "onGoalResponse" ) )
-            return;
-          QJSValue goal_response_cb = options.property( "onGoalResponse" );
-          if ( !goal_response_cb.isCallable() )
-            return;
-          QMetaObject::invokeMethod(
-              this, "invokeGoalResponseCallback", Qt::AutoConnection,
-              Q_ARG( QJSValue, goal_response_cb ),
-              Q_ARG( ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr, gh ) );
-        };
-    goal_options.feedback_callback =
-        [options, this]( const BabelFishActionClient::GoalHandle::SharedPtr &goal_handle,
-                         const CompoundMessage::ConstSharedPtr &feedback ) mutable {
-          if ( !options.hasProperty( "onFeedback" ) )
-            return;
-          QJSValue feedback_cb = options.property( "onFeedback" );
-          if ( !feedback_cb.isCallable() )
-            return;
-          QMetaObject::invokeMethod(
-              this, "invokeFeedbackCallback", Qt::AutoConnection, Q_ARG( QJSValue, feedback_cb ),
-              Q_ARG( ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr, goal_handle ),
-              Q_ARG( ros_babel_fish::CompoundMessage::ConstSharedPtr, feedback ) );
-        };
-    goal_options.result_callback =
-        [options, this]( const BabelFishActionClient::GoalHandle::WrappedResult &result ) {
-          if ( !options.hasProperty( "onResult" ) )
-            return;
-          QJSValue result_cb = options.property( "onResult" );
-          if ( !result_cb.isCallable() )
-            return;
-          QMetaObject::invokeMethod(
-              this, "invokeResultCallback", Qt::AutoConnection, Q_ARG( QJSValue, result_cb ),
-              Q_ARG( QString, uuidToString( result.goal_id ) ),
-              Q_ARG( qml_ros2_plugin::action_goal_status::GoalStatus,
-                     static_cast<qml_ros2_plugin::action_goal_status::GoalStatus>( result.code ) ),
-              Q_ARG( ros_babel_fish::CompoundMessage::ConstSharedPtr, result.result ) );
-        };
+    if ( options.hasProperty( "onGoalResponse" ) ) {
+      goal_options.goal_response_callback =
+          [goal_response_cb = options.property( "onGoalResponse" ),
+           this]( const BabelFishActionClient::GoalHandle::SharedPtr &gh ) {
+            if ( !goal_response_cb.isCallable() )
+              return;
+            QMetaObject::invokeMethod(
+                this, "invokeGoalResponseCallback", Qt::AutoConnection,
+                Q_ARG( QJSValue, goal_response_cb ),
+                Q_ARG( ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr, gh ) );
+          };
+    }
+    if ( options.hasProperty( "onFeedback" ) ) {
+      goal_options.feedback_callback =
+          [feedback_cb = options.property( "onFeedback" ),
+           this]( const BabelFishActionClient::GoalHandle::SharedPtr &goal_handle,
+                  const CompoundMessage::ConstSharedPtr &feedback ) mutable {
+            if ( !feedback_cb.isCallable() )
+              return;
+            QMetaObject::invokeMethod(
+                this, "invokeFeedbackCallback", Qt::AutoConnection, Q_ARG( QJSValue, feedback_cb ),
+                Q_ARG( ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr, goal_handle ),
+                Q_ARG( ros_babel_fish::CompoundMessage::ConstSharedPtr, feedback ) );
+          };
+    }
+    if ( options.hasProperty( "onResult" ) ) {
+      goal_options.result_callback =
+          [result_cb = options.property( "onResult" ),
+           this]( const BabelFishActionClient::GoalHandle::WrappedResult &result ) {
+            if ( !result_cb.isCallable() )
+              return;
+            QMetaObject::invokeMethod(
+                this, "invokeResultCallback", Qt::AutoConnection, Q_ARG( QJSValue, result_cb ),
+                Q_ARG( QString, uuidToString( result.goal_id ) ),
+                Q_ARG( qml_ros2_plugin::action_goal_status::GoalStatus,
+                       static_cast<qml_ros2_plugin::action_goal_status::GoalStatus>( result.code ) ),
+                Q_ARG( ros_babel_fish::CompoundMessage::ConstSharedPtr, result.result ) );
+          };
+    }
     auto goal_handle = client_->async_send_goal( message, goal_options );
     return new GoalHandle( client_, std::move( goal_handle ) );
   } catch ( BabelFishException &ex ) {
