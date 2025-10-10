@@ -21,7 +21,15 @@ ServiceClient::ServiceClient( QString name, QString type, const QoSWrapper &qos 
   babel_fish_ = BabelFishDispenser::getBabelFish();
 }
 
-ServiceClient::~ServiceClient() { stop_ = true; }
+ServiceClient::~ServiceClient()
+{
+  stop_ = true;
+  for ( auto &thread : waiting_threads_ ) {
+    if ( thread.joinable() )
+      thread.join();
+  }
+  waiting_threads_.clear();
+}
 
 void ServiceClient::onRos2Initialized()
 {
