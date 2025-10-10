@@ -731,7 +731,7 @@ struct QVariantListToMessageConverter {
     for ( int src_i = 0; src_i < list.size() && target_i < count; ++src_i, ++target_i ) {
       const QVariant &variant = list.at( static_cast<int>( src_i ) );
       auto &child = array[target_i];
-      if ( variant.type() != QVariant::Map ) {
+      if ( !variant.canConvert<QVariantMap>() ) {
         if ( child.isTime() ) {
           if ( !isCompatible<rclcpp::Time>( variant ) ) {
             QML_ROS2_PLUGIN_WARN(
