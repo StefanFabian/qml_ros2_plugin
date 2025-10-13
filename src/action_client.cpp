@@ -56,6 +56,8 @@ bool ActionClient::isServerReady() const
   return client_ != nullptr && client_->action_server_is_ready();
 }
 
+QString ActionClient::name() const { return name_; }
+
 QString ActionClient::actionType() const { return action_type_; }
 
 void ActionClient::checkServerReady()

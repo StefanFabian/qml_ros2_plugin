@@ -24,12 +24,18 @@ class ActionClient : public QObjectRos2
   Q_OBJECT
   //! True if the ActionClient is connected to the ActionServer, false otherwise.
   Q_PROPERTY( bool ready READ isServerReady NOTIFY serverReadyChanged )
+  //! The service name (topic in ROS 1).
+  Q_PROPERTY( QString name READ name CONSTANT )
   //! The type of the action. Example: action_tutorials_interfaces/action/Fibonacci
+  Q_PROPERTY( QString type READ actionType CONSTANT )
+  //! DEPRECATED: The type of the action. Example: action_tutorials_interfaces/action/Fibonacci
   Q_PROPERTY( QString actionType READ actionType CONSTANT )
 public:
   ActionClient( const QString &name, const QString &action_type );
 
   Q_INVOKABLE bool isServerReady() const;
+
+  QString name() const;
 
   QString actionType() const;
 
