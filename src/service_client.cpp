@@ -90,7 +90,9 @@ void ServiceClient::setConnectionTimeout( int timeout )
 void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &callback )
 {
   using clock = std::chrono::steady_clock;
-  if ( client_ == nullptr ) {
+  if ( client_ == nullptr || !client_->service_is_ready() ) {
+    QML_ROS2_PLUGIN_DEBUG( "Service '%s' not ready, waiting up to %d ms.",
+                           name_.toStdString().c_str(), connection_timeout_ );
     waiting_threads_.emplace_back( [this, req, callback] {
       auto now = clock::now();
       while ( !isServiceReady() ) {
@@ -113,6 +115,7 @@ void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &ca
     } );
     return;
   }
+  QML_ROS2_PLUGIN_DEBUG( "Service '%s' is ready. Sending request.", name_.toStdString().c_str() );
   CompoundMessage::SharedPtr message;
   try {
     message = babel_fish_.create_service_request_shared( service_type_.toStdString() );
