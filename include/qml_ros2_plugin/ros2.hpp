@@ -62,6 +62,11 @@ public:
   void init( const QString &name, const QStringList &args, Ros2InitOptions *options = nullptr );
 
   /*!
+   * Shutdown the internal node. Call before application exit to enable clean up.
+   */
+  Q_INVOKABLE void shutdown();
+
+  /*!
    * Can be used to query the state of ROS.
    * @return False if it's time to exit, true if still ok.
    */
@@ -164,7 +169,7 @@ signals:
   void initialized();
 
   //! Emitted when this ROS node was shut down and it is time to exit.
-  void shutdown();
+  void aboutToShutdown();
 
 private:
   std::thread executor_thread_;
@@ -172,6 +177,7 @@ private:
   std::shared_ptr<rclcpp::Node> node_;
   ros_babel_fish::BabelFish babel_fish_;
   std::atomic<int> count_wrappers;
+  std::atomic<bool> is_shutdown_{ false };
 };
 
 class Ros2QmlSingletonWrapper : public QObject
@@ -384,7 +390,7 @@ signals:
   //! @copydoc Ros2Qml::initialized
   void initialized();
 
-  //! @copydoc Ros2Qml::shutdown
+  //! @copydoc Ros2Qml::aboutToShutdown
   void shutdown();
 
 private:

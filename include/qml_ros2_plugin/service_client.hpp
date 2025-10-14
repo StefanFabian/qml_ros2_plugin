@@ -73,7 +73,7 @@ private slots:
 
   void checkServiceReady();
 
-  void invokeCallback( QJSValue value, QVariant result );
+  void invokeCallback( QJSValue value, const QVariant &result );
 
 private:
   ros_babel_fish::BabelFish babel_fish_;
@@ -83,7 +83,7 @@ private:
   ros_babel_fish::BabelFishServiceClient::SharedPtr client_;
   QTimer connect_timer_;
   std::vector<std::thread> waiting_threads_;
-  std::atomic<bool> stop_;
+  std::atomic<bool> stop_{ false };
   int connection_timeout_ = 10'000; // Default connection timeout in ms
 };
 } // namespace qml_ros2_plugin

@@ -11,7 +11,7 @@ namespace qml_ros2_plugin
 
 /*!
  * Base class for QObjects that require ROS functionality.
- * Provides virtual methods that are called once ROS was initialized and once it was shutdown to
+ * Provides virtual methods that are called once ROS was initialized and once it is shutting down to
  * enable initialization and clean-up of of functionality that requires ROS.
  */
 class QObjectRos2 : public QObject

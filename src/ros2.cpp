@@ -26,18 +26,38 @@ Ros2Qml &Ros2Qml::getInstance()
   return instance;
 }
 
-Ros2Qml::Ros2Qml() : count_wrappers( 0 ) { babel_fish_ = BabelFishDispenser::getBabelFish(); }
+Ros2Qml::Ros2Qml() : count_wrappers( 0 )
+{
+  babel_fish_ = BabelFishDispenser::getBabelFish();
+
+  auto *core_app = QCoreApplication::instance();
+  if ( !core_app )
+    return;
+  QObject::connect( QCoreApplication::instance(), &QCoreApplication::aboutToQuit, this,
+                    &Ros2Qml::shutdown );
+}
 
 Ros2Qml::~Ros2Qml()
 {
   if ( node_ == nullptr )
     return;
-  QML_ROS2_PLUGIN_DEBUG( "Ros2Qml destructing but context still alive. Shutting down context." );
-  node_ = nullptr;
-  rclcpp::shutdown( context_, "QML Ros2 was destroyed." );
-  if ( executor_thread_.joinable() )
-    executor_thread_.join();
-  context_ = nullptr;
+
+  QML_ROS2_PLUGIN_WARN(
+      "Ros2Qml destructing but context still alive. Please call Ros2.shutdown() "
+      "before application exit to ensure safe clean up. Otherwise the middleware might crash." );
+  shutdown();
+}
+
+void Ros2Qml::registerDependant() { ++count_wrappers; }
+
+void Ros2Qml::unregisterDependant()
+{
+  int count = --count_wrappers;
+  if ( count < 0 ) {
+    QML_ROS2_PLUGIN_WARN(
+        "Stop spinning was called more often than start spinning! This is a bug!" );
+    ++count_wrappers;
+  }
 }
 
 QString Ros2Qml::hostname() const { return QHostInfo::localHostName(); }
@@ -85,11 +105,26 @@ void Ros2Qml::init( const QString &name, const QStringList &argv, Ros2InitOption
   executor->add_node( node_ );
   emit initialized();
 
-  executor_thread_ = std::thread( [exec = std::move( executor )]() { exec->spin(); } );
+  executor_thread_ = std::thread( [this, exec = std::move( executor )]() {
+    while ( !is_shutdown_ ) { exec->spin_some(); }
+  } );
   QML_ROS2_PLUGIN_DEBUG( "QML Ros2 initialized." );
 }
 
-bool Ros2Qml::ok() const { return rclcpp::ok( context_ ); }
+void Ros2Qml::shutdown()
+{
+  QML_ROS2_PLUGIN_DEBUG( "Shutting down Ros2Qml..." );
+  emit aboutToShutdown();
+  is_shutdown_ = true;
+  if ( executor_thread_.joinable() )
+    executor_thread_.join();
+  rclcpp::shutdown( context_, "Shutting down Ros2Qml." );
+  node_ = nullptr;
+  context_ = nullptr;
+  QML_ROS2_PLUGIN_DEBUG( "Ros2Qml shut down." );
+}
+
+bool Ros2Qml::ok() const { return context_ != nullptr && rclcpp::ok( context_ ); }
 
 namespace
 {
@@ -316,28 +351,6 @@ QVariant Ros2Qml::createEmptyActionGoal( const QString &datatype ) const
   return {};
 }
 
-void Ros2Qml::registerDependant() { ++count_wrappers; }
-
-void Ros2Qml::unregisterDependant()
-{
-  int count = --count_wrappers;
-  if ( count == 0 ) {
-    QML_ROS2_PLUGIN_DEBUG( "No dependants left. QML Ros2 shutting down." );
-    rclcpp::shutdown(
-        context_, "All dependants unregistered, usually that means the application is exiting." );
-    emit shutdown();
-    if ( executor_thread_.joinable() )
-      executor_thread_.join();
-    node_.reset();
-    context_.reset();
-    QML_ROS2_PLUGIN_DEBUG( "QML Ros2 shut down." );
-  } else if ( count < 0 ) {
-    QML_ROS2_PLUGIN_WARN(
-        "Stop spinning was called more often than start spinning! This is a bug!" );
-    ++count_wrappers;
-  }
-}
-
 std::shared_ptr<rclcpp::Node> Ros2Qml::node() { return node_; }
 
 /***************************************************************************************************/
@@ -348,7 +361,8 @@ Ros2QmlSingletonWrapper::Ros2QmlSingletonWrapper()
 {
   connect( &Ros2Qml::getInstance(), &Ros2Qml::initialized, this,
            &Ros2QmlSingletonWrapper::initialized );
-  connect( &Ros2Qml::getInstance(), &Ros2Qml::shutdown, this, &Ros2QmlSingletonWrapper::shutdown );
+  connect( &Ros2Qml::getInstance(), &Ros2Qml::aboutToShutdown, this,
+           &Ros2QmlSingletonWrapper::shutdown );
   Ros2Qml::getInstance().registerDependant();
 }
 

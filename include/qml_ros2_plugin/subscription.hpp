@@ -81,7 +81,7 @@ public:
   void setMessageType( const QString &value );
 
   //! @return The number of publishers this subscriber is connected to.
-  Q_INVOKABLE unsigned int getPublisherCount();
+  Q_INVOKABLE unsigned int getPublisherCount() const;
 
 signals:
 

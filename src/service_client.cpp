@@ -52,6 +52,10 @@ void ServiceClient::onRos2Initialized()
 void ServiceClient::onRos2Shutdown()
 {
   stop_ = true;
+  for ( auto &thread : waiting_threads_ ) {
+    if ( thread.joinable() )
+      thread.join();
+  }
   client_.reset();
 }
 
@@ -90,16 +94,20 @@ void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &ca
     waiting_threads_.emplace_back( [this, req, callback] {
       auto now = clock::now();
       while ( !isServiceReady() ) {
-        if ( clock::now() - now > std::chrono::milliseconds( connection_timeout_ ) ) {
+        if ( stop_ || clock::now() - now > std::chrono::milliseconds( connection_timeout_ ) ) {
+          QML_ROS2_PLUGIN_DEBUG( "Service '%s' timeouted or client was destroyed while waiting for "
+                                 "it to become ready.",
+                                 name_.toStdString().c_str() );
           QMetaObject::invokeMethod( this, "invokeCallback", Qt::AutoConnection,
                                      Q_ARG( QJSValue, callback ),
                                      Q_ARG( QVariant, QVariant( false ) ) );
           return;
         }
         std::this_thread::sleep_for( std::chrono::milliseconds( 5 ) );
-        if ( stop_ )
-          return;
       }
+      QML_ROS2_PLUGIN_DEBUG(
+          "Service '%s' is ready after waiting %ld ms. Sending goal.", name_.toStdString().c_str(),
+          std::chrono::duration_cast<std::chrono::milliseconds>( clock::now() - now ).count() );
       QMetaObject::invokeMethod( this, "sendRequestAsync", Qt::AutoConnection,
                                  Q_ARG( QVariantMap, req ), Q_ARG( QJSValue, callback ) );
     } );
@@ -109,12 +117,13 @@ void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &ca
   try {
     message = babel_fish_.create_service_request_shared( service_type_.toStdString() );
     fillMessage( *message, req );
-    client_->async_send_request(
-        message, [callback, this]( BabelFishServiceClient::SharedFuture response ) {
-          QMetaObject::invokeMethod( this, "invokeCallback", Qt::AutoConnection,
-                                     Q_ARG( QJSValue, callback ),
-                                     Q_ARG( QVariant, msgToMap( response.get() ) ) );
-        } );
+    client_->async_send_request( message, [callback,
+                                           this]( BabelFishServiceClient::SharedFuture response ) {
+      QML_ROS2_PLUGIN_DEBUG( "Received response from service %s.", name_.toStdString().c_str() );
+      QMetaObject::invokeMethod( this, "invokeCallback", Qt::AutoConnection,
+                                 Q_ARG( QJSValue, callback ),
+                                 Q_ARG( QVariant, msgToMap( response.get() ) ) );
+    } );
     return;
   } catch ( BabelFishException &ex ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to call service: %s", ex.what() );
@@ -127,7 +136,7 @@ void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &ca
                              Q_ARG( QJSValue, callback ), Q_ARG( QVariant, QVariant( false ) ) );
 }
 
-void ServiceClient::invokeCallback( QJSValue value, QVariant result )
+void ServiceClient::invokeCallback( QJSValue value, const QVariant &result )
 {
   QJSEngine *engine = qjsEngine( this );
   value.call( { engine->toScriptValue( result ) } );
