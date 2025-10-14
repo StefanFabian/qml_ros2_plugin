@@ -38,6 +38,10 @@ Additionally, you can use the init options to set options for the node, such as 
     Ros2.init("node_name", initOptions)
   }
 
+Before application exit make sure to call ``Ros2.shutdown()`` to cleanly shutdown the node.
+In Qt application this should be done automatically, if it is not, you might get a warning in the console and the
+application could crash due to the middleware being destructed before the ROS 2 qml plugin cleaned up.
+
 Query Graph
 ------------
 

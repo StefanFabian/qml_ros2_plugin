@@ -20,8 +20,7 @@ QObjectRos2::QObjectRos2( QObject *parent ) : QObject( parent ), is_initialized_
   }
   // These allow for safe clean-up if the application exits since the order of the singleton
   // destructors is undefined and this might lead to dependency issues.
-  QObject::connect( &Ros2Qml::getInstance(), &Ros2Qml::shutdown, this, &QObjectRos2::_shutdown );
-  QObject::connect( QCoreApplication::instance(), &QCoreApplication::aboutToQuit, this,
+  QObject::connect( &Ros2Qml::getInstance(), &Ros2Qml::aboutToShutdown, this,
                     &QObjectRos2::_shutdown );
   // This object needs ROS communication, so it's safe to assume it wants the spinner to be running during its lifetime.
   Ros2Qml::getInstance().registerDependant();

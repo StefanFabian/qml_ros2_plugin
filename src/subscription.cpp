@@ -32,7 +32,7 @@ Subscription::~Subscription() = default;
 void Subscription::initTimers()
 {
   connect( &subscribe_timer_, &QTimer::timeout, this, &Subscription::subscribe );
-  subscribe_timer_.setInterval( std::chrono::milliseconds( 100 ) );
+  subscribe_timer_.setInterval( std::chrono::milliseconds( 1000 ) );
   connect( &throttle_timer_, &QTimer::timeout, this, &Subscription::updateMessage );
   throttle_timer_.setSingleShot( false );
   if ( throttle_rate_ == 0 )
@@ -114,7 +114,7 @@ void Subscription::setMessageType( const QString &value )
   emit messageTypeChanged();
 }
 
-unsigned int Subscription::getPublisherCount()
+unsigned int Subscription::getPublisherCount() const
 {
   return is_subscribed_ ? subscription_->get_publisher_count() : 0;
 }
