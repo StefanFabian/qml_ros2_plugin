@@ -362,7 +362,7 @@ Ros2QmlSingletonWrapper::Ros2QmlSingletonWrapper()
   connect( &Ros2Qml::getInstance(), &Ros2Qml::initialized, this,
            &Ros2QmlSingletonWrapper::initialized );
   connect( &Ros2Qml::getInstance(), &Ros2Qml::aboutToShutdown, this,
-           &Ros2QmlSingletonWrapper::shutdown );
+           &Ros2QmlSingletonWrapper::aboutToShutdown );
   Ros2Qml::getInstance().registerDependant();
 }
 
@@ -409,6 +409,8 @@ void Ros2QmlSingletonWrapper::init( const QString &name, const QStringList &args
 {
   Ros2Qml::getInstance().init( name, args, qobject_cast<Ros2InitOptions *>( options ) );
 }
+
+void Ros2QmlSingletonWrapper::shutdown() { Ros2Qml::getInstance().shutdown(); }
 
 bool Ros2QmlSingletonWrapper::ok() const { return Ros2Qml::getInstance().ok(); }
 

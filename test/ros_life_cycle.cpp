@@ -85,8 +85,10 @@ TEST( Ros2LifeCycle, testLifeCycle )
     EXPECT_TRUE( mock_ros.initialized );
     delete publisher_before_init;
     delete publisher_after_init;
+
+    ros_wrapper.shutdown();
   }
-  // Wrappers are destroyed, this should clear node etc.
+  // After shutdown everything should be uninitialized again
   EXPECT_FALSE( qml_ros2_plugin::Ros2Qml::getInstance().isInitialized() );
   EXPECT_FALSE( qml_ros2_plugin::TfTransformListener::getInstance().isInitialized() );
 }

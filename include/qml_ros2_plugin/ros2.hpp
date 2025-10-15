@@ -229,6 +229,9 @@ public:
   //! @copydoc Ros2Qml::init(const QStringList &, const QString &, Ros2InitOptions)
   Q_INVOKABLE void init( const QString &name, const QStringList &args, QObject *options = nullptr );
 
+  //! @copydoc Ros2Qml::shutdown
+  Q_INVOKABLE void shutdown();
+
   //! @copydoc Ros2Qml::ok
   Q_INVOKABLE bool ok() const;
 
@@ -391,7 +394,7 @@ signals:
   void initialized();
 
   //! @copydoc Ros2Qml::aboutToShutdown
-  void shutdown();
+  void aboutToShutdown();
 
 private:
   bool initLogging();
