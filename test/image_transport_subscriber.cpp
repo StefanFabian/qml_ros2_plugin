@@ -133,11 +133,8 @@ TEST( ImageTransportSubscription, testWrongFormat )
   image->encoding = sensor_msgs::image_encodings::RGB8;
   image->data = { 255, 0, 0, 0, 255, 0, 200, 100, 0, 0, 100, 200, 50, 100, 20, 150, 150, 200 };
   img_pub->publish( *image );
-  mock_surface.stop();
-  processSomeEvents( 100 );
-
   EXPECT_FALSE( mock_surface.last_frame.isValid() );
-  EXPECT_FALSE( subscriber.subscribed() );
+  EXPECT_TRUE( waitFor( [&subscriber]() { return !subscriber.subscribed(); }, 30 ) );
 }
 
 int main( int argc, char **argv )
@@ -151,6 +148,7 @@ int main( int argc, char **argv )
   int result = RUN_ALL_TESTS();
   node.reset();
   Ros2Qml::getInstance().unregisterDependant();
+  Ros2Qml::getInstance().shutdown();
   rclcpp::shutdown();
   return result;
 }

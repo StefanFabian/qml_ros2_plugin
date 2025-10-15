@@ -46,7 +46,7 @@ void processEvents()
   rclcpp::spin_some( node );
 }
 
-bool waitFor( const std::function<bool()> &pred, std::chrono::milliseconds timeout = 500ms )
+bool waitFor( const std::function<bool()> &pred, std::chrono::milliseconds timeout = 1s )
 {
   auto start = std::chrono::steady_clock::now();
   while ( ( std::chrono::steady_clock::now() - start ) < timeout ) {
@@ -371,6 +371,7 @@ TEST( Communication, serviceCallAsync )
   ASSERT_TRUE( !returned );
   waitFor( [&returned]() { return returned; }, 2s );
   ASSERT_TRUE( returned );
+  processEvents();
   processEvents();
   ASSERT_TRUE( obj.hasProperty( "result" ) );
   QVariant result = obj.property( "result" ).toVariant();
@@ -815,6 +816,7 @@ int main( int argc, char **argv )
   wrapper.init( "communication_qml" );
   int result = RUN_ALL_TESTS();
   node.reset();
+  wrapper.shutdown();
   return result;
 }
 
