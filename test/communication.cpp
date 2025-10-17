@@ -58,6 +58,11 @@ bool waitFor( const std::function<bool()> &pred, std::chrono::milliseconds timeo
   return false;
 }
 
+void waitFor( std::chrono::milliseconds timeout )
+{
+  waitFor( []() { return false; }, timeout );
+}
+
 TEST( Communication, publisher )
 {
   Ros2QmlSingletonWrapper wrapper;
@@ -138,12 +143,12 @@ TEST( Communication, subscriber )
   ASSERT_EQ( subscriber_pns->topic().toStdString(), "/communication/test" );
   //  EXPECT_EQ( subscriber_pns->ns(), QString( "/communication/private_ns" )) << subscriber_pns->ns().toStdString();
   EXPECT_EQ( subscriber_pns->queueSize(), 1U );
-  if ( !waitFor( [&]() { return pub_pns->get_subscription_count() > 0; } ) )
+  if ( !waitFor( [&pub_pns]() { return pub_pns->get_subscription_count() > 0; } ) )
     FAIL() << "Timout while waiting for subscriber num increasing.";
   geometry_msgs::msg::Pose pose;
   pose.position.x = 2.34;
   pub_pns->publish( pose );
-  if ( !waitFor( [&]() { return subscriber_pns->message().isValid(); } ) )
+  if ( !waitFor( [&subscriber_pns]() { return subscriber_pns->message().isValid(); } ) )
     FAIL() << "Did not receive message in time.";
   EXPECT_DOUBLE_EQ( pose.position.x,
                     subscriber_pns->message().toMap()["position"].toMap()["x"].toDouble() );
@@ -160,11 +165,11 @@ TEST( Communication, subscriber )
   EXPECT_EQ( subscriber_pns_glob.queueSize(), 5U );
   EXPECT_EQ( subscriber_pns_glob.topic(), QString( "/pose" ) )
       << subscriber_pns_glob.topic().toStdString();
-  if ( !waitFor( [&]() { return pub_pns_glob->get_subscription_count() > 0; } ) )
+  if ( !waitFor( [&pub_pns_glob]() { return pub_pns_glob->get_subscription_count() > 0; } ) )
     FAIL() << "Timout while waiting for subscriber num increasing.";
   pose.position.y = 3.44;
   pub_pns_glob->publish( pose );
-  if ( !waitFor( [&]() { return subscriber_pns_glob.message().isValid(); } ) )
+  if ( !waitFor( [&subscriber_pns_glob]() { return subscriber_pns_glob.message().isValid(); } ) )
     FAIL() << "Did not receive message in time.";
   EXPECT_DOUBLE_EQ( pose.position.x,
                     subscriber_pns_glob.message().toMap()["position"].toMap()["x"].toDouble() );
@@ -180,11 +185,11 @@ TEST( Communication, subscriber )
   EXPECT_EQ( subscriber_ns->queueSize(), 1U );
   EXPECT_EQ( subscriber_ns->topic(), QString( "/other_pose" ) )
       << subscriber_ns->topic().toStdString();
-  if ( !waitFor( [&]() { return pub_ns->get_subscription_count() > 0; } ) )
+  if ( !waitFor( [&pub_ns]() { return pub_ns->get_subscription_count() > 0; }, 3s ) )
     FAIL() << "Timout while waiting for subscriber num increasing.";
   pose.position.z = 5.16;
   pub_ns->publish( pose );
-  if ( !waitFor( [&]() { return subscriber_ns->message().isValid(); } ) )
+  if ( !waitFor( [&subscriber_ns]() { return subscriber_ns->message().isValid(); } ) )
     FAIL() << "Did not receive message in time.";
   EXPECT_DOUBLE_EQ( pose.position.x,
                     subscriber_ns->message().toMap()["position"].toMap()["x"].toDouble() );
@@ -197,7 +202,7 @@ TEST( Communication, subscriber )
   EXPECT_FALSE( subscriber_ns->enabled() );
   pose.position.z = 1.0;
   pub_ns->publish( pose );
-  if ( waitFor( [&]() {
+  if ( waitFor( [&subscriber_ns]() {
          return std::abs( subscriber_ns->message().toMap()["position"].toMap()["z"].toDouble() -
                           1.0 ) < 1E-4;
        } ) )
@@ -234,7 +239,8 @@ TEST( Communication, throttleRate )
   processEvents();
   EXPECT_TRUE( subscriber_pns->isRosInitialized() );
   EXPECT_TRUE( subscriber_pns->enabled() );
-  EXPECT_TRUE( waitFor( [&subscriber_pns]() { return subscriber_pns->getPublisherCount() == 1U; } ) );
+  EXPECT_TRUE(
+      waitFor( [&subscriber_pns]() { return subscriber_pns->getPublisherCount() == 1U; }, 3s ) );
   ASSERT_EQ( subscriber_pns->topic().toStdString(), "/communication/test_throttle_rate" );
   EXPECT_EQ( subscriber_pns->queueSize(), 5U );
   if ( !waitFor( [&]() { return pub_pns->get_subscription_count() > 0; } ) )
@@ -590,18 +596,15 @@ return {
   // Cancel all goals before and at time
   callback_watcher->goal_handles.clear();
   handle1 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 1700 } }, options ) );
-  //  ASSERT_NE( handle1, nullptr );
-  processEvents();
-  std::this_thread::sleep_for( 10ms );
-  processEvents();
+  ASSERT_NE( handle1, nullptr );
+  ASSERT_TRUE( waitFor( [&handle1]() { return handle1->status() == action_goal_status::Accepted; } ) );
+  waitFor( 10ms );
   handle2 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 1800 } }, options ) );
-  //  ASSERT_NE( handle2, nullptr );
-  processEvents();
-  std::this_thread::sleep_for( 40ms );
-  processEvents();
+  ASSERT_NE( handle2, nullptr );
+  ASSERT_TRUE( waitFor( [&handle2]() { return handle2->status() == action_goal_status::Accepted; } ) );
+  waitFor( 10ms );
   QDateTime now = rosToQmlTime( node->now() );
-  std::this_thread::sleep_for( 10ms );
-  processEvents();
+  waitFor( 50ms );
   handle3 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 190 } }, options ) );
   ASSERT_NE( handle3, nullptr );
   EXPECT_NE( handle1->status(), action_goal_status::Succeeded );
