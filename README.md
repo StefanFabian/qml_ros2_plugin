@@ -21,9 +21,7 @@ Connects QML user interfaces to the Robot Operating System 2 (ROS2). [For the RO
 Please be aware that this loses some of the semantic information that the type of a message would normally provide.
 
 Currently, has support for the following:  
-Logging, Publisher, Subscription, ImageTransportSubscription, Service client, ActionClient, TfTransform, Ament index and querying topics  
-
-**License:** MIT
+Logging, Publisher, Subscription, ImageTransportSubscription, Service client, ActionClient, TfTransform, Ament index and querying topics
 
 https://github.com/StefanFabian/qml_ros2_plugin/assets/2090520/c45280cf-24fe-4ff1-8423-30035deda10d
 
@@ -228,8 +226,7 @@ Alternatively, you can follow the steps below to build it yourself.
 Install dependencies
 
 ```bash
-sudo apt install doxygen
-pip3 install sphinx sphinx_rtd_theme breathe
+sudo apt install doxygen python3-sphinx python3-sphinx-rtd-theme python3-breathe 
 ```
 
 #### Build documentation

@@ -109,7 +109,7 @@ QVariant TfTransformListener::canTransform( const QString &target_frame,
 
 QVariantMap TfTransformListener::lookUpTransform( const QString &target_frame,
                                                   const QString &source_frame,
-                                                  const rclcpp::Time &time, double timeout )
+                                                  const rclcpp::Time &time, double timeout ) const
 {
   geometry_msgs::msg::TransformStamped transform;
   if ( !isInitialized() ) {
@@ -169,7 +169,7 @@ QVariantMap TfTransformListener::lookUpTransform( const QString &target_frame,
                                                   const rclcpp::Time &target_time,
                                                   const QString &source_frame,
                                                   const rclcpp::Time &source_time,
-                                                  const QString &fixed_frame, double timeout )
+                                                  const QString &fixed_frame, double timeout ) const
 {
   geometry_msgs::msg::TransformStamped transform;
   if ( !isInitialized() ) {

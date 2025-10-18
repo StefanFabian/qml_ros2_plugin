@@ -60,12 +60,38 @@ As a simple example, a ``Subscription`` can be created as follows:
     topic: "/intval"
   }
 
+or a button calling a service or action client:
+
+.. code-block:: qml
+  :linenos:
+
+  Button {
+    property var client: Ros2.createServiceClient("/add_two_ints", "example_interfaces/srv/AddTwoInts")
+    property bool sending: false
+    text: !sending ? "Do something" : "Working..."
+    onClicked: {
+      // Limit to one service call at a time but this is optional, you can do multiple calls in parallel
+      if (sending) return
+      sending = true
+      myServiceClient.callAsync({ a: 42, b: 1337 }, function(result) {
+        // The response callback will be called once the service response is received or the call failed.
+        // In that case result will be false.
+        sending = false
+        if (!result) {
+          console.log("Service call failed!")
+          return
+        }
+        console.log("Service response:", result.sum)
+      })
+    }
+  }
+
 For more in-depth examples, check out the :ref:`Examples` section.
 
 Initialization
 --------------
-Before a ``Subscription`` can receive messages, a ``Publisher`` can publish
-messages, etc. the node has to be initialized.
+Before a ``Subscription`` can receive messages, a ``Publisher`` can publish messages, etc. the node has to be
+initialized. This has to be done once per application.
 
 .. code-block:: qml
   :linenos:
@@ -79,8 +105,11 @@ messages, etc. the node has to be initialized.
 
 Shutdown
 --------
-To make your application quit when ROS shuts down, e.g., because of a
-``Ctrl+C`` in the console, you can connect
+ .. note::
+   The following is not always necessary, only add it if Ctrl+C does not properly exit your application.
+   The plugin will clean automatically if it can properly detect the Qt application shutdown.
+
+To make your application quit when ROS shuts down, e.g., because of a ``Ctrl+C`` in the console, you can connect
 to the ``Shutdown`` signal:
 
 .. code-block:: qml

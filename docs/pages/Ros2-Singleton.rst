@@ -1,6 +1,6 @@
-=============
+==============
 Ros2 Singleton
-=============
+==============
 
 The ``Ros2`` singleton provides interfaces to static methods and convenience
 methods.
