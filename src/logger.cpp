@@ -1,8 +1,13 @@
 // Copyright (c) 2021 Stefan Fabian. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+<<<<<<< HEAD
 #include "qml_ros2_plugin/logger.hpp"
 #include "qml_ros2_plugin/helpers/logging.hpp"
+=======
+#include "qml6_ros2_plugin/logger.hpp"
+#include "logging.hpp"
+>>>>>>> ce1248c (Moved logging helper to private src folder.)
 
 #include <QJSEngine>
 

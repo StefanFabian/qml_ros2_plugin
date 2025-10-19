@@ -3,9 +3,15 @@
 
 #include "qml_ros2_plugin/goal_handle.hpp"
 
+<<<<<<< HEAD
 #include "qml_ros2_plugin/babel_fish_dispenser.hpp"
 #include "qml_ros2_plugin/conversion/message_conversions.hpp"
 #include "qml_ros2_plugin/helpers/logging.hpp"
+=======
+#include "logging.hpp"
+#include "qml6_ros2_plugin/babel_fish_dispenser.hpp"
+#include "qml6_ros2_plugin/conversion/message_conversions.hpp"
+>>>>>>> ce1248c (Moved logging helper to private src folder.)
 
 using namespace ros_babel_fish;
 using namespace qml_ros2_plugin::conversion;

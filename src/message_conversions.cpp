@@ -3,11 +3,19 @@
 
 #include "qml_ros2_plugin/conversion/message_conversions.hpp"
 
+<<<<<<< HEAD
 #include "qml_ros2_plugin/array.hpp"
 #include "qml_ros2_plugin/babel_fish_dispenser.hpp"
 #include "qml_ros2_plugin/conversion/qml_ros_conversion.hpp"
 #include "qml_ros2_plugin/helpers/logging.hpp"
 #include "qml_ros2_plugin/time.hpp"
+=======
+#include "logging.hpp"
+#include "qml6_ros2_plugin/array.hpp"
+#include "qml6_ros2_plugin/babel_fish_dispenser.hpp"
+#include "qml6_ros2_plugin/conversion/qml_ros_conversion.hpp"
+#include "qml6_ros2_plugin/time.hpp"
+>>>>>>> ce1248c (Moved logging helper to private src folder.)
 
 #include <QAbstractListModel>
 #include <QDateTime>
