@@ -27,6 +27,11 @@ class ServiceClient : public QObjectRos2
   //! Connection timeout in ms to wait for the service to become available when sending a request.
   Q_PROPERTY( int connectionTimeout READ connectionTimeout WRITE setConnectionTimeout NOTIFY
                   connectionTimeoutChanged )
+  //! How many service requests are currently pending and waiting for the response.
+  Q_PROPERTY( int pendingRequests READ pendingRequests NOTIFY pendingRequestsChanged )
+
+  using clock = std::chrono::steady_clock;
+
 public:
   /*!
    * @param name The service topic.
@@ -48,6 +53,8 @@ public:
 
   void setConnectionTimeout( int timeout );
 
+  int pendingRequests() const;
+
   /*!
    * Calls a service asynchronously returning immediately.
    * Once the service call finishes, the optional callback is called with the result if provided.
@@ -63,6 +70,8 @@ signals:
   void serviceReadyChanged();
 
   void connectionTimeoutChanged();
+
+  void pendingRequestsChanged();
 
 protected:
   void onRos2Initialized() override;
@@ -82,9 +91,15 @@ private:
   QString service_type_;
   ros_babel_fish::BabelFishServiceClient::SharedPtr client_;
   QTimer connect_timer_;
-  std::vector<std::thread> waiting_threads_;
-  std::atomic<bool> stop_{ false };
-  int connection_timeout_ = 10'000; // Default connection timeout in ms
+  struct WaitingServiceCallData {
+    QVariantMap request;
+    QJSValue callback;
+    clock::time_point start;
+  };
+  // Queue of service calls waiting for the service to become available
+  std::vector<WaitingServiceCallData> waiting_service_calls_;
+  int pending_requests_ = 0;
+  int connection_timeout_ = 10'000; // Default connection timeout for waiting service calls in ms
 };
 } // namespace qml_ros2_plugin
 
