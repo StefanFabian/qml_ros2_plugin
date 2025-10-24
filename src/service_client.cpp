@@ -21,15 +21,7 @@ ServiceClient::ServiceClient( QString name, QString type, const QoSWrapper &qos 
   babel_fish_ = BabelFishDispenser::getBabelFish();
 }
 
-ServiceClient::~ServiceClient()
-{
-  stop_ = true;
-  for ( auto &thread : waiting_threads_ ) {
-    if ( thread.joinable() )
-      thread.join();
-  }
-  waiting_threads_.clear();
-}
+ServiceClient::~ServiceClient() = default;
 
 void ServiceClient::onRos2Initialized()
 {
@@ -49,23 +41,43 @@ void ServiceClient::onRos2Initialized()
   connect_timer_.start();
 }
 
-void ServiceClient::onRos2Shutdown()
-{
-  stop_ = true;
-  for ( auto &thread : waiting_threads_ ) {
-    if ( thread.joinable() )
-      thread.join();
-  }
-  client_.reset();
-}
+void ServiceClient::onRos2Shutdown() { client_.reset(); }
 
 void ServiceClient::checkServiceReady()
 {
-  if ( !isServiceReady() )
+  if ( !isServiceReady() ) {
+    int timeouted = 0;
+    for ( size_t i = 0; i < waiting_service_calls_.size(); ++i, ++timeouted ) {
+      if ( clock::now() - waiting_service_calls_[i].start <
+           std::chrono::milliseconds( connection_timeout_ ) )
+        break;
+      QML_ROS2_PLUGIN_DEBUG(
+          "Request for service '%s' timeouted while waiting for it to become ready.",
+          name_.toStdString().c_str() );
+      invokeCallback( waiting_service_calls_[i].callback, QVariant( false ) );
+      pending_requests_--;
+    }
+    if ( timeouted > 0 ) {
+      waiting_service_calls_.erase( waiting_service_calls_.begin(),
+                                    waiting_service_calls_.begin() + timeouted );
+      emit pendingRequestsChanged();
+    }
     return;
+  }
   connect_timer_.stop();
   disconnect( &connect_timer_, &QTimer::timeout, this, &ServiceClient::checkServiceReady );
   emit serviceReadyChanged();
+
+  if ( waiting_service_calls_.empty() )
+    return;
+
+  blockSignals( true );
+  for ( const auto &call : waiting_service_calls_ ) {
+    pending_requests_--;
+    sendRequestAsync( call.request, call.callback );
+  }
+  blockSignals( false );
+  emit pendingRequestsChanged();
 }
 
 bool ServiceClient::isServiceReady() const
@@ -87,32 +99,15 @@ void ServiceClient::setConnectionTimeout( int timeout )
   emit connectionTimeoutChanged();
 }
 
+int ServiceClient::pendingRequests() const { return pending_requests_; }
+
 void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &callback )
 {
-  using clock = std::chrono::steady_clock;
+  pending_requests_++;
   if ( client_ == nullptr || !client_->service_is_ready() ) {
     QML_ROS2_PLUGIN_DEBUG( "Service '%s' not ready, waiting up to %d ms.",
                            name_.toStdString().c_str(), connection_timeout_ );
-    waiting_threads_.emplace_back( [this, req, callback] {
-      auto now = clock::now();
-      while ( !isServiceReady() ) {
-        if ( stop_ || clock::now() - now > std::chrono::milliseconds( connection_timeout_ ) ) {
-          QML_ROS2_PLUGIN_DEBUG( "Service '%s' timeouted or client was destroyed while waiting for "
-                                 "it to become ready.",
-                                 name_.toStdString().c_str() );
-          QMetaObject::invokeMethod( this, "invokeCallback", Qt::AutoConnection,
-                                     Q_ARG( QJSValue, callback ),
-                                     Q_ARG( QVariant, QVariant( false ) ) );
-          return;
-        }
-        std::this_thread::sleep_for( std::chrono::milliseconds( 5 ) );
-      }
-      QML_ROS2_PLUGIN_DEBUG(
-          "Service '%s' is ready after waiting %ld ms. Sending goal.", name_.toStdString().c_str(),
-          std::chrono::duration_cast<std::chrono::milliseconds>( clock::now() - now ).count() );
-      QMetaObject::invokeMethod( this, "sendRequestAsync", Qt::AutoConnection,
-                                 Q_ARG( QVariantMap, req ), Q_ARG( QJSValue, callback ) );
-    } );
+    waiting_service_calls_.push_back( { req, callback, clock::now() } );
     return;
   }
   QML_ROS2_PLUGIN_DEBUG( "Service '%s' is ready. Sending request.", name_.toStdString().c_str() );
@@ -123,10 +118,13 @@ void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &ca
     client_->async_send_request( message, [callback,
                                            this]( BabelFishServiceClient::SharedFuture response ) {
       QML_ROS2_PLUGIN_DEBUG( "Received response from service %s.", name_.toStdString().c_str() );
+      pending_requests_--;
+      emit pendingRequestsChanged();
       QMetaObject::invokeMethod( this, "invokeCallback", Qt::AutoConnection,
                                  Q_ARG( QJSValue, callback ),
                                  Q_ARG( QVariant, msgToMap( response.get() ) ) );
     } );
+    emit pendingRequestsChanged();
     return;
   } catch ( BabelFishException &ex ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to call service: %s", ex.what() );
@@ -135,6 +133,7 @@ void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &ca
   } catch ( ... ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to call service: Unknown error." );
   }
+  pending_requests_--;
   QMetaObject::invokeMethod( this, "invokeCallback", Qt::AutoConnection,
                              Q_ARG( QJSValue, callback ), Q_ARG( QVariant, QVariant( false ) ) );
 }
