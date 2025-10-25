@@ -217,7 +217,7 @@ void Subscription::updateMessage()
   if ( message_queue_.empty() )
     return;
   for ( const auto &msg : message_queue_ ) {
-    message_ = msgToMap( *msg );
+    message_ = msgToMap( msg );
     emit messageChanged();
     emit newMessage( message_ );
   }
