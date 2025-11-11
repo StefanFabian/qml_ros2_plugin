@@ -111,6 +111,10 @@ public:
 
   Q_INVOKABLE QVariantList toVariantList() const;
 
+  //! This method will load the entry in the cache so it can return a reference to the entry.
+  //! This is otherwise not necessarily done for small types.
+  QVariant &atRef( int index );
+
 private:
   void enlargeCache( int size ) const;
 
