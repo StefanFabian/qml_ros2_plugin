@@ -152,6 +152,9 @@ QStringList Ros2Qml::queryTopics( const QString &datatype ) const
   QStringList result;
   std::string std_datatype = toFullyQualifiedDatatype( datatype.toStdString() );
   for ( const auto &[topic, types] : topics_and_types ) {
+    if ( topic.find( "/_action/" ) != std::string::npos ) {
+      continue;
+    }
     if ( !std_datatype.empty() &&
          std::find( types.begin(), types.end(), std_datatype ) == types.end() )
       continue;
