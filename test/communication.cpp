@@ -87,7 +87,7 @@ TEST( Communication, publisher )
   if ( !waitFor( [&]() { return !pub_singleton_private_storage.messages.empty(); } ) )
     FAIL() << "Timeout while waiting for message!";
   ASSERT_EQ( pub_singleton_private_storage.messages.size(), 1UL );
-  EXPECT_EQ( pub_singleton_private_storage.messages[0].position.x, 1.2 );
+  EXPECT_DOUBLE_EQ( pub_singleton_private_storage.messages[0].position.x, 1.2 );
   delete pub_singleton_private;
 
   auto pub_singleton_glob_explicit = dynamic_cast<qml_ros2_plugin::Publisher *>(
@@ -107,7 +107,7 @@ TEST( Communication, publisher )
   if ( !waitFor( [&]() { return !pub_singleton_glob_explicit_storage.messages.empty(); } ) )
     FAIL() << "Timeout while waiting for message!";
   ASSERT_EQ( pub_singleton_glob_explicit_storage.messages.size(), 1UL );
-  EXPECT_EQ( pub_singleton_glob_explicit_storage.messages[0].position.y, 1.3 );
+  EXPECT_DOUBLE_EQ( pub_singleton_glob_explicit_storage.messages[0].position.y, 1.3 );
   delete pub_singleton_glob_explicit;
 
   auto pub_singleton_glob = dynamic_cast<qml_ros2_plugin::Publisher *>(
@@ -125,7 +125,7 @@ TEST( Communication, publisher )
   if ( !waitFor( [&]() { return !pub_singleton_glob_storage.messages.empty(); } ) )
     FAIL() << "Timeout while waiting for message!";
   ASSERT_EQ( pub_singleton_glob_storage.messages.size(), 1UL );
-  EXPECT_EQ( pub_singleton_glob_storage.messages[0].position.y, 1.3 );
+  EXPECT_DOUBLE_EQ( pub_singleton_glob_storage.messages[0].position.y, 1.3 );
   delete pub_singleton_glob;
 }
 
