@@ -147,7 +147,8 @@ QVariant &Array::atRef( int index )
   }
   if ( p_->cache.size() > index && p_->cache[index].isValid() )
     return p_->cache[index];
-  p_->cache.resize( index + 1 );
+  p_->cache.reserve( index + 1 );
+  while ( p_->cache.size() <= index ) p_->cache.push_back( QVariant() );
   return p_->cache[index] = at( index );
 }
 

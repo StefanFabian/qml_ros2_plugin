@@ -346,7 +346,7 @@ TEST( MessageConversion, array )
   test_array.times.push_back( rclcpp::Time( 45000000 ) );
 
   // Unlike with array, this will be a QVariantList where a copy does not point to the same data.
-  ASSERT_EQ( map.toMap()["durations"].typeId(), QMetaType::QVariantList );
+  ASSERT_EQ( map.toMap()["durations"].type(), QVariant::List );
   auto &duration_array = obtainValueAsReference<QVariantList>(
       obtainValueAsReference<QVariantMap>( map )["durations"] );
   duration_array.replace( 0, { static_cast<uint8_t>( 21 ) } );

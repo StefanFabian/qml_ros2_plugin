@@ -42,6 +42,7 @@ set(SOURCES
   include/qml_ros2_plugin/image_transport_subscription.hpp
   include/qml_ros2_plugin/io.hpp
   include/qml_ros2_plugin/logger.hpp
+  include/qml_ros2_plugin/message_item_model.hpp
   include/qml_ros2_plugin/publisher.hpp
   include/qml_ros2_plugin/qobject_ros2.hpp
   include/qml_ros2_plugin/qos.hpp
@@ -64,6 +65,7 @@ set(SOURCES
   src/io.cpp
   src/logger.cpp
   src/message_conversions.cpp
+  src/message_item_model.cpp
   src/publisher.cpp
   src/qml_ros2_plugin.cpp
   src/qobject_ros2.cpp

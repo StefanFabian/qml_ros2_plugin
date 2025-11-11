@@ -1,19 +1,11 @@
 // Copyright (c) 2021 Stefan Fabian. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-<<<<<<< HEAD
 #include "qml_ros2_plugin/service_client.hpp"
+#include "logging.hpp"
 #include "qml_ros2_plugin/babel_fish_dispenser.hpp"
 #include "qml_ros2_plugin/conversion/message_conversions.hpp"
-#include "qml_ros2_plugin/helpers/logging.hpp"
 #include "qml_ros2_plugin/ros2.hpp"
-=======
-#include "qml6_ros2_plugin/service_client.hpp"
-#include "logging.hpp"
-#include "qml6_ros2_plugin/babel_fish_dispenser.hpp"
-#include "qml6_ros2_plugin/conversion/message_conversions.hpp"
-#include "qml6_ros2_plugin/ros2.hpp"
->>>>>>> ce1248c (Moved logging helper to private src folder.)
 
 #include <QJSEngine>
 #include <thread>
