@@ -177,7 +177,6 @@ private:
   std::shared_ptr<rclcpp::Node> node_;
   ros_babel_fish::BabelFish babel_fish_;
   std::atomic<int> count_wrappers;
-  std::atomic<bool> is_shutdown_{ false };
 };
 
 class Ros2QmlSingletonWrapper : public QObject

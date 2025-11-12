@@ -101,13 +101,13 @@ void Ros2Qml::init( const QString &name, const QStringList &argv, Ros2InitOption
   executor_options.context = context_;
   // StaticSingleThreadedExecutor may be a bit faster but will keep a reference to the subscription
   // and therefore not unsubscribe if the subscription is reset.
-  auto executor = rclcpp::executors::SingleThreadedExecutor::make_unique( executor_options );
+  auto queue = std::make_unique<rclcpp::experimental::executors::SimpleEventsQueue>();
+  auto executor = rclcpp::experimental::executors::EventsExecutor::make_unique(
+      std::move( queue ), false, executor_options );
   executor->add_node( node_ );
   emit initialized();
 
-  executor_thread_ = std::thread( [this, exec = std::move( executor )]() {
-    while ( !is_shutdown_ ) { exec->spin_some(); }
-  } );
+  executor_thread_ = std::thread( [exec = std::move( executor )]() { exec->spin(); } );
   QML_ROS2_PLUGIN_DEBUG( "QML Ros2 initialized." );
 }
 
@@ -115,10 +115,9 @@ void Ros2Qml::shutdown()
 {
   QML_ROS2_PLUGIN_DEBUG( "Shutting down Ros2Qml..." );
   emit aboutToShutdown();
-  is_shutdown_ = true;
+  rclcpp::shutdown( context_, "Shutting down Ros2Qml." );
   if ( executor_thread_.joinable() )
     executor_thread_.join();
-  rclcpp::shutdown( context_, "Shutting down Ros2Qml." );
   node_ = nullptr;
   context_ = nullptr;
   QML_ROS2_PLUGIN_DEBUG( "Ros2Qml shut down." );
