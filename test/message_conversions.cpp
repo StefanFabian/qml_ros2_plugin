@@ -185,7 +185,7 @@ TEST( MessageConversion, msgToMapRBF )
     test_message.point_arr.push_back( p );
   }
 
-  CompoundMessage wrapped(
+  auto wrapped = CompoundMessage::make_shared(
       *fish.get_message_type_support( "ros_babel_fish_test_msgs/TestMessage" ),
       std::shared_ptr<void>( &test_message, []( void * ) { /*empty deleter*/ } ) );
   QVariant map = msgToMap( wrapped );
@@ -262,8 +262,9 @@ TEST( MessageConversion, array )
   fillArray( test_array.subarrays_fixed, SEED++ );
   fillArray( test_array.subarrays, SEED++ );
 
-  CompoundMessage wrapped( *fish.get_message_type_support( "ros_babel_fish_test_msgs/TestArray" ),
-                           std::shared_ptr<void>( &test_array, []( void * ) { /*empty deleter*/ } ) );
+  auto wrapped = CompoundMessage::make_shared(
+      *fish.get_message_type_support( "ros_babel_fish_test_msgs/TestArray" ),
+      std::shared_ptr<void>( &test_array, []( void * ) { /*empty deleter*/ } ) );
   QVariant map = msgToMap( wrapped );
   ASSERT_TRUE( mapAndMessageEqual( map, test_array ) );
   CompoundMessage::SharedPtr msg =
@@ -547,7 +548,6 @@ QtObject {
     ListElement { value: "is" }
     ListElement { value: "a" }
     ListElement { value: "test" }
-
   }
   Component.onCompleted: {
     stringModel.append({ 'x': "An object", 'y': "that's not a string"})

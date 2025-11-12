@@ -40,6 +40,25 @@ const T &obtainValueAsConstReference( const QVariant &value )
   return *reinterpret_cast<const T *>( value.data() );
 }
 
+enum class ConversionFlags : int {
+  None = 0,
+  //! Use Array to wrap arrays to lazy initialize values on access.
+  //! Advantage: Large arrays that are not accessed don't have to be evaluated.
+  //! Downside is that elements can not be accessed using index operator[] but need to use .at(index).
+  LazyWrapArrays = 1,
+  Default = LazyWrapArrays
+};
+
+inline ConversionFlags operator&( ConversionFlags a, ConversionFlags b )
+{
+  return static_cast<ConversionFlags>( static_cast<int>( a ) & static_cast<int>( b ) );
+}
+
+inline ConversionFlags operator|( ConversionFlags a, ConversionFlags b )
+{
+  return static_cast<ConversionFlags>( static_cast<int>( a ) | static_cast<int>( b ) );
+}
+
 QVariantMap msgToMap( const std_msgs::msg::Header &msg );
 
 QVariantMap msgToMap( const geometry_msgs::msg::Vector3 &msg );
@@ -58,9 +77,12 @@ QVariantMap msgToMap( const action_msgs::msg::GoalInfo &msg );
 
 QVariantMap msgToMap( const action_msgs::msg::GoalStatus &msg );
 
-QVariant msgToMap( const std::shared_ptr<const ros_babel_fish::Message> &msg );
+QVariant msgToMap( const std::shared_ptr<const ros_babel_fish::Message> &msg,
+                   ConversionFlags flags = ConversionFlags::Default );
 
-QVariant msgToMap( const ros_babel_fish::Message &msg );
+//! Will soon be deprecated. Use the shared_ptr overload instead.
+QVariant msgToMap( const ros_babel_fish::Message &msg,
+                   ConversionFlags flags = ConversionFlags::Default );
 
 bool fillMessage( ros_babel_fish::Message &msg, const QVariant &value );
 

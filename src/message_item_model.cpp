@@ -389,7 +389,7 @@ QVariant MessageTreeItem::createNewChild() const
   case rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE: {
     auto babel_fish = BabelFishDispenser::getBabelFish();
     ros_babel_fish::MessageMembersIntrospection members = *introspection_;
-    auto value = babel_fish.create_message( members.getMessageName() );
+    auto value = babel_fish.create_message_shared( members.getMessageName() );
     return QVariant::fromValue( conversion::msgToMap( value ) );
   }
   case rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:

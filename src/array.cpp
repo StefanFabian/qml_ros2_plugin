@@ -191,6 +191,12 @@ void Array::spliceList( int start, int delete_count, const QVariantList &items )
   p_->length = p_->cache.size();
 }
 
+void Array::replace( int index, const QVariant &value )
+{
+  enlargeCache( index );
+  p_->cache.replace( index, value );
+}
+
 void Array::push( const QVariant &value )
 {
   enlargeCache( length() );
@@ -199,6 +205,8 @@ void Array::push( const QVariant &value )
     p_->modified.push_back( true );
   ++p_->length;
 }
+
+void Array::append( const QVariant &value ) { push( value ); }
 
 void Array::unshift( const QVariant &value )
 {

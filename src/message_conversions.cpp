@@ -273,7 +273,7 @@ struct ArrayToQVariantListConverter {
 };
 } // namespace
 
-QVariant msgToMap( const Message::ConstSharedPtr &msg )
+QVariant msgToMap( const Message::ConstSharedPtr &msg, ConversionFlags flags )
 {
   if ( msg->type() == MessageTypes::Compound ) {
     QVariantMap result;
@@ -289,22 +289,22 @@ QVariant msgToMap( const Message::ConstSharedPtr &msg )
     const auto &keys = compound.keys();
     const auto &values = compound.values();
     for ( size_t i = 0; i < keys.size(); ++i ) {
-      result.insert( QString::fromStdString( keys[i] ), msgToMap( values[i] ) );
+      result.insert( QString::fromStdString( keys[i] ), msgToMap( values[i], flags ) );
     }
     return result;
   } else if ( msg->type() == MessageTypes::Array ) {
     auto &arr = msg->as<ArrayMessageBase>();
-    if ( arr.size() > 50 ) {
-      // For array >= 50 elements, do lazy evaluation and don't copy.
+    if ( ( flags & ConversionFlags::LazyWrapArrays ) == ConversionFlags::LazyWrapArrays ) {
       return QVariant::fromValue( Array( std::dynamic_pointer_cast<const ArrayMessageBase>( msg ) ) );
     }
+    // If not lazy wrap, use qvariant
     return invoke_for_array_message( arr, ArrayToQVariantListConverter{} );
   }
 
   return invoke_for_value_message( *msg, MessageToQVariantConverter{} );
 }
 
-QVariant msgToMap( const Message &msg )
+QVariant msgToMap( const Message &msg, ConversionFlags flags )
 {
   if ( msg.type() == MessageTypes::Compound ) {
     QVariantMap result;
@@ -320,7 +320,7 @@ QVariant msgToMap( const Message &msg )
     const auto &keys = compound.keys();
     const auto &values = compound.values();
     for ( size_t i = 0; i < keys.size(); ++i ) {
-      result.insert( QString::fromStdString( keys[i] ), msgToMap( values[i] ) );
+      result.insert( QString::fromStdString( keys[i] ), msgToMap( values[i], flags ) );
     }
     return result;
   } else if ( msg.type() == MessageTypes::Array ) {
