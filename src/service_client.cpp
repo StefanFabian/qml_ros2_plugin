@@ -54,10 +54,10 @@ void ServiceClient::checkServiceReady()
       QML_ROS2_PLUGIN_DEBUG(
           "Request for service '%s' timeouted while waiting for it to become ready.",
           name_.toStdString().c_str() );
+      pending_requests_--;
       QMetaObject::invokeMethod( this, "invokeCallback", Qt::AutoConnection,
                                  Q_ARG( QJSValue, waiting_service_calls_[i].callback ),
                                  Q_ARG( QVariant, false ) );
-      pending_requests_--;
     }
     if ( timeouted > 0 ) {
       waiting_service_calls_.erase( waiting_service_calls_.begin(),
@@ -111,6 +111,7 @@ void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &ca
     QML_ROS2_PLUGIN_DEBUG( "Service '%s' not ready, waiting up to %d ms.",
                            name_.toStdString().c_str(), connection_timeout_ );
     waiting_service_calls_.push_back( { req, callback, clock::now() } );
+    emit pendingRequestsChanged();
     if ( !connect_timer_.isActive() ) {
       // If the time is not active, the service was ready at some point and is not ready anymore.
       emit serviceReadyChanged();
