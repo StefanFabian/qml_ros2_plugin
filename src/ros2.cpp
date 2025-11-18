@@ -14,6 +14,7 @@
 #include <QCoreApplication>
 #include <QHostInfo>
 #include <QJSEngine>
+#include <rcl/validate_topic_name.h>
 #include <rcl_action/graph.h>
 #include <thread>
 
@@ -435,6 +436,20 @@ QString Ros2QmlSingletonWrapper::getNamespace()
   if ( !isInitialized() )
     return {};
   return QString::fromStdString( Ros2Qml::getInstance().node()->get_namespace() );
+}
+
+bool Ros2QmlSingletonWrapper::isValidTopic( const QString &topic ) const
+{
+  int validation_result;
+  size_t invalid_index;
+  rcl_ret_t ret =
+      rcl_validate_topic_name( topic.toStdString().c_str(), &validation_result, &invalid_index );
+  if ( ret != RCL_RET_OK ) {
+    QML_ROS2_PLUGIN_ERROR( "Failed to validate topic name '%s': %s", topic.toStdString().c_str(),
+                           rcl_get_error_string().str );
+    return false;
+  }
+  return validation_result == RCL_TOPIC_NAME_VALID;
 }
 
 QStringList Ros2QmlSingletonWrapper::queryTopics( const QString &datatype ) const

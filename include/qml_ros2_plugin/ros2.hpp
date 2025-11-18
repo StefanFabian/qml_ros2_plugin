@@ -243,6 +243,9 @@ public:
   //! Returns the namespace of the node. Returns empty string before ROS node was initialized.
   Q_INVOKABLE QString getNamespace();
 
+  //! Returns true if the given topic name is valid, false otherwise.
+  Q_INVOKABLE bool isValidTopic( const QString &topic ) const;
+
   //! @copydoc Ros2Qml::queryTopics
   Q_INVOKABLE QStringList queryTopics( const QString &datatype = QString() ) const;
 
