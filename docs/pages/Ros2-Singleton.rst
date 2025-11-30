@@ -65,7 +65,7 @@ Additionally, for topics three convenience methods are also provided:
   | Queries a list of topics with the given datatype or all topics if no type provided.
 * | ``QList<TopicInfo> queryTopicInfo()``
   | Retrieves a list of all advertised topics including their datatypes. See :cpp:class:`TopicInfo`
-* | ``QString queryTopicTypes( const QString &name )``
+* | ``QStringList queryTopicTypes( const QString &name )``
   | Retrieves the datatypes for a given topic.
 
 And for actions and services:
