@@ -9,12 +9,11 @@ ApplicationWindow {
   width: 800
   height: 600
 
-  // This connection makes sure the application exits if this ROS node is requested to shutdown
-  Connections {
-    target: Ros2
-    function onShutdown() {
-      Qt.quit()
-    }
+  Component.onCompleted: {
+    // Initialize ROS with the given name. The command line args are passed by the plugin
+    // Optionally, you can call init with a string list ["arg1", "arg2"] after the name to use those
+    // args instead of the ones supplied by the command line.
+    Ros2.init("turtle_tutorial_control")
   }
 
   // Arguments are: Message Type, Topic, Queue Size
@@ -184,12 +183,4 @@ ApplicationWindow {
     // Angular has to be inverted because right is positive 
     onTriggered: page.cmdVelPublisher.publish({ linear: { x: sliderForward.value }, angular: { z: -sliderTurn.value } })
   }
-
-  Component.onCompleted: {
-    // Initialize ROS with the given name. The command line args are passed by the plugin
-    // Optionally, you can call init with a string list ["arg1", "arg2"] after the name to use those
-    // args instead of the ones supplied by the command line.
-    Ros2.init("turtle_tutorial_control")
-  }
-
 }

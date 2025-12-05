@@ -12,9 +12,24 @@ namespace qml_ros2_plugin
 
 QString AmentIndex::getPackageShareDirectory( const QString &package_name )
 {
+  if ( package_name.isEmpty() ) {
+    return {};
+  }
   try {
     return QString::fromStdString(
         ament_index_cpp::get_package_share_directory( package_name.toStdString() ) );
+  } catch ( ament_index_cpp::PackageNotFoundError &ex ) {
+    return {};
+  }
+}
+
+QString AmentIndex::getPackagePrefix( const QString &package_name )
+{
+  if ( package_name.isEmpty() ) {
+    return {};
+  }
+  try {
+    return QString::fromStdString( ament_index_cpp::get_package_prefix( package_name.toStdString() ) );
   } catch ( ament_index_cpp::PackageNotFoundError &ex ) {
     return {};
   }

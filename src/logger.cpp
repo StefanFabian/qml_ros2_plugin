@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #include "qml_ros2_plugin/logger.hpp"
-#include "qml_ros2_plugin/helpers/logging.hpp"
+#include "logging.hpp"
 
 #include <QJSEngine>
 

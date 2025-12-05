@@ -25,6 +25,14 @@ public:
    */
   Q_INVOKABLE QString getPackageShareDirectory( const QString &package_name );
 
+  /*!
+   * Queries the path to the prefix directory for a given package.
+   * @param package_name The name of the package.
+   * @return The fully-qualified path to the prefix directory of the given
+   * package or an empty string if the package is not found.
+   */
+  Q_INVOKABLE QString getPackagePrefix( const QString &package_name );
+
   //! @return A list of all packages.
   Q_INVOKABLE QStringList getPackages();
 };

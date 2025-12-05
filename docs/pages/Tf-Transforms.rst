@@ -57,7 +57,7 @@ Be aware that in JavaScript durations are given in milliseconds.
 API
 ---
 
-.. doxygenclass:: qml_ros2_plugin::TfTransformListener
+.. doxygenclass:: qml6_ros2_plugin::TfTransformListenerWrapper
   :members:
 
 .. doxygenclass:: qml_ros2_plugin::TfTransform

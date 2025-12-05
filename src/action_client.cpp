@@ -2,11 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #include "qml_ros2_plugin/action_client.hpp"
+#include "logging.hpp"
 #include "qml_ros2_plugin/babel_fish_dispenser.hpp"
 #include "qml_ros2_plugin/conversion/message_conversions.hpp"
 #include "qml_ros2_plugin/conversion/qml_ros_conversion.hpp"
 #include "qml_ros2_plugin/goal_handle.hpp"
-#include "qml_ros2_plugin/helpers/logging.hpp"
 #include "qml_ros2_plugin/ros2.hpp"
 
 #include <QJSEngine>

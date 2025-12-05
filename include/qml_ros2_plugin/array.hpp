@@ -65,12 +65,18 @@ public:
    */
   Q_INVOKABLE void spliceList( int start, int delete_count, const QVariantList &items );
 
+  //! Replaces the element at the given index with the given value.
+  Q_INVOKABLE void replace( int index, const QVariant &value );
+
   /*!
    * Adds the given value to the end of the array.
    *
    * @param value The item that is added.
    */
   Q_INVOKABLE void push( const QVariant &value );
+
+  //! Alias for push.
+  Q_INVOKABLE void append( const QVariant &value );
 
   /*!
    * Adds the given value to the front of the array.
@@ -110,6 +116,10 @@ public:
   ros_babel_fish::ArrayMessageBase::ConstSharedPtr _message() const;
 
   Q_INVOKABLE QVariantList toVariantList() const;
+
+  //! This method will load the entry in the cache so it can return a reference to the entry.
+  //! This is otherwise not necessarily done for small types.
+  QVariant &atRef( int index );
 
 private:
   void enlargeCache( int size ) const;

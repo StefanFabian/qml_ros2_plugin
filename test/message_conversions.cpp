@@ -185,7 +185,7 @@ TEST( MessageConversion, msgToMapRBF )
     test_message.point_arr.push_back( p );
   }
 
-  CompoundMessage wrapped(
+  auto wrapped = CompoundMessage::make_shared(
       *fish.get_message_type_support( "ros_babel_fish_test_msgs/TestMessage" ),
       std::shared_ptr<void>( &test_message, []( void * ) { /*empty deleter*/ } ) );
   QVariant map = msgToMap( wrapped );
@@ -193,7 +193,7 @@ TEST( MessageConversion, msgToMapRBF )
   CompoundMessage::SharedPtr msg =
       fish.create_message_shared( "ros_babel_fish_test_msgs/TestMessage" );
   EXPECT_TRUE( fillMessage( *msg, map ) );
-  auto &compound = msg->as<CompoundMessage>();
+  const auto &compound = msg->as<CompoundMessage>();
   EXPECT_TRUE( messageEqual( compound, test_message ) );
 
   // Int for duration
@@ -215,9 +215,10 @@ TEST( MessageConversion, msgToMapRBF )
   obtainValueAsReference<QVariantMap>( broken_map )["i32"] = QString( "WRONG" );
   EXPECT_FALSE( fillMessage( *msg, broken_map ) );
 
-  broken_map = msgToMap( wrapped );
-  obtainValueAsReference<QVariantMap>( broken_map )["str"] = 132;
-  EXPECT_FALSE( fillMessage( *msg, broken_map ) );
+  // Removed test case since this can be converted to string and will be done so now.
+  //  broken_map = msgToMap( wrapped );
+  //  obtainValueAsReference<QVariantMap>( broken_map )["str"] = 132;
+  //  EXPECT_FALSE( fillMessage( *msg, broken_map ) );
 
   broken_map = msgToMap( wrapped );
   obtainValueAsReference<QVariantMap>( broken_map )["str"] = QVariantMap();
@@ -261,8 +262,9 @@ TEST( MessageConversion, array )
   fillArray( test_array.subarrays_fixed, SEED++ );
   fillArray( test_array.subarrays, SEED++ );
 
-  CompoundMessage wrapped( *fish.get_message_type_support( "ros_babel_fish_test_msgs/TestArray" ),
-                           std::shared_ptr<void>( &test_array, []( void * ) { /*empty deleter*/ } ) );
+  auto wrapped = CompoundMessage::make_shared(
+      *fish.get_message_type_support( "ros_babel_fish_test_msgs/TestArray" ),
+      std::shared_ptr<void>( &test_array, []( void * ) { /*empty deleter*/ } ) );
   QVariant map = msgToMap( wrapped );
   ASSERT_TRUE( mapAndMessageEqual( map, test_array ) );
   CompoundMessage::SharedPtr msg =
@@ -345,21 +347,21 @@ TEST( MessageConversion, array )
   test_array.times.push_back( rclcpp::Time( 45000000 ) );
 
   auto duration_array = map.toMap()["durations"].value<Array>();
-  duration_array.spliceList( 0, 1, { static_cast<uint8_t>( 21 ) } );
+  duration_array.replace( 0, { static_cast<uint8_t>( 21 ) } );
   test_array.durations[0] = rclcpp::Duration::from_seconds( 0.021 );
-  duration_array.spliceList( 1, 1, { static_cast<uint16_t>( 24 ) } );
+  duration_array.replace( 1, { static_cast<uint16_t>( 24 ) } );
   test_array.durations[1] = rclcpp::Duration::from_seconds( 0.024 );
-  duration_array.spliceList( 2, 1, { static_cast<uint32_t>( 27 ) } );
+  duration_array.replace( 2, { static_cast<uint32_t>( 27 ) } );
   test_array.durations[2] = rclcpp::Duration::from_seconds( 0.027 );
-  duration_array.spliceList( 3, 1, { static_cast<qulonglong>( 30 ) } );
+  duration_array.replace( 3, { static_cast<qulonglong>( 30 ) } );
   test_array.durations[3] = rclcpp::Duration::from_seconds( 0.030 );
-  duration_array.spliceList( 4, 1, { static_cast<int8_t>( 33 ) } );
+  duration_array.replace( 4, { static_cast<int8_t>( 33 ) } );
   test_array.durations[4] = rclcpp::Duration::from_seconds( 0.033 );
-  duration_array.spliceList( 5, 1, { static_cast<int16_t>( 36 ) } );
+  duration_array.replace( 5, { static_cast<int16_t>( 36 ) } );
   test_array.durations[5] = rclcpp::Duration::from_seconds( 0.036 );
-  duration_array.spliceList( 6, 1, { static_cast<int32_t>( 39 ) } );
+  duration_array.replace( 6, { static_cast<int32_t>( 39 ) } );
   test_array.durations[6] = rclcpp::Duration::from_seconds( 0.039 );
-  duration_array.spliceList( 7, 1, { static_cast<qlonglong>( 42 ) } );
+  duration_array.replace( 7, { static_cast<qlonglong>( 42 ) } );
   test_array.durations[7] = rclcpp::Duration::from_seconds( 0.042 );
 
   msg = fish.create_message_shared( "ros_babel_fish_test_msgs/TestArray" );
@@ -541,7 +543,6 @@ QtObject {
     ListElement { value: "is" }
     ListElement { value: "a" }
     ListElement { value: "test" }
-
   }
   Component.onCompleted: {
     stringModel.append({ 'x': "An object", 'y': "that's not a string"})

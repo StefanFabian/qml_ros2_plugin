@@ -3,9 +3,9 @@
 
 #include "qml_ros2_plugin/goal_handle.hpp"
 
+#include "logging.hpp"
 #include "qml_ros2_plugin/babel_fish_dispenser.hpp"
 #include "qml_ros2_plugin/conversion/message_conversions.hpp"
-#include "qml_ros2_plugin/helpers/logging.hpp"
 
 using namespace ros_babel_fish;
 using namespace qml_ros2_plugin::conversion;
@@ -124,6 +124,25 @@ void GoalHandle::updateStatus()
   if ( isTerminalState( new_status ) ) {
     status_timer_.stop();
   }
+}
+
+bool GoalHandle::isActive() const
+{
+  checkFuture();
+  if ( goal_handle_ == nullptr )
+    return false;
+  switch ( static_cast<action_goal_status::GoalStatus>( goal_handle_->get_status() ) ) {
+  case action_goal_status::Accepted:
+  case action_goal_status::Executing:
+  case action_goal_status::Canceling:
+    return true;
+  case action_goal_status::Aborted:
+  case action_goal_status::Canceled:
+  case action_goal_status::Succeeded:
+  case action_goal_status::Unknown:
+    return false;
+  }
+  return false;
 }
 
 } // namespace qml_ros2_plugin

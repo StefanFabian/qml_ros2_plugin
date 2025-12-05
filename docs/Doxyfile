@@ -1,4 +1,4 @@
-PROJECT_NAME="QML ROS Plugin"
+PROJECT_NAME="QML ROS 2 Plugin"
 # List the source input folders from which the documentation is generated here
 INPUT=../include
 RECURSIVE=YES

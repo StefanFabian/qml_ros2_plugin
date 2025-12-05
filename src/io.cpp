@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #include "qml_ros2_plugin/io.hpp"
+#include "logging.hpp"
 #include "qml_ros2_plugin/array.hpp"
 #include "qml_ros2_plugin/conversion/qvariant_yaml_conversion.hpp"
-#include "qml_ros2_plugin/helpers/logging.hpp"
 
 #include <QAbstractListModel>
 #include <QMetaProperty>

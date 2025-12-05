@@ -140,6 +140,18 @@ QVariant Array::at( int index ) const
   return result;
 }
 
+QVariant &Array::atRef( int index )
+{
+  if ( index < 0 || index >= length() ) {
+    throw std::out_of_range( "Index out of range" );
+  }
+  if ( p_->cache.size() > index && p_->cache[index].isValid() )
+    return p_->cache[index];
+  p_->cache.reserve( index + 1 );
+  while ( p_->cache.size() <= index ) p_->cache.push_back( QVariant() );
+  return p_->cache[index] = at( index );
+}
+
 void Array::spliceList( int start, int delete_count, const QVariantList &items )
 {
   if ( start > p_->length )
@@ -179,6 +191,12 @@ void Array::spliceList( int start, int delete_count, const QVariantList &items )
   p_->length = p_->cache.size();
 }
 
+void Array::replace( int index, const QVariant &value )
+{
+  enlargeCache( index );
+  p_->cache.replace( index, value );
+}
+
 void Array::push( const QVariant &value )
 {
   enlargeCache( length() );
@@ -187,6 +205,8 @@ void Array::push( const QVariant &value )
     p_->modified.push_back( true );
   ++p_->length;
 }
+
+void Array::append( const QVariant &value ) { push( value ); }
 
 void Array::unshift( const QVariant &value )
 {
@@ -252,7 +272,6 @@ void Array::enlargeCache( int size ) const
 }
 
 bool Array::_inCache() const { return p_->all_in_cache; }
-
 void Array::fillCache() const
 {
   if ( p_->all_in_cache )
