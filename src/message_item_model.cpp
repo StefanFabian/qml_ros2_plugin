@@ -312,7 +312,7 @@ bool MessageTreeItem::insertChildren( int index, int count )
   }
   if ( index < 0 || index > childCount() )
     return false;
-  const int max_size = static_cast<int>( introspection_->value->array_size_ );
+  const auto max_size = static_cast<int>( introspection_->value->array_size_ );
   const bool is_bounded = introspection_->value->is_upper_bound_;
   const bool is_fixed_length = !introspection_->value->is_upper_bound_ && max_size > 0;
   if ( is_fixed_length || ( is_bounded && childCount() + count > max_size ) ) {
@@ -523,8 +523,9 @@ bool MessageItemModel::setData( const QModelIndex &index, const QVariant &value,
 {
   if ( !index.isValid() || role != Qt::EditRole )
     return false;
-  auto *item = static_cast<MessageTreeItem *>( index.internalPointer() );
-  if ( item->setData( index.column(), value ) ) {
+
+  if ( auto *item = static_cast<MessageTreeItem *>( index.internalPointer() );
+       item->setData( index.column(), value ) ) {
     emit modified();
     // Not emiting data changed for EditRole here because that would trigger rerender while the user
     // might still be modifying the data.
