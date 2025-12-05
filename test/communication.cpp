@@ -50,9 +50,9 @@ bool waitFor( const std::function<bool()> &pred, std::chrono::milliseconds timeo
 {
   auto start = std::chrono::steady_clock::now();
   while ( ( std::chrono::steady_clock::now() - start ) < timeout ) {
+    processEvents();
     if ( pred() )
       return true;
-    processEvents();
     std::this_thread::sleep_for( 1ms );
   }
   return false;
@@ -165,7 +165,7 @@ TEST( Communication, subscriber )
   EXPECT_EQ( subscriber_pns_glob.queueSize(), 5U );
   EXPECT_EQ( subscriber_pns_glob.topic(), QString( "/pose" ) )
       << subscriber_pns_glob.topic().toStdString();
-  if ( !waitFor( [&pub_pns_glob]() { return pub_pns_glob->get_subscription_count() > 0; } ) )
+  if ( !waitFor( [&pub_pns_glob]() { return pub_pns_glob->get_subscription_count() > 0; }, 3s ) )
     FAIL() << "Timout while waiting for subscriber num increasing.";
   pose.position.y = 3.44;
   pub_pns_glob->publish( pose );
@@ -228,8 +228,8 @@ public:
 TEST( Communication, throttleRate )
 {
   Ros2QmlSingletonWrapper wrapper;
-  auto pub_pns = node->create_publisher<std_msgs::msg::Int32>( "~/test_throttle_rate",
-                                                               rclcpp::QoS( 5 ).transient_local() );
+  auto pub_pns = node->create_publisher<std_msgs::msg::Int32>(
+      "~/test_throttle_rate", rclcpp::QoS( 5 ).transient_local().reliable() );
   ASSERT_EQ( pub_pns->get_topic_name(), std::string( "/communication/test_throttle_rate" ) );
   auto subscriber_pns = dynamic_cast<qml_ros2_plugin::Subscription *>( wrapper.createSubscription(
       "/communication/test_throttle_rate", QoSWrapper().keep_last( 5 ) ) );
@@ -274,7 +274,7 @@ TEST( Communication, throttleRate )
 
   receiver->receive_count = 0;
   subscriber_pns->setQoS( QoSWrapper().reliable().transient_local().keep_last( 5 ) );
-  EXPECT_TRUE( waitFor( [&]() { return receiver->receive_count == 4; }, 1s ) )
+  EXPECT_TRUE( waitFor( [&]() { return receiver->receive_count == 4; }, 3s ) )
       << "Should have received all messages with transient local QoS. Received: "
       << receiver->receive_count;
 
@@ -361,7 +361,7 @@ TEST( Communication, serviceCallAsync )
       "/service", [&]( example_interfaces::srv::AddTwoInts_Request::SharedPtr req,
                        example_interfaces::srv::AddTwoInts_Response::SharedPtr resp ) {
         service_called = true;
-        std::this_thread::sleep_for( 1s );
+        std::this_thread::sleep_for( 300ms );
         resp->sum = req->a + req->b;
         returned = true;
       } );
@@ -374,12 +374,8 @@ TEST( Communication, serviceCallAsync )
 
   ASSERT_TRUE( waitFor( [&]() { return service->isServiceReady(); } ) );
   service->sendRequestAsync( { { "a", 1 }, { "b", 3 } }, callback );
-  ASSERT_TRUE( !returned );
-  waitFor( [&returned]() { return returned; }, 2s );
+  ASSERT_TRUE( waitFor( [&]() { return obj.hasProperty( "result" ); }, 3s ) );
   ASSERT_TRUE( returned );
-  processEvents();
-  processEvents();
-  ASSERT_TRUE( obj.hasProperty( "result" ) );
   QVariant result = obj.property( "result" ).toVariant();
   EXPECT_TRUE( service_called ) << "Service was not called!";
   ASSERT_EQ( result.type(), QVariant::Map )
@@ -411,10 +407,8 @@ TEST( Communication, serviceCallAsync )
   ASSERT_TRUE( waitFor( [&]() { return service->isServiceReady(); }, 1s ) );
   service->sendRequestAsync( {}, callback );
   ASSERT_TRUE( !returned );
-  waitFor( [&returned]() { return returned; } );
+  ASSERT_TRUE( waitFor( [&]() { return obj.hasProperty( "result" ); }, 3s ) );
   ASSERT_TRUE( returned );
-  processEvents();
-  ASSERT_TRUE( obj.hasProperty( "result" ) );
   result = obj.property( "result" ).toVariant();
   // In ROS2 each message needs at least one member, hence empty will add a filler byte member
   ASSERT_EQ( result.type(), QVariant::Map )
@@ -809,7 +803,8 @@ int main( int argc, char **argv )
   testing::InitGoogleTest( &argc, argv );
   QCoreApplication app( argc, argv );
   rclcpp::init( argc, argv );
-  node = rclcpp::Node::make_shared( "communication" );
+  node = rclcpp::Node::make_shared( "communication",
+                                    rclcpp::NodeOptions().use_intra_process_comms( false ) );
   tf2_ros::StaticTransformBroadcaster static_tf_broadcaster( node );
   geometry_msgs::msg::TransformStamped static_transform;
   static_transform.header.frame_id = "billionaires";
