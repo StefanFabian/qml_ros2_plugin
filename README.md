@@ -18,25 +18,23 @@ If you are using this module in a scientific context, feel free to cite [this pa
 # QML ROS2 Plugin
 
 Connects QML user interfaces to the Robot Operating System 2 (ROS2).
-Please be aware that this loses some of the semantic information that the message type would normally provide since
-you can subscribe to any message without specifying the type and the type is only checked if you do specify it.
+Please be aware that this loses some of the semantic information that the message type would normally provide, since
+you can subscribe to any message without specifying the type, and the type is only checked if you do specify it.
 
 * [For the Qt6 version click here](https://github.com/StefanFabian/qml6_ros2_plugin)
 * [For the ROS 1 version click here](https://github.com/StefanFabian/qml_ros_plugin).
 
 Currently, has support for the following:  
-Logging, Publisher, Subscription, ImageTransportSubscription, Service client, ActionClient, TfTransform, Ament index and querying topics
+Logging, Publisher, Subscription, ImageTransportSubscription, Service Client, Action Client, TfTransform, Ament Index, and querying topics, services, and actions.
 
 https://github.com/StefanFabian/qml_ros2_plugin/assets/2090520/c45280cf-24fe-4ff1-8423-30035deda10d
 
-This demo interface uses Tf and a velocity publisher to control and display the turtle demo with less than 200 lines of code for the entire interface.
+This demo interface utilizes Tf and a velocity publisher to control and display the turtle demo, requiring less than 200 lines of code for the entire interface.
 It is available in the examples folder as `turtle_demo_control.qml`.
-
-**Note:** For full examples including ROS init calls and shutdown handling checkout the examples directory.
 
 ## Logging
 
-Logging is supported and correctly reports from which qml file and line the message came!
+Logging is supported and correctly reports from which QML file and line the message came!
 
 ```qml
 import Ros2 1.0
@@ -57,6 +55,8 @@ Item {
 }
 ```
 
+Check the logging example in the [examples](examples) directory!
+
 ## Quickstart
 
 Check the examples in the [examples](examples) directory for a quick introduction on how to use this module.
@@ -66,21 +66,16 @@ The type does not need to be known at the time of compilation.
 ## Installation
 
 You can either build this repository as part of your ROS2 workspace as you would any other ROS2 package, or
-set the CMake option `GLOBAL_INSTALL` to `ON` which installs the plugin in your global qml module directory.  
+set the CMake option `GLOBAL_INSTALL` to `ON`, which installs the plugin in your global qml module directory.  
 **Please note** that the plugin will still require a ROS2 environment when loaded to be able to load the message
 libraries.
 
-Other than the source dependencies which are currently not available in the package sources, you can install
-the dependencies using rosdep:  
+You can install the dependencies using rosdep:  
 *The following command assumes you are in the `src` folder of your ROS 2 workspace*
 
 ```
 rosdep install --from-paths . --ignore-packages-from-source
 ```
-
-### Source Dependencies
-
-* [ros_babel_fish](https://github.com/LOEWE-emergenCity/ros2_babel_fish)
 
 ## Documentation
 
