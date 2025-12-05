@@ -457,7 +457,7 @@ QModelIndex MessageItemModel::parent( const QModelIndex &child ) const
   if ( parentItem == nullptr )
     return {};
 
-  return parentItem != root_item_.get() ? createIndex( parentItem->row(), 0, (void*)parentItem )
+  return parentItem != root_item_.get() ? createIndex( parentItem->row(), 0, (void *)parentItem )
                                         : QModelIndex{};
 }
 int MessageItemModel::rowCount( const QModelIndex &parent ) const
