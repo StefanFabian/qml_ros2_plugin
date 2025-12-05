@@ -346,10 +346,7 @@ TEST( MessageConversion, array )
   time_array.push( 45.0 );
   test_array.times.push_back( rclcpp::Time( 45000000 ) );
 
-  // Unlike with array, this will be a QVariantList where a copy does not point to the same data.
-  ASSERT_EQ( map.toMap()["durations"].type(), QVariant::List );
-  auto &duration_array = obtainValueAsReference<QVariantList>(
-      obtainValueAsReference<QVariantMap>( map )["durations"] );
+  auto duration_array = map.toMap()["durations"].value<Array>();
   duration_array.replace( 0, { static_cast<uint8_t>( 21 ) } );
   test_array.durations[0] = rclcpp::Duration::from_seconds( 0.021 );
   duration_array.replace( 1, { static_cast<uint16_t>( 24 ) } );
@@ -387,9 +384,7 @@ TEST( MessageConversion, array )
 
   // Too long fixed array
   broken_map = msgToMap( msg );
-  obtainValueAsReference<QVariantList>(
-      obtainValueAsReference<QVariantMap>( broken_map )["durations"] )
-      .append( 3456.0 );
+  broken_map.toMap()["durations"].value<Array>().push( 3456.0 );
   EXPECT_FALSE( fillMessage( *broken_msg, broken_map ) );
 
   // Non string in string array but can be converted to string
