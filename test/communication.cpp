@@ -229,10 +229,17 @@ TEST( Communication, throttleRate )
 {
   Ros2QmlSingletonWrapper wrapper;
   auto pub_pns = node->create_publisher<std_msgs::msg::Int32>(
-      "~/test_throttle_rate", rclcpp::QoS( 5 ).transient_local().reliable() );
+      "~/test_throttle_rate", rclcpp::QoS( 5 ).transient_local().reliable().keep_last( 5 ) );
+  std_msgs::msg::Int32 msg;
+  msg.data = 1;
+  pub_pns->publish( msg );
+  msg.data = 2;
+  pub_pns->publish( msg );
   ASSERT_EQ( pub_pns->get_topic_name(), std::string( "/communication/test_throttle_rate" ) );
-  auto subscriber_pns = dynamic_cast<qml_ros2_plugin::Subscription *>( wrapper.createSubscription(
-      "/communication/test_throttle_rate", QoSWrapper().keep_last( 5 ) ) );
+  auto subscriber_pns = dynamic_cast<qml_ros2_plugin::Subscription *>(
+      wrapper.createSubscription( "/communication/test_throttle_rate",
+                                  QoSWrapper().reliable().transient_local().keep_last( 5 ) ) );
+  subscriber_pns->setThrottleRate( 0 );
   std::unique_ptr<Receiver> receiver = std::make_unique<Receiver>();
   QObject::connect( subscriber_pns, &qml_ros2_plugin::Subscription::newMessage, receiver.get(),
                     &Receiver::callback );
@@ -245,7 +252,10 @@ TEST( Communication, throttleRate )
   EXPECT_EQ( subscriber_pns->queueSize(), 5U );
   if ( !waitFor( [&]() { return pub_pns->get_subscription_count() > 0; } ) )
     FAIL() << "Timout while waiting for subscriber num increasing.";
-  std_msgs::msg::Int32 msg;
+  ASSERT_TRUE( waitFor( [&]() { return receiver->receive_count == 2; }, 3s ) )
+      << "Should have received the two initial messages. Received: " << receiver->receive_count;
+  subscriber_pns->setThrottleRate( 20 );
+  receiver->receive_count = 0;
   msg.data = 2;
   pub_pns->publish( msg );
   msg.data = 3;
@@ -271,12 +281,6 @@ TEST( Communication, throttleRate )
     FAIL() << "Did not receive message in time.";
   ASSERT_EQ( receiver->receive_count, 2 )
       << "Should have received both messages with throttling disabled.";
-
-  receiver->receive_count = 0;
-  subscriber_pns->setQoS( QoSWrapper().reliable().transient_local().keep_last( 5 ) );
-  EXPECT_TRUE( waitFor( [&]() { return receiver->receive_count == 4; }, 3s ) )
-      << "Should have received all messages with transient local QoS. Received: "
-      << receiver->receive_count;
 
   delete subscriber_pns;
 }
