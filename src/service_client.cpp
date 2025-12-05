@@ -37,6 +37,14 @@ void ServiceClient::onRos2Initialized()
     QML_ROS2_PLUGIN_ERROR( "Could not create ServiceClient: %s", ex.what() );
     client_ = nullptr;
     return;
+  } catch ( std::exception &ex ) {
+    QML_ROS2_PLUGIN_ERROR( "Could not create ServiceClient: %s", ex.what() );
+    client_ = nullptr;
+    return;
+  } catch ( ... ) {
+    QML_ROS2_PLUGIN_ERROR( "Could not create ServiceClient: Unknown error." );
+    client_ = nullptr;
+    return;
   }
   connect_timer_.start();
 }
