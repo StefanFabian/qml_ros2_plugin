@@ -253,7 +253,7 @@ bool MessageTreeItem::setItemData( QVariant value )
   if ( type_ == ArrayElement ) {
     if ( item_data->type() == qMetaTypeId<qml_ros2_plugin::Array>() ) {
       auto *array = static_cast<qml_ros2_plugin::Array *>( item_data->data() );
-      array->spliceList( index_, 1, QVariantList{ value } );
+      array->replace( index_, value );
       return true;
     }
     if ( item_data->type() != QMetaType::QVariantList ) {
