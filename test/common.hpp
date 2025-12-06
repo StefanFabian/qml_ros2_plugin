@@ -83,7 +83,7 @@ void fillArray( std::vector<bool> &msg, unsigned seed )
 {
   std::default_random_engine generator( seed );
   std::uniform_int_distribution<uint8_t> distribution( 0, 1 );
-  std::uniform_int_distribution<size_t> length_distribution( TEST_CASE_MAX_ARRAY_LENGTH,
+  std::uniform_int_distribution<size_t> length_distribution( TEST_CASE_MIN_ARRAY_LENGTH,
                                                              TEST_CASE_MAX_ARRAY_LENGTH );
   size_t length = length_distribution( generator );
   msg.reserve( length );
