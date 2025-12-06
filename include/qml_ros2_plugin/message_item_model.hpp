@@ -72,7 +72,8 @@ class MessageItemModel : public QAbstractItemModel
   Q_PROPERTY( QVariant message READ message WRITE setMessage NOTIFY messageChanged )
   //! The type of the message displayed by this model.
   //! Changing this manually will reset the content so first set this before setting the message content.
-  //! If the message contains a '\#messageType' field, it will overwrite the current messageType.
+  //! If the message contains a ``#messageType`` field (as a top-level key), its value will overwrite the current messageType.
+  //! The ``#messageType`` field should be a string specifying the ROS message type, e.g. ``std_msgs/String``.
   Q_PROPERTY( QString messageType READ messageType WRITE setMessageType NOTIFY messageTypeChanged )
 
   static constexpr int TypeRole = Qt::UserRole;

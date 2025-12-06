@@ -125,7 +125,7 @@ public:
    */
   Q_INVOKABLE void initialize();
 
-  //! @copydoc TfTransformListener::canTransform(const QString &,const QString &,const rclcpp::Time &, double) const
+  //! @copydoc TfTransformListener::canTransform(const QString &, const QString &, const rclcpp::Time &, double) const
   Q_INVOKABLE QVariant canTransform( const QString &target_frame, const QString &source_frame,
                                      const QDateTime &time, double timeout = 0 ) const;
 

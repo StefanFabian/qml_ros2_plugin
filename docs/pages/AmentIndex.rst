@@ -21,5 +21,5 @@ Example
 API
 ---
 
-.. doxygenclass:: qml6_ros2_plugin::AmentIndex
+.. doxygenclass:: qml_ros2_plugin::AmentIndex
    :members:
