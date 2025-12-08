@@ -77,11 +77,11 @@ int MessageTreeItem::childCount() const
       return introspection_->value->array_size_;
 
     auto item_data = getItemData();
-    if ( item_data.type() == QMetaType::QVariantList ) {
+    if ( item_data.userType() == QMetaType::QVariantList ) {
       auto *arr_msg = static_cast<const QVariantList *>( item_data.data() );
       return static_cast<int>( arr_msg->size() );
     }
-    if ( item_data.type() == qMetaTypeId<qml_ros2_plugin::Array>() ) {
+    if ( item_data.userType() == qMetaTypeId<qml_ros2_plugin::Array>() ) {
       const auto *array = static_cast<const qml_ros2_plugin::Array *>( item_data.data() );
       return array->length();
     }
@@ -181,21 +181,21 @@ QVariant *MessageTreeItem::getItemDataPtr() const
   if ( item_data == nullptr )
     return nullptr;
   if ( type_ == ArrayElement ) {
-    if ( item_data->type() == qMetaTypeId<qml_ros2_plugin::Array>() ) {
+    if ( item_data->userType() == qMetaTypeId<qml_ros2_plugin::Array>() ) {
       auto *array = static_cast<qml_ros2_plugin::Array *>( item_data->data() );
       return &( array->atRef( index_ ) ); // Not supported
     }
-    if ( item_data->type() != QMetaType::QVariantList ) {
+    if ( item_data->userType() != QMetaType::QVariantList ) {
       QML_ROS2_PLUGIN_ERROR( "MessageTreeItem::getItemDataPtr: Unexpected type '%d'!",
-                             item_data->type() );
+                             item_data->userType() );
       return nullptr;
     }
     auto *arr_msg = static_cast<QVariantList *>( item_data->data() );
     return &( ( *arr_msg )[index_] );
   }
-  if ( item_data->type() != QMetaType::QVariantMap ) {
+  if ( item_data->userType() != QMetaType::QVariantMap ) {
     QML_ROS2_PLUGIN_ERROR( "MessageTreeItem::getItemDataPtr: Unexpected type '%d'!",
-                           item_data->type() );
+                           item_data->userType() );
     return nullptr;
   }
   auto *compound_msg = static_cast<QVariantMap *>( item_data->data() );
@@ -209,31 +209,31 @@ QVariant MessageTreeItem::getItemData() const
   }
   QVariant *item_data = parent_item_->getItemDataPtr();
   if ( type_ == ArrayElement ) {
-    if ( item_data->type() == qMetaTypeId<qml_ros2_plugin::Array>() ) {
+    if ( item_data->userType() == qMetaTypeId<qml_ros2_plugin::Array>() ) {
       auto *array = static_cast<qml_ros2_plugin::Array *>( item_data->data() );
       return ( array->at( index_ ) );
     }
-    if ( item_data->type() != QMetaType::QVariantList ) {
+    if ( item_data->userType() != QMetaType::QVariantList ) {
       QML_ROS2_PLUGIN_ERROR( "MessageTreeItem::getItemData: Unexpected type '%d'!",
-                             item_data->type() );
+                             item_data->userType() );
       return {};
     }
     auto *arr_msg = static_cast<QVariantList *>( item_data->data() );
     return ( ( *arr_msg )[index_] );
   }
-  if ( item_data->type() == qMetaTypeId<qml_ros2_plugin::Time>() ) {
+  if ( item_data->userType() == qMetaTypeId<qml_ros2_plugin::Time>() ) {
     auto time = static_cast<qml_ros2_plugin::Time *>( item_data->data() );
     builtin_interfaces::msg::Time t = time->getTime();
     return name_ == "sec" ? t.sec : t.nanosec;
   }
-  if ( item_data->type() == qMetaTypeId<qml_ros2_plugin::Duration>() ) {
+  if ( item_data->userType() == qMetaTypeId<qml_ros2_plugin::Duration>() ) {
     auto duration = static_cast<qml_ros2_plugin::Duration *>( item_data->data() );
     builtin_interfaces::msg::Duration d = duration->getDuration();
     return name_ == "sec" ? d.sec : d.nanosec;
   }
-  if ( item_data->type() != QMetaType::QVariantMap ) {
+  if ( item_data->userType() != QMetaType::QVariantMap ) {
     QML_ROS2_PLUGIN_ERROR( "MessageTreeItem::getItemData: Unknown type of member '%d'!",
-                           item_data->type() );
+                           item_data->userType() );
     return {};
   }
   auto *compound_msg = static_cast<QVariantMap *>( item_data->data() );
@@ -251,21 +251,21 @@ bool MessageTreeItem::setItemData( QVariant value )
   }
   QVariant *item_data = parent_item_->getItemDataPtr();
   if ( type_ == ArrayElement ) {
-    if ( item_data->type() == qMetaTypeId<qml_ros2_plugin::Array>() ) {
+    if ( item_data->userType() == qMetaTypeId<qml_ros2_plugin::Array>() ) {
       auto *array = static_cast<qml_ros2_plugin::Array *>( item_data->data() );
       array->replace( index_, value );
       return true;
     }
-    if ( item_data->type() != QMetaType::QVariantList ) {
+    if ( item_data->userType() != QMetaType::QVariantList ) {
       QML_ROS2_PLUGIN_ERROR( "MessageTreeItem::setItemData: Unexpected type '%d'!",
-                             item_data->type() );
+                             item_data->userType() );
       return false;
     }
     auto *arr_msg = static_cast<QVariantList *>( item_data->data() );
     ( *arr_msg )[index_] = value;
     return true;
   }
-  if ( item_data->type() == qMetaTypeId<qml_ros2_plugin::Time>() ) {
+  if ( item_data->userType() == qMetaTypeId<qml_ros2_plugin::Time>() ) {
     auto time = static_cast<qml_ros2_plugin::Time *>( item_data->data() );
     builtin_interfaces::msg::Time t = time->getTime();
     bool ok = false;
@@ -282,7 +282,7 @@ bool MessageTreeItem::setItemData( QVariant value )
     *time = qml_ros2_plugin::Time( t );
     return ok;
   }
-  if ( item_data->type() == qMetaTypeId<qml_ros2_plugin::Duration>() ) {
+  if ( item_data->userType() == qMetaTypeId<qml_ros2_plugin::Duration>() ) {
     auto duration = static_cast<qml_ros2_plugin::Duration *>( item_data->data() );
     builtin_interfaces::msg::Duration d = duration->getDuration();
     bool ok = false;
@@ -295,9 +295,9 @@ bool MessageTreeItem::setItemData( QVariant value )
     *duration = qml_ros2_plugin::Duration( d );
     return ok;
   }
-  if ( item_data->type() != QMetaType::QVariantMap ) {
+  if ( item_data->userType() != QMetaType::QVariantMap ) {
     QML_ROS2_PLUGIN_ERROR( "MessageTreeItem::setItemData: Unknown type of member '%d'!",
-                           item_data->type() );
+                           item_data->userType() );
     return {};
   }
   auto *compound_msg = static_cast<QVariantMap *>( item_data->data() );
@@ -323,14 +323,14 @@ bool MessageTreeItem::insertChildren( int index, int count )
   if ( item_data == nullptr )
     return false;
 
-  if ( item_data->type() == qMetaTypeId<qml_ros2_plugin::Array>() ) {
+  if ( item_data->userType() == qMetaTypeId<qml_ros2_plugin::Array>() ) {
     auto *array = static_cast<qml_ros2_plugin::Array *>( item_data->data() );
     QVariantList values;
     for ( int i = 0; i < count; ++i ) { values.append( createNewChild() ); }
     array->spliceList( index, 0, values );
     return true;
   }
-  if ( item_data->type() != QMetaType::QVariantList ) {
+  if ( item_data->userType() != QMetaType::QVariantList ) {
     QML_ROS2_PLUGIN_ERROR( "Unexpected type in MessageItemModel when trying to insert child." );
     return false;
   }
@@ -358,7 +358,7 @@ bool MessageTreeItem::removeChildren( int index, int count )
     return false;
   }
   QVariant *item_data = getItemDataPtr();
-  if ( item_data->type() == qMetaTypeId<qml_ros2_plugin::Array>() ) {
+  if ( item_data->userType() == qMetaTypeId<qml_ros2_plugin::Array>() ) {
     auto *array = static_cast<qml_ros2_plugin::Array *>( item_data->data() );
     array->spliceList( index, count, {} );
     return true;
