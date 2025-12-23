@@ -104,6 +104,7 @@ TEST( Logging, log )
   ASSERT_EQ( log.size(), 1U );
   EXPECT_EQ( log[0].first, "Fatal Message" );
   EXPECT_EQ( log[0].second, rcl_interfaces::msg::Log::FATAL );
+  wrapper->shutdown();
 }
 
 int main( int argc, char **argv )

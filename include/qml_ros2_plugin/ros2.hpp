@@ -177,7 +177,6 @@ private:
   std::shared_ptr<rclcpp::Node> node_;
   ros_babel_fish::BabelFish babel_fish_;
   std::atomic<int> count_wrappers;
-  std::atomic<bool> is_shutdown_{ false };
 };
 
 class Ros2QmlSingletonWrapper : public QObject
@@ -243,6 +242,9 @@ public:
 
   //! Returns the namespace of the node. Returns empty string before ROS node was initialized.
   Q_INVOKABLE QString getNamespace();
+
+  //! Returns true if the given topic name is valid, false otherwise.
+  Q_INVOKABLE bool isValidTopic( const QString &topic ) const;
 
   //! @copydoc Ros2Qml::queryTopics
   Q_INVOKABLE QStringList queryTopics( const QString &datatype = QString() ) const;

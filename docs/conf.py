@@ -12,6 +12,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+from datetime import datetime
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
@@ -29,7 +30,7 @@ if os.environ.get('READTHEDOCS', None) == 'True':
 # -- Project information -----------------------------------------------------
 
 project = 'QML ROS2 Plugin'
-copyright = '2021, Stefan Fabian'
+copyright = f'2021-{datetime.now().year}, Stefan Fabian'
 author = 'Stefan Fabian'
 
 

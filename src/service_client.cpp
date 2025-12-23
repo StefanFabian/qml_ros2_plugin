@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #include "qml_ros2_plugin/service_client.hpp"
+#include "logging.hpp"
 #include "qml_ros2_plugin/babel_fish_dispenser.hpp"
 #include "qml_ros2_plugin/conversion/message_conversions.hpp"
-#include "qml_ros2_plugin/helpers/logging.hpp"
 #include "qml_ros2_plugin/ros2.hpp"
 
 #include <QJSEngine>
@@ -19,6 +19,9 @@ ServiceClient::ServiceClient( QString name, QString type, const QoSWrapper &qos 
     : qos_( qos ), name_( std::move( name ) ), service_type_( std::move( type ) )
 {
   babel_fish_ = BabelFishDispenser::getBabelFish();
+  connect_timer_.setInterval( 16 );
+  connect_timer_.setSingleShot( false );
+  connect( &connect_timer_, &QTimer::timeout, this, &ServiceClient::checkServiceReady );
 }
 
 ServiceClient::~ServiceClient() = default;
@@ -34,10 +37,15 @@ void ServiceClient::onRos2Initialized()
     QML_ROS2_PLUGIN_ERROR( "Could not create ServiceClient: %s", ex.what() );
     client_ = nullptr;
     return;
+  } catch ( std::exception &ex ) {
+    QML_ROS2_PLUGIN_ERROR( "Could not create ServiceClient: %s", ex.what() );
+    client_ = nullptr;
+    return;
+  } catch ( ... ) {
+    QML_ROS2_PLUGIN_ERROR( "Could not create ServiceClient: Unknown error." );
+    client_ = nullptr;
+    return;
   }
-  connect_timer_.setInterval( 16 );
-  connect_timer_.setSingleShot( false );
-  connect( &connect_timer_, &QTimer::timeout, this, &ServiceClient::checkServiceReady );
   connect_timer_.start();
 }
 
@@ -54,8 +62,10 @@ void ServiceClient::checkServiceReady()
       QML_ROS2_PLUGIN_DEBUG(
           "Request for service '%s' timeouted while waiting for it to become ready.",
           name_.toStdString().c_str() );
-      invokeCallback( waiting_service_calls_[i].callback, QVariant( false ) );
       pending_requests_--;
+      QMetaObject::invokeMethod( this, "invokeCallback", Qt::AutoConnection,
+                                 Q_ARG( QJSValue, waiting_service_calls_[i].callback ),
+                                 Q_ARG( QVariant, false ) );
     }
     if ( timeouted > 0 ) {
       waiting_service_calls_.erase( waiting_service_calls_.begin(),
@@ -64,8 +74,8 @@ void ServiceClient::checkServiceReady()
     }
     return;
   }
+  QML_ROS2_PLUGIN_DEBUG( "Service '%s' is ready.", name_.toStdString().c_str() );
   connect_timer_.stop();
-  disconnect( &connect_timer_, &QTimer::timeout, this, &ServiceClient::checkServiceReady );
   emit serviceReadyChanged();
 
   if ( waiting_service_calls_.empty() )
@@ -76,6 +86,7 @@ void ServiceClient::checkServiceReady()
     pending_requests_--;
     sendRequestAsync( call.request, call.callback );
   }
+  waiting_service_calls_.clear();
   blockSignals( false );
   emit pendingRequestsChanged();
 }
@@ -104,10 +115,16 @@ int ServiceClient::pendingRequests() const { return pending_requests_; }
 void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &callback )
 {
   pending_requests_++;
-  if ( client_ == nullptr || !client_->service_is_ready() ) {
+  if ( !isServiceReady() ) {
     QML_ROS2_PLUGIN_DEBUG( "Service '%s' not ready, waiting up to %d ms.",
                            name_.toStdString().c_str(), connection_timeout_ );
     waiting_service_calls_.push_back( { req, callback, clock::now() } );
+    emit pendingRequestsChanged();
+    if ( !connect_timer_.isActive() ) {
+      // If the time is not active, the service was ready at some point and is not ready anymore.
+      emit serviceReadyChanged();
+      connect_timer_.start();
+    }
     return;
   }
   QML_ROS2_PLUGIN_DEBUG( "Service '%s' is ready. Sending request.", name_.toStdString().c_str() );

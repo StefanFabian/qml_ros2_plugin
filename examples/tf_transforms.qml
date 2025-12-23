@@ -9,12 +9,17 @@ ApplicationWindow {
   width: 800
   height: 600
 
-  // This connection makes sure the application exits if this ROS node is requested to shutdown
-  Connections {
-    target: Ros2
-    function onShutdown() {
-      Qt.quit()
-    }
+  Component.onCompleted: {
+    // Initialize ROS with the given name. The command line args are passed by the plugin
+    // Optionally, you can call init with a string list ["arg1", "arg2"] after the name to use those
+    // args instead of the ones supplied by the command line.
+    Ros2.init("qml_tf_transforms_demo")
+    // Since not every application needs tf2, the subscription is created on-demand. That means
+    // if you use a TfTransform element, or the TfTransformListener singleton, the tf2 subscription
+    // is created. However, the first time the TfTransformListener is used, the subscription may not yet
+    // be initialized and the first call(s) will fail (until tf2 data is received).
+    // This can be avoided by using at the start of the application or some time before using one of the lookup methods:
+    TfTransformListener.initialize()
   }
 
   TfTransform {
@@ -189,19 +194,4 @@ ApplicationWindow {
       wrapMode: Text.WordWrap
     }
   }
-
-
-  Component.onCompleted: {
-    // Initialize ROS with the given name. The command line args are passed by the plugin
-    // Optionally, you can call init with a string list ["arg1", "arg2"] after the name to use those
-    // args instead of the ones supplied by the command line.
-    Ros2.init("qml_tf_transforms_demo")
-    // Since not every application needs tf2, the subscription is created on-demand. That means
-    // if you use a TfTransform element, or the TfTransformListener singleton, the tf2 subscription
-    // is created. However, the first time the TfTransformListener is used, the subscription may not yet
-    // be initialized and the first call(s) will fail (until tf2 data is received).
-    // This can be avoided by using at the start of the application or some time before using one of the lookup methods:
-    TfTransformListener.initialize()
-  }
-
 }
