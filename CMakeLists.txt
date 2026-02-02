@@ -168,19 +168,29 @@ if(${GLOBAL_INSTALL})
     message(FATAL_ERROR "Could not find qml plugin dir. Is qml installed?")
   endif()
   message(STATUS "Plugin will be installed to ${QT_INSTALL_QML}")
-  set(DESTDIR "${QT_INSTALL_QML}/${TARGETPATH}")
+  set(QML_INSTALL_DIR "${QT_INSTALL_QML}/${TARGETPATH}")
   install(TARGETS ${PROJECT_NAME} EXPORT export_${PROJECT_NAME} DESTINATION lib)
-  install(FILES ${CMAKE_CURRENT_LIST_DIR}/qmldir DESTINATION ${DESTDIR})
+  install(FILES ${CMAKE_CURRENT_LIST_DIR}/qmldir DESTINATION ${QML_INSTALL_DIR})
   # Create symlink to the library instead of installing it twice
   # If code loads the library from two separate inodes (files), the singletons will not be shared.
-  install(CODE "
-    file(MAKE_DIRECTORY \"\$ENV{DESTDIR}${DESTDIR}\")
+  # Compute relative path from QML plugin dir to lib dir
+  file(RELATIVE_PATH REL_LIB_PATH "${QML_INSTALL_DIR}" "${CMAKE_INSTALL_PREFIX}/lib")
+
+  # Generate a script to create the symlink because install(CODE) does not support generator expressions.
+  set(INSTALL_SYMLINK_CODE "
+    file(MAKE_DIRECTORY \"\$ENV{DESTDIR}${QML_INSTALL_DIR}\")
     file(CREATE_LINK
-      \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/lib/\$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
-      \"\$ENV{DESTDIR}${DESTDIR}/\$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
+      \"${REL_LIB_PATH}/$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
+      \"\$ENV{DESTDIR}${QML_INSTALL_DIR}/$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
       SYMBOLIC
+      RESULT LINK_RESULT
     )
+    if(NOT LINK_RESULT STREQUAL \"0\")
+      message(FATAL_ERROR \"Failed to create symlink: \${LINK_RESULT}. Symlink is required to prevent singleton duplication. On Windows, enable Developer Mode or run as administrator.\")
+    endif()
   ")
+  file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/install_symlink_global_$<CONFIG>.cmake" CONTENT "${INSTALL_SYMLINK_CODE}")
+  install(CODE "include(\"${CMAKE_CURRENT_BINARY_DIR}/install_symlink_global_\${CMAKE_INSTALL_CONFIG_NAME}.cmake\")")
 else()
   message(STATUS "Installing as part of a ROS2 workspace.")
   # Register plugin to be found by QML
@@ -190,14 +200,23 @@ else()
   install(FILES qmldir DESTINATION lib/qml/Ros2)
   # Create symlink to the library instead of installing it twice
   # If code loads the library from two separate inodes (files), the singletons will not be shared.
-  install(CODE "
+
+  # Generate a script to create the symlink because install(CODE) does not support generator expressions.
+  set(INSTALL_SYMLINK_CODE "
     file(MAKE_DIRECTORY \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/lib/qml/Ros2\")
     file(CREATE_LINK
-      \"../../\$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
-      \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/lib/qml/Ros2/\$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
+      \"../../$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
+      \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/lib/qml/Ros2/$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
       SYMBOLIC
+      RESULT LINK_RESULT
     )
+    if(NOT LINK_RESULT STREQUAL \"0\")
+      message(FATAL_ERROR \"Failed to create symlink: \${LINK_RESULT}. Symlink is required to prevent singleton duplication. On Windows, enable Developer Mode or run as administrator.\")
+    endif()
   ")
+  file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/install_symlink_local_$<CONFIG>.cmake" CONTENT "${INSTALL_SYMLINK_CODE}")
+  install(CODE "include(\"${CMAKE_CURRENT_BINARY_DIR}/install_symlink_local_\${CMAKE_INSTALL_CONFIG_NAME}.cmake\")")
+
   # The export is only necessary if part of a ROS2 workspace
   ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
   ament_export_include_directories(include)
