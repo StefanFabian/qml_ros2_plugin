@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 project(qml_ros2_plugin VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -170,16 +170,34 @@ if(${GLOBAL_INSTALL})
   message(STATUS "Plugin will be installed to ${QT_INSTALL_QML}")
   set(DESTDIR "${QT_INSTALL_QML}/${TARGETPATH}")
   install(TARGETS ${PROJECT_NAME} EXPORT export_${PROJECT_NAME} DESTINATION lib)
-  install(TARGETS ${PROJECT_NAME} DESTINATION ${DESTDIR})
   install(FILES ${CMAKE_CURRENT_LIST_DIR}/qmldir DESTINATION ${DESTDIR})
+  # Create symlink to the library instead of installing it twice
+  # If code loads the library from two separate inodes (files), the singletons will not be shared.
+  install(CODE "
+    file(MAKE_DIRECTORY \"\$ENV{DESTDIR}${DESTDIR}\")
+    file(CREATE_LINK
+      \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/lib/\$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
+      \"\$ENV{DESTDIR}${DESTDIR}/\$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
+      SYMBOLIC
+    )
+  ")
 else()
   message(STATUS "Installing as part of a ROS2 workspace.")
   # Register plugin to be found by QML
   ament_environment_hooks(environment_setup.dsv.in)
   install(DIRECTORY include/ DESTINATION include)
   install(TARGETS ${PROJECT_NAME} EXPORT export_${PROJECT_NAME} DESTINATION lib)
-  install(TARGETS ${PROJECT_NAME} DESTINATION lib/qml/Ros2)
   install(FILES qmldir DESTINATION lib/qml/Ros2)
+  # Create symlink to the library instead of installing it twice
+  # If code loads the library from two separate inodes (files), the singletons will not be shared.
+  install(CODE "
+    file(MAKE_DIRECTORY \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/lib/qml/Ros2\")
+    file(CREATE_LINK
+      \"../../\$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
+      \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/lib/qml/Ros2/\$<TARGET_FILE_NAME:${PROJECT_NAME}>\"
+      SYMBOLIC
+    )
+  ")
   # The export is only necessary if part of a ROS2 workspace
   ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
   ament_export_include_directories(include)
