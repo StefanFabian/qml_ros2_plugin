@@ -149,15 +149,22 @@ void Subscription::try_subscribe()
   if ( node == nullptr || !Ros2Qml::getInstance().ok() )
     return;
   try {
+    QPointer instance = this;
     if ( user_message_type_.isEmpty() ) {
       subscription_ = babel_fish_.create_subscription(
           *node, topic_.toStdString(), qos_.rclcppQoS(),
-          [this]( ros_babel_fish::CompoundMessage::SharedPtr msg ) { messageCallback( msg ); },
+          [instance]( ros_babel_fish::CompoundMessage::SharedPtr msg ) {
+            if ( instance )
+              instance->messageCallback( msg );
+          },
           nullptr, {}, std::chrono::nanoseconds( 0 ) );
     } else {
       subscription_ = babel_fish_.create_subscription(
           *node, topic_.toStdString(), user_message_type_.toStdString(), qos_.rclcppQoS(),
-          [this]( ros_babel_fish::CompoundMessage::SharedPtr msg ) { messageCallback( msg ); },
+          [instance]( ros_babel_fish::CompoundMessage::SharedPtr msg ) {
+            if ( instance )
+              instance->messageCallback( msg );
+          },
           nullptr, {} );
     }
   } catch ( const std::exception &e ) {

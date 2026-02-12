@@ -103,7 +103,7 @@ TEST( ImageTransportSubscription, testCorrectFormat )
   img_pub->publish( *image );
   processSomeEvents();
 
-  ASSERT_TRUE( waitFor( [&mock_surface] { return mock_surface.last_frame.isValid(); } ) );
+  ASSERT_TRUE( waitFor( [&mock_surface] { return mock_surface.last_frame.isValid(); }, 30 ) );
   ASSERT_EQ( mock_surface.last_frame.pixelFormat(), QVideoFrame::Format_RGB24 );
   EXPECT_TRUE( mock_surface.last_frame.map( QAbstractVideoBuffer::MapMode::ReadOnly ) );
   EXPECT_EQ( mock_surface.last_frame.mappedBytes(), 3 * 3 * 2 );

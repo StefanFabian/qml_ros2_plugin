@@ -21,7 +21,12 @@ ServiceClient::ServiceClient( QString name, QString type, const QoSWrapper &qos 
   babel_fish_ = BabelFishDispenser::getBabelFish();
 }
 
-ServiceClient::~ServiceClient() = default;
+ServiceClient::~ServiceClient()
+{
+  std::unique_lock lock( check_ready_mutex_ );
+  connect_timer_.stop();
+  disconnect( &connect_timer_, &QTimer::timeout, this, &ServiceClient::checkServiceReady );
+}
 
 void ServiceClient::onRos2Initialized()
 {
@@ -45,6 +50,7 @@ void ServiceClient::onRos2Shutdown() { client_.reset(); }
 
 void ServiceClient::checkServiceReady()
 {
+  std::unique_lock lock( check_ready_mutex_ );
   if ( !isServiceReady() ) {
     int timeouted = 0;
     for ( size_t i = 0; i < waiting_service_calls_.size(); ++i, ++timeouted ) {
@@ -56,6 +62,7 @@ void ServiceClient::checkServiceReady()
           name_.toStdString().c_str() );
       invokeCallback( waiting_service_calls_[i].callback, QVariant( false ) );
       pending_requests_--;
+      invokeCallback( waiting_service_calls_[i].id, false );
     }
     if ( timeouted > 0 ) {
       waiting_service_calls_.erase( waiting_service_calls_.begin(),
@@ -74,7 +81,16 @@ void ServiceClient::checkServiceReady()
   blockSignals( true );
   for ( const auto &call : waiting_service_calls_ ) {
     pending_requests_--;
-    sendRequestAsync( call.request, call.callback );
+    auto it = pending_callbacks_.find( call.id );
+    if ( it == pending_callbacks_.end() ) {
+      QML_ROS2_PLUGIN_ERROR(
+          "ServiceClient: Could not find pending callback with ID %d in checkServiceReady. Can not "
+          "send request after connection was established.",
+          call.id );
+      continue;
+    }
+    sendRequestAsync( call.request, it->second );
+    pending_callbacks_.erase( it );
   }
   blockSignals( false );
   emit pendingRequestsChanged();
@@ -103,11 +119,26 @@ int ServiceClient::pendingRequests() const { return pending_requests_; }
 
 void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &callback )
 {
+  if ( !engine_ ) {
+    engine_ = qjsEngine( this );
+  }
   pending_requests_++;
-  if ( client_ == nullptr || !client_->service_is_ready() ) {
+  int callback_id = generateInternalCallbackId();
+  while ( pending_callbacks_.find( callback_id ) != pending_callbacks_.end() ) {
+    callback_id = generateInternalCallbackId();
+  }
+  pending_callbacks_[callback_id] = callback;
+  if ( !isServiceReady() ) {
     QML_ROS2_PLUGIN_DEBUG( "Service '%s' not ready, waiting up to %d ms.",
                            name_.toStdString().c_str(), connection_timeout_ );
-    waiting_service_calls_.push_back( { req, callback, clock::now() } );
+
+    waiting_service_calls_.push_back( { req, callback_id, clock::now() } );
+    emit pendingRequestsChanged();
+    if ( !connect_timer_.isActive() ) {
+      // If the time is not active, the service was ready at some point and is not ready anymore.
+      emit serviceReadyChanged();
+      connect_timer_.start();
+    }
     return;
   }
   QML_ROS2_PLUGIN_DEBUG( "Service '%s' is ready. Sending request.", name_.toStdString().c_str() );
@@ -115,15 +146,19 @@ void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &ca
   try {
     message = babel_fish_.create_service_request_shared( service_type_.toStdString() );
     fillMessage( *message, req );
-    client_->async_send_request( message, [callback,
-                                           this]( BabelFishServiceClient::SharedFuture response ) {
-      QML_ROS2_PLUGIN_DEBUG( "Received response from service %s.", name_.toStdString().c_str() );
-      pending_requests_--;
-      emit pendingRequestsChanged();
-      QMetaObject::invokeMethod( this, "invokeCallback", Qt::AutoConnection,
-                                 Q_ARG( QJSValue, callback ),
-                                 Q_ARG( QVariant, msgToMap( response.get() ) ) );
-    } );
+    QPointer instance = this;
+    client_->async_send_request(
+        message, [callback_id, instance]( BabelFishServiceClient::SharedFuture response ) {
+          if ( !instance )
+            return;
+          QML_ROS2_PLUGIN_DEBUG( "Received response from service %s.",
+                                 instance->name_.toStdString().c_str() );
+          instance->pending_requests_--;
+          emit instance->pendingRequestsChanged();
+          QMetaObject::invokeMethod( instance, "invokeCallback", Qt::AutoConnection,
+                                     Q_ARG( int, callback_id ),
+                                     Q_ARG( QVariant, msgToMap( response.get() ) ) );
+        } );
     emit pendingRequestsChanged();
     return;
   } catch ( BabelFishException &ex ) {
@@ -134,13 +169,34 @@ void ServiceClient::sendRequestAsync( const QVariantMap &req, const QJSValue &ca
     QML_ROS2_PLUGIN_ERROR( "Failed to call service: Unknown error." );
   }
   pending_requests_--;
-  QMetaObject::invokeMethod( this, "invokeCallback", Qt::AutoConnection,
-                             Q_ARG( QJSValue, callback ), Q_ARG( QVariant, QVariant( false ) ) );
+  invokeCallback( callback_id, false );
 }
 
-void ServiceClient::invokeCallback( QJSValue value, const QVariant &result )
+void ServiceClient::invokeCallback( int id, const QVariant &result )
 {
-  QJSEngine *engine = qjsEngine( this );
-  value.call( { engine->toScriptValue( result ) } );
+  QJSEngine *engine = engine_ ? engine_.data() : qjsEngine( this );
+  if ( !engine ) {
+    QML_ROS2_PLUGIN_ERROR(
+        "ServiceClient: Failed to get QJSEngine in invokeCallback. Can not invoke callback." );
+    return;
+  }
+  auto it = pending_callbacks_.find( id );
+  if ( it == pending_callbacks_.end() ) {
+    QML_ROS2_PLUGIN_ERROR(
+        "ServiceClient: Could not find pending callback with ID %d in invokeCallback. Can not "
+        "invoke callback.",
+        id );
+    return;
+  }
+  QJSValue &callback = it->second;
+  callback.call( { engine->toScriptValue( result ) } );
+  pending_callbacks_.erase( it );
+}
+
+int ServiceClient::generateInternalCallbackId()
+{
+  // Create a unique incrementing internal goal ID
+  static std::atomic<int> current_id = 0;
+  return current_id.fetch_add( 1 );
 }
 } // namespace qml_ros2_plugin

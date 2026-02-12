@@ -12,6 +12,11 @@ namespace qml_ros2_plugin
 {
 class ImageTransportSubscriptionHandle;
 
+struct ImageInformation {
+  rclcpp::Time timestamp;
+  std::string encoding;
+};
+
 /*!
  * Encapsulates the image transport communication to share the subscription resources, avoiding multiple conversions of
  *  the same image and subscription overhead if multiple cameras are set to throttle.
@@ -25,6 +30,7 @@ class ImageTransportManager
   class Subscription;
 
 public:
+  using ImageCallback = std::function<void( const QVideoFrame &, const ImageInformation & )>;
   static ImageTransportManager &getInstance();
 
   /*!
@@ -35,6 +41,12 @@ public:
    * If multiple subscriptions of the same topic and namespace are created, the settings of the
    * first subscription are used.
    */
+  std::shared_ptr<ImageTransportSubscriptionHandle>
+  subscribe( const rclcpp::Node::SharedPtr &node, const QString &qtopic, quint32 queue_size,
+             const image_transport::TransportHints &transport_hints, const ImageCallback &callback,
+             const QList<QVideoFrame::PixelFormat> &supported_pixel_formats );
+
+  // Overload for backwards compatibility. Is removed in a Qt6 version.
   std::shared_ptr<ImageTransportSubscriptionHandle>
   subscribe( const rclcpp::Node::SharedPtr &node, const QString &qtopic, quint32 queue_size,
              const image_transport::TransportHints &transport_hints,
@@ -70,7 +82,7 @@ public:
 private:
   std::shared_ptr<ImageTransportManager::Subscription> subscription;
   QList<QVideoFrame::PixelFormat> supported_pixel_formats;
-  std::function<void( const QVideoFrame & )> callback;
+  ImageTransportManager::ImageCallback callback;
   double framerate_ = 0;
   int network_latency = -1;
   int processing_latency = -1;
