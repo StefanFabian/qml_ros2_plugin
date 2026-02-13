@@ -7,6 +7,7 @@
 #include "qml_ros2_plugin/qobject_ros2.hpp"
 
 #include <QAbstractVideoSurface>
+#include <QPointer>
 #include <QTimer>
 #include <QVideoSurfaceFormat>
 
@@ -47,6 +48,12 @@ class ImageTransportSubscription : public QObjectRos2
   Q_PROPERTY( int timeout READ timeout WRITE setTimeout NOTIFY timeoutChanged )
   //! Whether the subscriber is active or not. Setting to false will shut down subscribers
   Q_PROPERTY( bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged )
+  //! The encoding of the received image. (readonly)
+  Q_PROPERTY( QString encoding READ encoding NOTIFY encodingChanged )
+  //! Whether the received image has an alpha channel. (readonly)
+  Q_PROPERTY( bool hasAlpha READ hasAlpha NOTIFY encodingChanged )
+  //! Whether the received image is a color image. (readonly)
+  Q_PROPERTY( bool isColor READ isColor NOTIFY encodingChanged )
 public:
   ImageTransportSubscription( QString topic, quint32 queue_size );
 
@@ -82,6 +89,12 @@ public:
 
   int processingLatency() const;
 
+  QString encoding() const;
+
+  bool hasAlpha() const;
+
+  bool isColor() const;
+
 signals:
 
   void topicChanged();
@@ -101,6 +114,8 @@ signals:
   void networkLatencyChanged();
 
   void processingLatencyChanged();
+
+  void encodingChanged();
 
 private slots:
 
@@ -124,9 +139,10 @@ private:
   QString default_transport_;
   QVideoFrame last_frame_;
   std::shared_ptr<ImageTransportSubscriptionHandle> subscription_;
-  QAbstractVideoSurface *surface_ = nullptr;
+  QPointer<QAbstractVideoSurface> surface_;
   rclcpp::Clock clock_;
   rclcpp::Time last_frame_timestamp_;
+  std::string encoding_;
   double last_framerate_ = 0;
   quint32 queue_size_;
   int throttle_interval_ = 0;

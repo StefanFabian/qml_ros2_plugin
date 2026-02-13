@@ -3,6 +3,7 @@
 
 #include "qml_ros2_plugin/image_transport_manager.hpp"
 
+#include "./ring_buffer.hpp"
 #include "qml_ros2_plugin/helpers/logging.hpp"
 #include "qml_ros2_plugin/helpers/rolling_average.h"
 #include "qml_ros2_plugin/image_buffer.hpp"
@@ -12,6 +13,8 @@
 #include <mutex>
 #include <set>
 #include <thread>
+
+using namespace std::chrono_literals;
 
 namespace qml_ros2_plugin
 {
@@ -36,8 +39,26 @@ public:
   ImageTransportManager *manager = nullptr;
   quint32 queue_size = 0;
   std::thread subscribe_thread;
+  std::future<void> subscribe_future_;
+  // Use a timer to unsubscribe to avoid unsubscribing and resubscribing in quick succession
+  QTimer unsubscribe_timer;
 
-  explicit Subscription( image_transport::TransportHints hints ) : hints( std::move( hints ) ) { }
+  explicit Subscription( image_transport::TransportHints hints ) : hints( std::move( hints ) )
+  {
+    unsubscribe_timer.setInterval( 1000 );
+    unsubscribe_timer.setSingleShot( true );
+    QObject::connect( &unsubscribe_timer, &QTimer::timeout, [this]() {
+      std::lock_guard subscriptions_lock( subscriptions_mutex_ );
+      if ( subscriptions_.empty() && subscriber_ ) {
+        QML_ROS2_PLUGIN_DEBUG(
+            "No more subscriptions left for topic '%s'. Shutting down subscriber.", topic.c_str() );
+        subscriber_.shutdown();
+        std::lock_guard image_lock( image_mutex_ );
+        last_image_ = nullptr;
+        last_buffer_ = nullptr;
+      }
+    } );
+  }
 
   ~Subscription() override = default;
 
@@ -47,17 +68,23 @@ public:
       return;
     // Make sure we don't subscribe twice in a row due to a race condition
     std::unique_lock lock( subscribe_mutex_ );
-    if ( subscribe_thread.joinable() ) {
+    if ( subscribe_future_.valid() &&
+         subscribe_future_.wait_for( 0ms ) == std::future_status::timeout ) {
       // Already subscribing
       return;
     }
     // Subscribing on background thread to reduce load on UI thread
-    subscribe_thread = std::thread( [this]() {
+    subscribe_future_ = std::async( std::launch::async, [this]() {
       if ( subscriber_ )
         return;
       try {
-        subscriber_ = subscription_manager->transport->subscribe(
+        auto subscriber = subscription_manager->transport->subscribe(
             topic, queue_size, &Subscription::imageCallback, this, &hints );
+        std::lock_guard subscriptions_lock( subscriptions_mutex_ );
+        if ( subscriptions_.empty() )
+          subscriber.shutdown();
+        else
+          subscriber_ = std::move( subscriber );
       } catch ( std::exception &ex ) {
         QML_ROS2_PLUGIN_ERROR( "Failed to subscribe to topic '%s' with transport '%s': %s",
                                topic.c_str(), hints.getTransport().c_str(), ex.what() );
@@ -76,7 +103,7 @@ public:
     subscription_handles_.push_back( sub );
     updateSupportedFormats();
     // If this was the first subscription, subscribe
-    if ( subscriptions_.size() == 1 )
+    if ( !subscriber_ )
       subscribe();
   }
 
@@ -94,6 +121,10 @@ public:
     size_t index = it - subscriptions_.begin();
     subscriptions_.erase( it );
     subscription_handles_.erase( subscription_handles_.begin() + index );
+    bool subscriber_active = subscriber_;
+    if ( subscriptions_.empty() && subscriber_active ) {
+      unsubscribe_timer.start();
+    }
     updateSupportedFormats();
   }
 
@@ -120,18 +151,8 @@ private:
       formats = supported_formats_;
     }
     auto buffer = std::make_unique<ImageBuffer>( image, formats );
-
     {
       std::lock_guard image_lock( image_mutex_ );
-      if ( last_image_ != nullptr ) {
-        if ( rclcpp::Time( last_image_->header.stamp ).nanoseconds() == 0 )
-          camera_base_interval_ = static_cast<int>(
-              ( received_stamp - last_received_stamp_ ).nanoseconds() / ( 1000 * 1000 ) );
-        else
-          camera_base_interval_ = static_cast<int>(
-              ( rclcpp::Time( image->header.stamp ) - last_image_->header.stamp ).nanoseconds() /
-              ( 1000 * 1000 ) );
-      }
       last_received_stamp_ = received_stamp;
       last_image_ = image;
       last_buffer_ = std::move( buffer );
@@ -145,7 +166,6 @@ private:
     ImageBuffer *buffer;
     sensor_msgs::msg::Image::ConstSharedPtr image;
     rclcpp::Time received;
-    int base_interval;
     {
       std::lock_guard image_lock( image_mutex_ );
       if ( last_buffer_ == nullptr || last_image_ == nullptr )
@@ -153,7 +173,6 @@ private:
       buffer = last_buffer_.release();
       image = last_image_;
       received = last_received_stamp_;
-      base_interval = camera_base_interval_;
       last_buffer_ = nullptr;
     }
     QVideoFrame frame( buffer, QSize( image->width, image->height ), buffer->format() );
@@ -167,21 +186,31 @@ private:
         subscribers.push_back( sub_weak.lock() );
       }
     }
-    const rclcpp::Time &image_stamp = image->header.stamp;
-    int network_latency = image_stamp.nanoseconds() != 0
-                              ? static_cast<int>( ( received - image_stamp ).seconds() * 1000 )
+    ImageInformation info;
+    info.timestamp = image->header.stamp;
+    info.encoding = image->encoding;
+    int network_latency = info.timestamp.nanoseconds() != 0
+                              ? static_cast<int>( ( received - info.timestamp ).seconds() * 1000 )
                               : -1;
     network_latency_average_.add( network_latency );
     auto processing_latency = static_cast<int>( ( clock_.now() - received ).seconds() * 1000 );
     processing_latency_average_.add( processing_latency );
-    image_interval_average_.add( base_interval );
+    if ( info.timestamp.nanoseconds() != 0 ) {
+      image_interval_average_.push_back( info.timestamp );
+    } else {
+      image_interval_average_.push_back( last_received_stamp_ );
+    }
+    const auto image_stamp_diff =
+        ( image_interval_average_.back() - image_interval_average_.front() ).nanoseconds();
+    const float framerate =
+        image_stamp_diff > 0 ? ( image_interval_average_.size() - 1 ) * 1E9f / image_stamp_diff : 0;
     for ( const auto &sub : subscribers ) {
       if ( sub == nullptr || !sub->callback )
         continue;
       sub->network_latency = network_latency_average_;
       sub->processing_latency = processing_latency_average_;
-      sub->framerate_ = std::round( 1000.0 / image_interval_average_ * 10 ) / 10;
-      sub->callback( frame );
+      sub->framerate_ = std::round( framerate * 10 ) / 10;
+      sub->callback( frame, info );
     }
   }
 
@@ -214,14 +243,13 @@ private:
   std::vector<ImageTransportSubscriptionHandle *> subscriptions_;
   std::vector<std::weak_ptr<ImageTransportSubscriptionHandle>> subscription_handles_;
   QList<QVideoFrame::PixelFormat> supported_formats_;
-  RollingAverage<int, 10> image_interval_average_;
+  RingBuffer<rclcpp::Time, 10> image_interval_average_;
   RollingAverage<int, 10> network_latency_average_;
   RollingAverage<int, 10> processing_latency_average_;
   rclcpp::Clock clock_ = rclcpp::Clock( RCL_ROS_TIME );
   rclcpp::Time last_received_stamp_;
   sensor_msgs::msg::Image::ConstSharedPtr last_image_;
   std::unique_ptr<ImageBuffer> last_buffer_ = nullptr;
-  int camera_base_interval_ = 0;
 };
 
 ImageTransportSubscriptionHandle::~ImageTransportSubscriptionHandle()
@@ -254,12 +282,10 @@ ImageTransportManager &ImageTransportManager::getInstance()
   return manager;
 }
 
-std::shared_ptr<ImageTransportSubscriptionHandle>
-ImageTransportManager::subscribe( const rclcpp::Node::SharedPtr &node, const QString &qtopic,
-                                  quint32 queue_size,
-                                  const image_transport::TransportHints &transport_hints,
-                                  const std::function<void( const QVideoFrame & )> &callback,
-                                  const QList<QVideoFrame::PixelFormat> &supported_pixel_formats )
+std::shared_ptr<ImageTransportSubscriptionHandle> ImageTransportManager::subscribe(
+    const rclcpp::Node::SharedPtr &node, const QString &qtopic, quint32 queue_size,
+    const image_transport::TransportHints &transport_hints, const ImageCallback &callback,
+    const QList<QVideoFrame::PixelFormat> &supported_pixel_formats )
 {
   if ( subscription_manager_ == nullptr ) {
     subscription_manager_ = std::make_shared<SubscriptionManager>( node );
@@ -268,7 +294,8 @@ ImageTransportManager::subscribe( const rclcpp::Node::SharedPtr &node, const QSt
   std::vector<std::shared_ptr<Subscription>> &subscriptions = subscription_manager_->subscriptions;
   size_t i = 0;
   for ( ; i < subscriptions.size(); ++i ) {
-    if ( subscriptions[i]->topic == topic && subscriptions[i]->queue_size == queue_size )
+    if ( subscriptions[i]->topic == topic && subscriptions[i]->queue_size == queue_size &&
+         subscriptions[i]->hints.getTransport() == transport_hints.getTransport() )
       break; // We could also compare transport type and hints
   }
   auto handle = std::make_shared<ImageTransportSubscriptionHandle>();
@@ -287,7 +314,19 @@ ImageTransportManager::subscribe( const rclcpp::Node::SharedPtr &node, const QSt
   handle->subscription = subscriptions[i];
   subscriptions[i]->addSubscription( handle );
   return handle;
-  return nullptr;
+}
+
+std::shared_ptr<ImageTransportSubscriptionHandle>
+ImageTransportManager::subscribe( const rclcpp::Node::SharedPtr &node, const QString &qtopic,
+                                  quint32 queue_size,
+                                  const image_transport::TransportHints &transport_hints,
+                                  const std::function<void( const QVideoFrame & )> &callback,
+                                  const QList<QVideoFrame::PixelFormat> &supported_pixel_formats )
+{
+  return subscribe(
+      node, qtopic, queue_size, transport_hints,
+      [callback]( const QVideoFrame &frame, const ImageInformation & ) { callback( frame ); },
+      supported_pixel_formats );
 }
 } // namespace qml_ros2_plugin
 

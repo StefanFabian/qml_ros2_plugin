@@ -51,7 +51,7 @@ protected:
   void onRos2Shutdown() override;
 
 private:
-  void checkFuture() const;
+  bool checkFuture() const;
 
   void updateStatus();
 
