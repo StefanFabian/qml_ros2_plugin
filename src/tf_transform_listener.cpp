@@ -9,7 +9,7 @@
 
 #include <QVariantMap>
 #include <memory>
-#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/transform_listener.hpp>
 
 using namespace qml_ros2_plugin::conversion;
 
@@ -18,7 +18,7 @@ namespace qml_ros2_plugin
 
 struct TfTransformListener::State {
   explicit State( rclcpp::Node::SharedPtr node )
-      : buffer( node->get_clock() ), listener( buffer, node, false )
+      : buffer( node->get_clock() ), listener( buffer, *node, false )
   {
     buffer.setUsingDedicatedThread( true );
   }

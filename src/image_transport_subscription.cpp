@@ -70,7 +70,7 @@ void ImageTransportSubscription::initSubscriber()
   }
   // TODO Transport hints
   const rclcpp::Node::SharedPtr &node = Ros2Qml::getInstance().node();
-  image_transport::TransportHints transport_hints( node.get(), default_transport_.toStdString() );
+  image_transport::TransportHints transport_hints( *node, default_transport_.toStdString() );
   subscription_ = ImageTransportManager::getInstance().subscribe(
       node, topic_, queue_size_, transport_hints,
       [this]( const QVideoFrame &frame, const ImageInformation &info ) {

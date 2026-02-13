@@ -60,7 +60,6 @@ void ServiceClient::checkServiceReady()
       QML_ROS2_PLUGIN_DEBUG(
           "Request for service '%s' timeouted while waiting for it to become ready.",
           name_.toStdString().c_str() );
-      invokeCallback( waiting_service_calls_[i].callback, QVariant( false ) );
       pending_requests_--;
       invokeCallback( waiting_service_calls_[i].id, false );
     }

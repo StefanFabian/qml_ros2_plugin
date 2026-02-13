@@ -22,6 +22,7 @@ class GoalHandle : public QObjectRos2
   Q_PROPERTY( qml_ros2_plugin::action_goal_status::GoalStatus status READ status NOTIFY statusChanged )
   Q_PROPERTY( QString goalId READ goalId )
   Q_PROPERTY( qml_ros2_plugin::Time goalStamp READ goalStamp )
+  Q_PROPERTY( bool isActive READ isActive )
 public:
   GoalHandle( ros_babel_fish::BabelFishActionClient::SharedPtr client,
               ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr handle );
@@ -34,6 +35,9 @@ public:
   QString goalId() const;
 
   qml_ros2_plugin::Time goalStamp() const;
+
+  //! @return True if the goal is in a non-terminal state, i.e., Accepted, Executing or Canceling.
+  Q_INVOKABLE bool isActive() const;
 
   //! Sends a cancellation request to the ActionServer.
   Q_INVOKABLE void cancel();

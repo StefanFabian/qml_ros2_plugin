@@ -87,7 +87,7 @@ public:
           subscriber_ = std::move( subscriber );
       } catch ( std::exception &ex ) {
         QML_ROS2_PLUGIN_ERROR( "Failed to subscribe to topic '%s' with transport '%s': %s",
-                               topic.c_str(), hints.getTransport().c_str(), e.what() );
+                               topic.c_str(), hints.getTransport().c_str(), ex.what() );
       }
     } );
   }
