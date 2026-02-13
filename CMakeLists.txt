@@ -87,8 +87,15 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   ${Qt5Qml_INCLUDE_DIRS}
   ${Qt5Quick_INCLUDE_DIRS}
 )
-target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Multimedia Qt5::Qml Qt5::Quick ${YAML_CPP_LIBRARIES})
-ament_target_dependencies(${PROJECT_NAME} ament_index_cpp rclcpp image_transport ros_babel_fish tf2_ros)
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  Qt5::Core Qt5::Multimedia Qt5::Qml Qt5::Quick ${YAML_CPP_LIBRARIES}
+  ament_index_cpp::ament_index_cpp
+  image_transport::image_transport
+  rclcpp::rclcpp
+  ros_babel_fish::ros_babel_fish
+  tf2_ros::static_transform_broadcaster_node
+  tf2_ros::tf2_ros
+)
 
 #############
 ## Testing ##
@@ -104,34 +111,52 @@ if(BUILD_TESTING)
   find_package(std_srvs REQUIRED)
   find_package(Qt5Test REQUIRED)
 
-  set(TEST_DEPENDENCIES example_interfaces ros_babel_fish_test_msgs std_srvs)
+  
 
   ament_add_gtest(test_communication test/communication.cpp)
-  ament_target_dependencies(test_communication ${TEST_DEPENDENCIES})
-  target_link_libraries(test_communication ${PROJECT_NAME} Qt5::Test)
+  target_link_libraries(test_communication 
+    ${example_interfaces_TARGETS}
+    ${ros_babel_fish_test_msgs_TARGETS}
+    ${std_srvs_TARGETS}
+    ${PROJECT_NAME} Qt5::Test)
 
   ament_add_gtest(test_image_conversions test/image_conversions.cpp)
-  ament_target_dependencies(test_image_conversions  ${TEST_DEPENDENCIES})
-  target_link_libraries(test_image_conversions ${PROJECT_NAME})
+  target_link_libraries(test_image_conversions
+    ${example_interfaces_TARGETS}
+    ${ros_babel_fish_test_msgs_TARGETS}
+    ${std_srvs_TARGETS}
+    ${PROJECT_NAME})
 
   ament_add_gtest(test_image_transport_subscriber test/image_transport_subscriber.cpp)
-  ament_target_dependencies(test_image_transport_subscriber  ${TEST_DEPENDENCIES})
-  target_link_libraries(test_image_transport_subscriber ${PROJECT_NAME})
+  target_link_libraries(test_image_transport_subscriber
+    ${example_interfaces_TARGETS}
+    ${ros_babel_fish_test_msgs_TARGETS}
+    ${std_srvs_TARGETS}
+    ${PROJECT_NAME})
 
   ament_add_gtest(test_message_conversions test/message_conversions.cpp)
-  ament_target_dependencies(test_message_conversions  ${TEST_DEPENDENCIES})
-  target_link_libraries(test_message_conversions ${PROJECT_NAME})
+  target_link_libraries(test_message_conversions
+    ${example_interfaces_TARGETS}
+    ${ros_babel_fish_test_msgs_TARGETS}
+    ${std_srvs_TARGETS}
+    ${PROJECT_NAME})
 
   ament_add_gtest(test_ros_life_cycle test/ros_life_cycle.cpp)
-  ament_target_dependencies(test_ros_life_cycle  ${TEST_DEPENDENCIES})
-  target_link_libraries(test_ros_life_cycle ${PROJECT_NAME})
+  target_link_libraries(test_ros_life_cycle
+    ${example_interfaces_TARGETS}
+    ${ros_babel_fish_test_msgs_TARGETS}
+    ${std_srvs_TARGETS}
+    ${PROJECT_NAME})
 
   ament_add_gtest(test_logging test/logging.cpp)
   target_link_libraries(test_logging ${PROJECT_NAME})
   #
   ament_add_gtest(test_io test/io.cpp)
-  ament_target_dependencies(test_io  ${TEST_DEPENDENCIES})
-  target_link_libraries(test_io ${PROJECT_NAME})
+  target_link_libraries(test_io
+    ${example_interfaces_TARGETS}
+    ${ros_babel_fish_test_msgs_TARGETS}
+    ${std_srvs_TARGETS}
+    ${PROJECT_NAME})
 
   install(DIRECTORY test/test_io DESTINATION share/qml_ros2_plugin/test/)
 endif()

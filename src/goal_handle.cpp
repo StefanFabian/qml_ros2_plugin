@@ -52,9 +52,9 @@ void GoalHandle::cancel()
 
 qml_ros2_plugin::action_goal_status::GoalStatus GoalHandle::status() const
 {
-  checkFuture();
+  bool future_ready = checkFuture();
   if ( goal_handle_ == nullptr )
-    return action_goal_status::Unknown;
+    return future_ready ? action_goal_status::Aborted : action_goal_status::Unknown;
   return static_cast<action_goal_status::GoalStatus>( goal_handle_->get_status() );
 }
 
@@ -80,16 +80,18 @@ void GoalHandle::onRos2Shutdown()
   goal_handle_ = nullptr;
 }
 
-void GoalHandle::checkFuture() const
+bool GoalHandle::checkFuture() const
 {
   if ( goal_handle_ != nullptr )
-    return;
+    return true;
   if ( !goal_handle_future_.valid() )
-    return;
+    return true;
   auto status = goal_handle_future_.wait_for( std::chrono::milliseconds( 0 ) );
   if ( status == std::future_status::ready ) {
     goal_handle_ = goal_handle_future_.get();
+    return true;
   }
+  return false;
 }
 
 namespace
@@ -124,6 +126,25 @@ void GoalHandle::updateStatus()
   if ( isTerminalState( new_status ) ) {
     status_timer_.stop();
   }
+}
+
+bool GoalHandle::isActive() const
+{
+  bool future_ready = checkFuture();
+  if ( goal_handle_ == nullptr )
+    return !future_ready;
+  switch ( static_cast<action_goal_status::GoalStatus>( goal_handle_->get_status() ) ) {
+  case action_goal_status::Accepted:
+  case action_goal_status::Executing:
+  case action_goal_status::Canceling:
+    return true;
+  case action_goal_status::Aborted:
+  case action_goal_status::Canceled:
+  case action_goal_status::Succeeded:
+  case action_goal_status::Unknown:
+    return false;
+  }
+  return false;
 }
 
 } // namespace qml_ros2_plugin

@@ -633,7 +633,12 @@ bool Ros2QmlSingletonWrapper::initLogging()
     QML_ROS2_PLUGIN_ERROR( "You need to initialize Ros2 before calling a log function!" );
     return false;
   }
-  logger_ = qjsEngine( this )->newQObject( new Logger( node->get_logger() ) );
+  QJSEngine *engine = qjsEngine( this );
+  if ( !engine ) {
+    QML_ROS2_PLUGIN_ERROR( "Failed to get QJSEngine in initLogging. Can not create logger." );
+    return false;
+  }
+  logger_ = engine->newQObject( new Logger( node->get_logger() ) );
   return true;
 }
 } // namespace qml_ros2_plugin

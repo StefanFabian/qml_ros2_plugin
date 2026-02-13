@@ -25,8 +25,8 @@
 #include <QSignalSpy>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
-#include <tf2_ros/static_transform_broadcaster.h>
-#include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/static_transform_broadcaster.hpp>
+#include <tf2_ros/transform_broadcaster.hpp>
 
 using namespace qml_ros2_plugin;
 using namespace std::chrono_literals;
@@ -38,24 +38,29 @@ struct MessageStorage {
   void callback( T msg ) { messages.push_back( msg ); }
 };
 
+rclcpp::executors::SingleThreadedExecutor::UniquePtr executor;
 rclcpp::Node::SharedPtr node;
 
 void processEvents()
 {
   QCoreApplication::processEvents();
-  rclcpp::spin_some( node );
+  executor->spin_some( 1ms );
 }
 
 bool waitFor( const std::function<bool()> &pred, std::chrono::milliseconds timeout = 1s )
 {
   auto start = std::chrono::steady_clock::now();
   while ( ( std::chrono::steady_clock::now() - start ) < timeout ) {
+    processEvents();
     if ( pred() )
       return true;
-    processEvents();
-    std::this_thread::sleep_for( 1ms );
   }
   return false;
+}
+
+void waitFor( std::chrono::milliseconds timeout )
+{
+  waitFor( []() { return false; }, timeout );
 }
 
 TEST( Communication, publisher )
@@ -134,7 +139,8 @@ TEST( Communication, subscriber )
   processEvents();
   EXPECT_TRUE( subscriber_pns->isRosInitialized() );
   EXPECT_TRUE( subscriber_pns->enabled() );
-  EXPECT_TRUE( waitFor( [&subscriber_pns]() { return subscriber_pns->getPublisherCount() == 1U; } ) );
+  EXPECT_TRUE(
+      waitFor( [&subscriber_pns]() { return subscriber_pns->getPublisherCount() == 1U; }, 3s ) );
   ASSERT_EQ( subscriber_pns->topic().toStdString(), "/communication/test" );
   //  EXPECT_EQ( subscriber_pns->ns(), QString( "/communication/private_ns" )) << subscriber_pns->ns().toStdString();
   EXPECT_EQ( subscriber_pns->queueSize(), 1U );
@@ -369,11 +375,8 @@ TEST( Communication, serviceCallAsync )
   ASSERT_TRUE( waitFor( [&]() { return service->isServiceReady(); } ) );
   service->sendRequestAsync( { { "a", 1 }, { "b", 3 } }, callback );
   ASSERT_TRUE( !returned );
-  waitFor( [&returned]() { return returned; }, 2s );
+  ASSERT_TRUE( waitFor( [&]() { return obj.hasProperty( "result" ); }, 3s ) );
   ASSERT_TRUE( returned );
-  processEvents();
-  processEvents();
-  ASSERT_TRUE( obj.hasProperty( "result" ) );
   QVariant result = obj.property( "result" ).toVariant();
   EXPECT_TRUE( service_called ) << "Service was not called!";
   ASSERT_EQ( result.type(), QVariant::Map )
@@ -405,10 +408,8 @@ TEST( Communication, serviceCallAsync )
   ASSERT_TRUE( waitFor( [&]() { return service->isServiceReady(); }, 1s ) );
   service->sendRequestAsync( {}, callback );
   ASSERT_TRUE( !returned );
-  waitFor( [&returned]() { return returned; } );
+  ASSERT_TRUE( waitFor( [&]() { return obj.hasProperty( "result" ); }, 3s ) );
   ASSERT_TRUE( returned );
-  processEvents();
-  ASSERT_TRUE( obj.hasProperty( "result" ) );
   result = obj.property( "result" ).toVariant();
   // In ROS2 each message needs at least one member, hence empty will add a filler byte member
   ASSERT_EQ( result.type(), QVariant::Map )
@@ -498,8 +499,6 @@ TEST( Communication, actionClient )
   engine.newQObject( client_ptr );
   ActionClient &client = *client_ptr;
   EXPECT_FALSE( client.isServerReady() );
-  // This should also print a warning "Tried to send goal when ActionClient was not connected!"
-  EXPECT_EQ( client.sendGoalAsync( { { "goal", 8 } } ), nullptr );
 
   auto *callback_watcher = new ActionClientCallback;
   QJSValue callback_watcher_js = engine.newQObject( callback_watcher );
@@ -512,9 +511,31 @@ return {
 }
 }))!" )
                          .call( { callback_watcher_js } );
-  ASSERT_TRUE( waitFor( [&client]() { return client.isServerReady(); }, 5s ) );
   GoalHandle *handle =
-      dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 400 } }, options ) );
+      dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 8 } }, options ).toQObject() );
+  EXPECT_FALSE( client.isServerReady() );
+  ASSERT_TRUE( waitFor( [&client]() { return client.isServerReady(); }, 5s ) );
+  // Goal handle should be accepted even if sent before server was ready
+  ASSERT_TRUE( waitFor( [handle]() { return handle->status() == action_goal_status::Succeeded; }, 3s ) )
+      << handle->status();
+  EXPECT_EQ( callback_watcher->feedback, 9 );
+  ASSERT_TRUE( waitFor( [&callback_watcher, handle]() {
+    return callback_watcher->results.find( handle->goalId() ) != callback_watcher->results.end();
+  } ) );
+  QVariantMap result_map = callback_watcher->results[handle->goalId()];
+  ASSERT_TRUE( result_map.contains( "goalId" ) )
+      << "Keys: " << result_map.keys().join( ", " ).toStdString();
+  EXPECT_EQ( result_map["goalId"].type(), QVariant::String );
+  EXPECT_EQ( result_map["goalId"].toString(), handle->goalId() );
+  ASSERT_TRUE( result_map.contains( "result" ) );
+  EXPECT_EQ( result_map["result"].type(), QVariant::Map );
+  ASSERT_TRUE( result_map["result"].toMap().contains( "final_value" ) );
+  EXPECT_EQ( result_map["result"].toMap()["final_value"].type(), QVariant::Int );
+  EXPECT_EQ( result_map["result"].toMap()["final_value"].toInt(), 16 );
+  callback_watcher->goal_handles.clear();
+
+  handle = dynamic_cast<GoalHandle *>(
+      client.sendGoalAsync( { { "target", 400 } }, options ).toQObject() );
   //  ASSERT_NE( handle, nullptr );
   ASSERT_TRUE( waitFor( [&callback_watcher]() { return !callback_watcher->goal_handles.empty(); } ) );
   handle = callback_watcher->goal_handles[0];
@@ -526,7 +547,7 @@ return {
   ASSERT_TRUE( waitFor( [&callback_watcher, handle]() {
     return callback_watcher->results.find( handle->goalId() ) != callback_watcher->results.end();
   } ) );
-  QVariantMap result_map = callback_watcher->results[handle->goalId()];
+  result_map = callback_watcher->results[handle->goalId()];
   ASSERT_TRUE( result_map.contains( "goalId" ) )
       << "Keys: " << result_map.keys().join( ", " ).toStdString();
   EXPECT_EQ( result_map["goalId"].type(), QVariant::String );
@@ -540,7 +561,8 @@ return {
 
   // Cancel
   callback_watcher->goal_handles.clear();
-  handle = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 300 } }, options ) );
+  handle = dynamic_cast<GoalHandle *>(
+      client.sendGoalAsync( { { "target", 300 } }, options ).toQObject() );
   //  ASSERT_NE( handle, nullptr );
   ASSERT_TRUE( waitFor( [&callback_watcher]() { return !callback_watcher->goal_handles.empty(); } ) );
   handle = callback_watcher->goal_handles[0];
@@ -555,14 +577,14 @@ return {
 
   // Cancel all goals
   callback_watcher->goal_handles.clear();
-  GoalHandle *handle1 =
-      dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 7000 } }, options ) );
+  GoalHandle *handle1 = dynamic_cast<GoalHandle *>(
+      client.sendGoalAsync( { { "target", 7000 } }, options ).toQObject() );
   //  ASSERT_NE( handle1, nullptr );
-  GoalHandle *handle2 =
-      dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 8000 } }, options ) );
+  GoalHandle *handle2 = dynamic_cast<GoalHandle *>(
+      client.sendGoalAsync( { { "target", 8000 } }, options ).toQObject() );
   //  ASSERT_NE( handle2, nullptr );
-  GoalHandle *handle3 =
-      dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 9000 } }, options ) );
+  GoalHandle *handle3 = dynamic_cast<GoalHandle *>(
+      client.sendGoalAsync( { { "target", 9000 } }, options ).toQObject() );
   //  ASSERT_NE( handle3, nullptr );
   ASSERT_TRUE(
       waitFor( [&callback_watcher]() { return callback_watcher->goal_handles.size() == 3; } ) );
@@ -589,20 +611,20 @@ return {
 
   // Cancel all goals before and at time
   callback_watcher->goal_handles.clear();
-  handle1 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 1700 } }, options ) );
-  //  ASSERT_NE( handle1, nullptr );
-  processEvents();
-  std::this_thread::sleep_for( 10ms );
-  processEvents();
-  handle2 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 1800 } }, options ) );
-  //  ASSERT_NE( handle2, nullptr );
-  processEvents();
-  std::this_thread::sleep_for( 40ms );
-  processEvents();
+  handle1 = dynamic_cast<GoalHandle *>(
+      client.sendGoalAsync( { { "target", 1700 } }, options ).toQObject() );
+  ASSERT_NE( handle1, nullptr );
+  ASSERT_TRUE( waitFor( [&handle1]() { return handle1->status() == action_goal_status::Accepted; } ) );
+  waitFor( 10ms );
+  handle2 = dynamic_cast<GoalHandle *>(
+      client.sendGoalAsync( { { "target", 1800 } }, options ).toQObject() );
+  ASSERT_NE( handle2, nullptr );
+  ASSERT_TRUE( waitFor( [&handle2]() { return handle2->status() == action_goal_status::Accepted; } ) );
+  waitFor( 10ms );
   QDateTime now = rosToQmlTime( node->now() );
-  std::this_thread::sleep_for( 10ms );
-  processEvents();
-  handle3 = dynamic_cast<GoalHandle *>( client.sendGoalAsync( { { "target", 190 } }, options ) );
+  waitFor( 50ms );
+  handle3 = dynamic_cast<GoalHandle *>(
+      client.sendGoalAsync( { { "target", 190 } }, options ).toQObject() );
   ASSERT_NE( handle3, nullptr );
   EXPECT_NE( handle1->status(), action_goal_status::Succeeded );
   EXPECT_NE( handle2->status(), action_goal_status::Succeeded );
@@ -806,8 +828,11 @@ int main( int argc, char **argv )
   testing::InitGoogleTest( &argc, argv );
   QCoreApplication app( argc, argv );
   rclcpp::init( argc, argv );
-  node = rclcpp::Node::make_shared( "communication" );
-  tf2_ros::StaticTransformBroadcaster static_tf_broadcaster( node );
+  node = rclcpp::Node::make_shared( "communication",
+                                    rclcpp::NodeOptions().use_intra_process_comms( false ) );
+  executor = rclcpp::executors::SingleThreadedExecutor::make_unique();
+  executor->add_node( node );
+  tf2_ros::StaticTransformBroadcaster static_tf_broadcaster( *node );
   geometry_msgs::msg::TransformStamped static_transform;
   static_transform.header.frame_id = "billionaires";
   static_transform.child_frame_id = "politics";
@@ -815,6 +840,7 @@ int main( int argc, char **argv )
   Ros2QmlSingletonWrapper wrapper;
   wrapper.init( "communication_qml" );
   int result = RUN_ALL_TESTS();
+  executor.reset();
   node.reset();
   wrapper.shutdown();
   return result;
