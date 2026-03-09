@@ -165,7 +165,7 @@ struct convert<QVariant> {
   static Node encode( const QVariant &variant )
   {
     YAML::Node result;
-    if ( variant.type() == QVariant::UserType && variant.userType() == qMetaTypeId<QJSValue>() ) {
+    if ( variant.userType() == qMetaTypeId<QJSValue>() ) {
       // Need to unwrap QJSValue because it can be cast to both QVariantList and QVariantMap but
       // will be empty if it is not the contained type.
       result = variant.value<QJSValue>().toVariant();
