@@ -2,8 +2,8 @@
 Changelog for package qml_ros2_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.26.31 (2026-03-10)
+--------------------
 * Revert humble incompatible changes.
 * Contributors: Stefan Fabian
 
