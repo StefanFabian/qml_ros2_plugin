@@ -2,8 +2,8 @@
 Changelog for package qml_ros2_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.26.30 (2026-03-10)
+--------------------
 * Fixed yaml conversion not handling QJSValue correctly.
 * Backport improvements from qml6_ros2_plugin.
 * Added backport workflow.
