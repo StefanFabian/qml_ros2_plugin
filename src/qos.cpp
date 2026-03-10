@@ -62,8 +62,6 @@ std::string to_string( const rclcpp::ReliabilityPolicy &reliability )
     return "Reliable";
   case rclcpp::ReliabilityPolicy::SystemDefault:
     return "SystemDefault";
-  case rclcpp::ReliabilityPolicy::BestAvailable:
-    return "BestAvailable";
   case rclcpp::ReliabilityPolicy::Unknown:
     return "Unknown";
   }
@@ -81,8 +79,6 @@ std::string to_string( const rclcpp::DurabilityPolicy &durability )
     return "SystemDefault";
   case rclcpp::DurabilityPolicy::Unknown:
     return "Unknown";
-  case rclcpp::DurabilityPolicy::BestAvailable:
-    return "BestAvailable";
   }
   return "Invalid";
 }

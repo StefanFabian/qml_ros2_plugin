@@ -204,9 +204,6 @@ public:
   //! best_effort and volatile with a history depth of 1.
   Q_INVOKABLE qml_ros2_plugin::QoSWrapper QoS();
 
-  //! Creates a QoS wrapper with the settings for BestAvailable from rclcpp.
-  Q_INVOKABLE qml_ros2_plugin::QoSWrapper BestAvailableQoS();
-
   //! Creates a QoS wrapper with the settings for Clock from rclcpp.
   Q_INVOKABLE qml_ros2_plugin::QoSWrapper ClockQoS();
 
