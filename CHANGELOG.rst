@@ -2,8 +2,8 @@
 Changelog for package qml_ros2_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.26.31 (2026-03-10)
+--------------------
 * Interface changes for kilted.
 * Contributors: Stefan Fabian
 
