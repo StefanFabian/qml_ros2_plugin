@@ -1,6 +1,6 @@
-=============
+==============
 Ros2 Singleton
-=============
+==============
 
 The ``Ros2`` singleton provides interfaces to static methods and convenience
 methods.
@@ -22,7 +22,7 @@ First, you need to initialize the node used by your QML application, e.g., in th
     Ros2.init("node_name")
   }
 
-You can also conditionally initialize by checking if it was already initialized using ``Ros2.isRosInitialized``.
+You can also conditionally initialize by checking if it was already initialized using ``Ros2.isInitialized``.
 As described in the API documentation for :cpp:func:`Ros2.init <qml_ros2_plugin::Ros2QmlSingletonWrapper::init>`, you can pass either just the
 node name or additionally use provided command line args instead of the command
 line args provided to your executable.
@@ -65,7 +65,7 @@ Additionally, for topics three convenience methods are also provided:
   | Queries a list of topics with the given datatype or all topics if no type provided.
 * | ``QList<TopicInfo> queryTopicInfo()``
   | Retrieves a list of all advertised topics including their datatypes. See :cpp:class:`TopicInfo`
-* | ``QString queryTopicTypes( const QString &name )``
+* | ``QStringList queryTopicTypes( const QString &name )``
   | Retrieves the datatypes for a given topic.
 
 And for actions and services:
