@@ -37,7 +37,7 @@ To send a goal, you can use the `sendGoalAsync` function:
         }
         // Handle goal accepted
       },
-      onFeedback(goal_hamdle, feedback) {
+      onFeedback(goal_handle, feedback) {
         // Handle feedback from action server
       },
       onResult(result) {
