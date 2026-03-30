@@ -40,10 +40,11 @@ jobs:
           - rosdistro: jazzy
             os: ubuntu-latest
     steps:
-      - name: install build tools
+      - name: install build tools and latest testing repo
         run: |
           sudo apt-get update
-          sudo apt-get install -y ros-dev-tools
+          sudo apt-get install -y ros-dev-tools ros2-testing-apt-source
+          sudo apt-get update
       - uses: actions/checkout@v4
         with:
           path: src/qml_ros2_plugin
