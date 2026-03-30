@@ -6,7 +6,7 @@ There are two methods for looking up **tf2** transforms.
 
 Component
 ---------
-The ``TfTransform`` component can be used to createSubscription to transforms between
+The ``TfTransform`` component can be used to subscribe to transforms between
 two frames.
 
 .. code-block:: qml
@@ -57,7 +57,7 @@ Be aware that in JavaScript durations are given in milliseconds.
 API
 ---
 
-.. doxygenclass:: qml_ros2_plugin::TfTransformListener
+.. doxygenclass:: qml_ros2_plugin::TfTransformListenerWrapper
   :members:
 
 .. doxygenclass:: qml_ros2_plugin::TfTransform
