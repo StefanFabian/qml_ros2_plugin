@@ -168,10 +168,10 @@ void Subscription::try_subscribe()
           nullptr, {} );
     }
   } catch ( const std::exception &e ) {
-    QML_ROS2_PLUGIN_ERROR( "Failed to create subscription: %s", e.what() );
+    QML_ROS2_PLUGIN_ERROR( "Failed to create subscription for topic '%s': %s", topic_.toStdString().c_str(), e.what() );
     return;
   } catch ( ... ) {
-    QML_ROS2_PLUGIN_ERROR( "Failed to create subscription: Unknown error." );
+    QML_ROS2_PLUGIN_ERROR( "Failed to create subscription for topic '%s': Unknown error.", topic_.toStdString().c_str() );
     return;
   }
   if ( subscription_ == nullptr )
