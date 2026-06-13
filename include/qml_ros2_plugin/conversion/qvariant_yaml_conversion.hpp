@@ -171,7 +171,12 @@ struct convert<QVariant> {
       result = variant.value<QJSValue>().toVariant();
       return result;
     }
-    if ( variant.canConvert<QVariantList>() ) {
+    if ( variant.type() == QVariant::String ) {
+      const auto &str = variant.toString();
+      result = str.toStdString();
+      result.SetTag( "tag:yaml.org,2002:str" );
+      return result;
+    } else if ( variant.canConvert<QVariantList>() ) {
       const auto &list = variant.value<QVariantList>();
       result = list;
       return result;
@@ -204,8 +209,6 @@ struct convert<QVariant> {
     }
     QString sval = variant.toString();
     result = ( sval.toStdString() );
-    if ( variant.type() == QVariant::String )
-      result.SetTag( "tag:yaml.org,2002:str" );
     return result;
   }
 
