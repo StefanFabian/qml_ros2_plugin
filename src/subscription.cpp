@@ -6,6 +6,7 @@
 #include "qml_ros2_plugin/babel_fish_dispenser.hpp"
 #include "qml_ros2_plugin/conversion/message_conversions.hpp"
 #include "qml_ros2_plugin/ros2.hpp"
+#include <mutex>
 
 using namespace qml_ros2_plugin::conversion;
 
@@ -48,7 +49,18 @@ QString Subscription::topic() const
 
 void Subscription::setTopic( const QString &value )
 {
+  if ( topic_ == value )
+    return;
   topic_ = value;
+  if ( is_subscribed_ )
+    shutdown();
+  if ( message_.isValid() ) {
+    std::unique_lock lock( message_mutex_ );
+    message_queue_.clear();
+    message_ = QVariant();
+    lock.unlock();
+    emit messageChanged();
+  }
   subscribe();
   emit topicChanged();
 }
@@ -168,10 +180,12 @@ void Subscription::try_subscribe()
           nullptr, {} );
     }
   } catch ( const std::exception &e ) {
-    QML_ROS2_PLUGIN_ERROR( "Failed to create subscription for topic '%s': %s", topic_.toStdString().c_str(), e.what() );
+    QML_ROS2_PLUGIN_ERROR( "Failed to create subscription for topic '%s': %s",
+                           topic_.toStdString().c_str(), e.what() );
     return;
   } catch ( ... ) {
-    QML_ROS2_PLUGIN_ERROR( "Failed to create subscription for topic '%s': Unknown error.", topic_.toStdString().c_str() );
+    QML_ROS2_PLUGIN_ERROR( "Failed to create subscription for topic '%s': Unknown error.",
+                           topic_.toStdString().c_str() );
     return;
   }
   if ( subscription_ == nullptr )
@@ -197,7 +211,6 @@ void Subscription::shutdown()
   subscription_.reset();
   throttle_timer_.stop();
   is_subscribed_ = false;
-  message_ = QVariant();
   emit subscribedChanged();
 }
 
