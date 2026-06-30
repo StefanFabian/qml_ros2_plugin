@@ -57,6 +57,10 @@ struct ElementGetter {
       return QVariant::fromValue( quint32( array[index] ) );
     } else if constexpr ( std::is_same_v<T, int8_t> ) {
       return QVariant::fromValue( qint32( array[index] ) );
+    } else if constexpr ( std::is_same_v<T, int64_t> ) {
+      return QVariant::fromValue( static_cast<qlonglong>( array[index] ) );
+    } else if constexpr ( std::is_same_v<T, uint64_t> ) {
+      return QVariant::fromValue( static_cast<qulonglong>( array[index] ) );
     } else if constexpr ( std::is_same_v<T, char16_t> ) {
       return QVariant::fromValue( QChar( array[index] ) );
     } else if constexpr ( std::is_same_v<T, long double> ) {

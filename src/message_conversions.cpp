@@ -145,6 +145,10 @@ struct MessageToQVariantConverter {
       return QVariant::fromValue( quint32( msg.getValue() ) );
     } else if constexpr ( std::is_same_v<T, int8_t> ) {
       return QVariant::fromValue( qint32( msg.getValue() ) );
+    } else if constexpr ( std::is_same_v<T, int64_t> ) {
+      return QVariant::fromValue( static_cast<qlonglong>( msg.getValue() ) );
+    } else if constexpr ( std::is_same_v<T, uint64_t> ) {
+      return QVariant::fromValue( static_cast<qulonglong>( msg.getValue() ) );
     } else if constexpr ( std::is_same_v<T, long double> ) {
       return QVariant::fromValue( static_cast<double>( msg.getValue() ) );
     } else if constexpr ( std::is_same_v<T, char16_t> ) {

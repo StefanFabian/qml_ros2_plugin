@@ -51,6 +51,31 @@ Next, launch the example UI:
 It provides a top down view on the position of the robot and sliders to control
 the forward and angular movement.
 
+Service Server
+==============
+
+The service server example advertises an ``example_interfaces/srv/AddTwoInts`` service and answers
+requests from QML. See :doc:`ServiceServer`.
+
+To run, run:
+
+.. code-block::
+
+  qmlscene service_server.qml
+
+Action Server
+=============
+
+The action server example advertises an ``example_interfaces/action/Fibonacci`` action server and
+computes the sequence step by step, publishing feedback and supporting cancellation. See
+:doc:`ActionServer`.
+
+To run, run:
+
+.. code-block::
+
+  qmlscene action_server.qml
+
 Logging
 =======
 
