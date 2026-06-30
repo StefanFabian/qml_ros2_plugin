@@ -253,10 +253,9 @@ TEST( MessageConversion, int64ArraysReadBackAsNumbers )
       *fish.get_message_type_support( "ros_babel_fish_test_msgs/TestArray" ),
       std::shared_ptr<void>( &test_array, []( void * ) { /*empty deleter*/ } ) );
 
-  // Eager QVariantList path (ConversionFlags::None -> ArrayToQVariantListConverter).
-  const QVariantMap eager = msgToMap( wrapped, ConversionFlags::None ).toMap();
-  const QVariantList i64 = eager["int64s"].toList();
-  const QVariantList u64 = eager["uint64s"].toList();
+  // Eager QVariantList path (msgToMap on an array Message reference -> ArrayToQVariantListConverter).
+  const QVariantList i64 = msgToMap( ( *wrapped )["int64s"] ).toList();
+  const QVariantList u64 = msgToMap( ( *wrapped )["uint64s"] ).toList();
   ASSERT_GE( i64.size(), 3 );
   ASSERT_EQ( u64.size(), 3 );
   EXPECT_EQ( i64[2].userType(), QMetaType::LongLong );
@@ -264,7 +263,7 @@ TEST( MessageConversion, int64ArraysReadBackAsNumbers )
   EXPECT_EQ( i64[2].toLongLong(), std::numeric_limits<int64_t>::max() );
   EXPECT_EQ( u64[2].toULongLong(), std::numeric_limits<uint64_t>::max() );
 
-  // Lazy-wrapped Array path (ConversionFlags::Default -> Array::at), the path used by the
+  // Lazy-wrapped Array path (msgToMap on a Message shared_ptr -> Array::at), the path used by the
   // subscription and action/service server callbacks.
   const QVariantMap lazy = msgToMap( wrapped ).toMap();
   const Array i64_array = lazy["int64s"].value<Array>();

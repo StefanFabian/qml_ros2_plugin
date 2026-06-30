@@ -127,8 +127,11 @@ if(BUILD_TESTING)
     ${PROJECT_NAME} Qt5::Test)
 
   ament_add_gtest(test_server_communication test/server_communication.cpp)
-  ament_target_dependencies(test_server_communication ${TEST_DEPENDENCIES})
-  target_link_libraries(test_server_communication ${PROJECT_NAME} Qt5::Test)
+  target_link_libraries(test_server_communication
+    ${example_interfaces_TARGETS}
+    ${ros_babel_fish_test_msgs_TARGETS}
+    ${std_srvs_TARGETS}
+    ${PROJECT_NAME} Qt5::Test)
 
   ament_add_gtest(test_image_conversions test/image_conversions.cpp)
   target_link_libraries(test_image_conversions

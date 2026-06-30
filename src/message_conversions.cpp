@@ -204,6 +204,12 @@ struct ArrayToQVariantListConverter {
         result.append( QVariant::fromValue( quint32( array[i] ) ) );
       } else if constexpr ( std::is_same_v<T, int8_t> ) {
         result.append( QVariant::fromValue( qint32( array[i] ) ) );
+      } else if constexpr ( std::is_same_v<T, int64_t> ) {
+        // On LP64 int64_t is long which maps to QMetaType::Long. QJSEngine can not convert that to
+        // a JS number, so store it as qlonglong (LongLong), mirroring Array::at.
+        result.append( QVariant::fromValue( static_cast<qlonglong>( array[i] ) ) );
+      } else if constexpr ( std::is_same_v<T, uint64_t> ) {
+        result.append( QVariant::fromValue( static_cast<qulonglong>( array[i] ) ) );
       } else if constexpr ( std::is_same_v<T, long double> ) {
         result.append( QVariant::fromValue( static_cast<double>( array[i] ) ) );
       } else if constexpr ( std::is_same_v<T, char16_t> ) {

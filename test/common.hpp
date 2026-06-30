@@ -5,6 +5,7 @@
 #define ROS_BABEL_FISH_TEST_COMMON_H
 
 #include <ros_babel_fish_test_msgs/msg/test_array.hpp>
+#include <rosidl_buffer/buffer.hpp>
 
 #include <QString>
 #include <gtest/gtest.h>
@@ -50,6 +51,14 @@ void fillArray( std::vector<T> &msg, unsigned seed )
   size_t length = length_distribution( generator );
   msg.reserve( length );
   for ( size_t i = 0; i < length; ++i ) { msg.push_back( distribution( generator ) ); }
+}
+
+// Rolling generates dynamic primitive arrays (e.g. uint8[]) as rosidl::Buffer instead of
+// std::vector. It is a drop-in replacement, so fill the underlying CPU vector storage.
+template<typename T>
+void fillArray( rosidl::Buffer<T> &msg, unsigned seed )
+{
+  fillArray( static_cast<std::vector<T> &>( msg ), seed );
 }
 
 template<typename T, size_t L>
