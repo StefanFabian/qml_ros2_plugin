@@ -87,6 +87,26 @@ void getElement( const ArrayMessage_<int8_t, BOUNDED, FIXED_LENGTH> &array, int 
 }
 
 template<bool BOUNDED, bool FIXED_LENGTH>
+void getElement( const ArrayMessage_<int64_t, BOUNDED, FIXED_LENGTH> &array, int index,
+                 QVariant &result, const std::shared_ptr<Array::Data> & )
+{
+  if ( static_cast<size_t>( index ) >= array.size() )
+    return;
+  // On LP64 int64_t is long which maps to QMetaType::Long. QJSEngine can not convert that to a JS
+  // number, so store it as qlonglong (LongLong).
+  result = QVariant::fromValue( static_cast<qlonglong>( array[index] ) );
+}
+
+template<bool BOUNDED, bool FIXED_LENGTH>
+void getElement( const ArrayMessage_<uint64_t, BOUNDED, FIXED_LENGTH> &array, int index,
+                 QVariant &result, const std::shared_ptr<Array::Data> & )
+{
+  if ( static_cast<size_t>( index ) >= array.size() )
+    return;
+  result = QVariant::fromValue( static_cast<qulonglong>( array[index] ) );
+}
+
+template<bool BOUNDED, bool FIXED_LENGTH>
 void getElement( const ArrayMessage_<long double, BOUNDED, FIXED_LENGTH> &array, int index,
                  QVariant &result, const std::shared_ptr<Array::Data> & )
 {

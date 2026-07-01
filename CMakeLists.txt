@@ -33,6 +33,8 @@ set(SOURCES
   include/qml_ros2_plugin/conversion/qml_ros_conversion.hpp
   include/qml_ros2_plugin/array.hpp
   include/qml_ros2_plugin/action_client.hpp
+  include/qml_ros2_plugin/action_server.hpp
+  include/qml_ros2_plugin/action_server_goal_handle.hpp
   include/qml_ros2_plugin/ament_index.hpp
   include/qml_ros2_plugin/babel_fish_dispenser.hpp
   include/qml_ros2_plugin/goal_handle.hpp
@@ -49,6 +51,7 @@ set(SOURCES
   include/qml_ros2_plugin/ros2.hpp
   include/qml_ros2_plugin/ros2_init_options.hpp
   include/qml_ros2_plugin/service_client.hpp
+  include/qml_ros2_plugin/service_server.hpp
   include/qml_ros2_plugin/subscription.hpp
   include/qml_ros2_plugin/tf_transform.hpp
   include/qml_ros2_plugin/tf_transform_listener.hpp
@@ -56,6 +59,8 @@ set(SOURCES
   include/qml_ros2_plugin/time.hpp
   src/array.cpp
   src/action_client.cpp
+  src/action_server.cpp
+  src/action_server_goal_handle.cpp
   src/ament_index.cpp
   src/babel_fish_dispenser.cpp
   src/goal_handle.cpp
@@ -73,6 +78,7 @@ set(SOURCES
   src/ros2.cpp
   src/ros2_init_options.cpp
   src/service_client.cpp
+  src/service_server.cpp
   src/subscription.cpp
   src/tf_transform.cpp
   src/tf_transform_listener.cpp
@@ -112,6 +118,13 @@ if(BUILD_TESTING)
   ament_add_gtest(test_communication test/communication.cpp)
   ament_target_dependencies(test_communication ${TEST_DEPENDENCIES})
   target_link_libraries(test_communication ${PROJECT_NAME} Qt5::Test)
+
+  ament_add_gtest(test_server_communication test/server_communication.cpp)
+  target_link_libraries(test_server_communication
+    ${example_interfaces_TARGETS}
+    ${ros_babel_fish_test_msgs_TARGETS}
+    ${std_srvs_TARGETS}
+    ${PROJECT_NAME} Qt5::Test)
 
   ament_add_gtest(test_image_conversions test/image_conversions.cpp)
   ament_target_dependencies(test_image_conversions  ${TEST_DEPENDENCIES})

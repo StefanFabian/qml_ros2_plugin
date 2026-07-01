@@ -83,11 +83,14 @@ void Publisher::advertise()
     is_advertised_ = true;
     emit advertised();
   } catch ( BabelFishException &ex ) {
-    QML_ROS2_PLUGIN_ERROR( "Failed to create publisher for topic '%s': %s", topic_.toStdString().c_str(), ex.what() );
+    QML_ROS2_PLUGIN_ERROR( "Failed to create publisher for topic '%s': %s",
+                           topic_.toStdString().c_str(), ex.what() );
   } catch ( std::exception &ex ) {
-    QML_ROS2_PLUGIN_ERROR( "Failed to create publisher for topic '%s': %s", topic_.toStdString().c_str(), ex.what() );
+    QML_ROS2_PLUGIN_ERROR( "Failed to create publisher for topic '%s': %s",
+                           topic_.toStdString().c_str(), ex.what() );
   } catch ( ... ) {
-    QML_ROS2_PLUGIN_ERROR( "Failed to create publisher for topic '%s': Unknown error", topic_.toStdString().c_str() );
+    QML_ROS2_PLUGIN_ERROR( "Failed to create publisher for topic '%s': Unknown error",
+                           topic_.toStdString().c_str() );
   }
 }
 } // namespace qml_ros2_plugin

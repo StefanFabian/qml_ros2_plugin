@@ -115,5 +115,6 @@ int main( int argc, char **argv )
   node = rclcpp::Node::make_shared( "test_logging" );
   int result = RUN_ALL_TESTS();
   node.reset();
+  rclcpp::shutdown();
   return result;
 }

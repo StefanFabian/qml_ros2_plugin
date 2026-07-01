@@ -14,6 +14,7 @@
 #include <QCoreApplication>
 #include <QHostInfo>
 #include <QJSEngine>
+#include <chrono>
 #include <rcl/validate_topic_name.h>
 #include <rcl_action/graph.h>
 #include <thread>
@@ -88,9 +89,19 @@ void Ros2Qml::init( const QString &name, const QStringList &argv, Ros2InitOption
     p_args[i] = args[i].c_str();
   }
   QML_ROS2_PLUGIN_DEBUG( "Initializing QML Ros2 with args: %s", arg_debug_string.c_str() );
+  rclcpp::InitOptions init_options = options ? options->rclcppInitOptions() : rclcpp::InitOptions();
+
+  // Remember the arguments so an ActionServer can lazily initialize the global default context if
+  // and when one is actually created (see ensureGlobalDefaultContextInitialized).
+  init_args_ = args;
+  global_context_init_options_ = init_options;
+
+  // Our own context hosts the node but must not initialize logging again (that would warn about
+  // double initialization when embedded in an application that already set it up).
+  init_options.auto_initialize_logging( false );
   context_ = rclcpp::Context::make_shared();
-  context_->init( argc, p_args.data(),
-                  options ? options->rclcppInitOptions() : rclcpp::InitOptions() );
+  context_->init( argc, p_args.data(), init_options );
+
   rclcpp::NodeOptions node_options;
   node_options.context( context_ );
 #if RCLCPP_VERSION_MAJOR >= 28
@@ -108,17 +119,46 @@ void Ros2Qml::init( const QString &name, const QStringList &argv, Ros2InitOption
   executor->add_node( node_ );
   emit initialized();
 
-  executor_thread_ = std::thread( [exec = std::move( executor )]() { exec->spin(); } );
+  executor_running_ = true;
+  executor_thread_ = std::thread( [this, exec = std::move( executor )]() {
+    exec->spin();
+    executor_running_ = false;
+  } );
   QML_ROS2_PLUGIN_DEBUG( "QML Ros2 initialized." );
+}
+
+void Ros2Qml::ensureGlobalDefaultContextInitialized()
+{
+  // rclcpp_action's goal-expiry thread sleeps on the global default context (it hardcodes it instead
+  // of the node's context), so an ActionServer added to the executor needs it valid. Only ensure it
+  // is valid and never tear it down: an embedding application may rely on the default context.
+  auto global_context = rclcpp::contexts::get_global_default_context();
+  if ( global_context->is_valid() )
+    return;
+  std::vector<const char *> p_args( init_args_.size() );
+  for ( size_t i = 0; i < init_args_.size(); ++i ) p_args[i] = init_args_[i].c_str();
+  global_context->init( static_cast<int>( init_args_.size() ), p_args.data(),
+                        global_context_init_options_ );
 }
 
 void Ros2Qml::shutdown()
 {
+  if ( context_ == nullptr )
+    return;
   QML_ROS2_PLUGIN_DEBUG( "Shutting down Ros2Qml..." );
   emit aboutToShutdown();
   rclcpp::shutdown( context_, "Shutting down Ros2Qml." );
-  if ( executor_thread_.joinable() )
+  if ( executor_thread_.joinable() ) {
+    // A goal/cancel callback may be blocked in a Qt::BlockingQueuedConnection waiting for this
+    // (GUI) thread; pump the event loop so it can complete and the executor can exit. A bare join()
+    // would deadlock against it. The executor keeps the entity alive while executing it, so
+    // resetting a server in aboutToShutdown above does not free an in-flight callback.
+    while ( executor_running_.load() ) {
+      QCoreApplication::processEvents();
+      std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
+    }
     executor_thread_.join();
+  }
   node_ = nullptr;
   context_ = nullptr;
   QML_ROS2_PLUGIN_DEBUG( "Ros2Qml shut down." );
