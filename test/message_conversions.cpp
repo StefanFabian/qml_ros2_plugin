@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "message_comparison.hpp"
 
+#include "qml_ros2_plugin/array.hpp"
 #include "qml_ros2_plugin/babel_fish_dispenser.hpp"
 #include "qml_ros2_plugin/conversion/message_conversions.hpp"
 #include "qml_ros2_plugin/conversion/qml_ros_conversion.hpp"
@@ -15,6 +16,7 @@
 #include <QDateTime>
 #include <QQmlComponent>
 #include <QQmlEngine>
+#include <limits>
 
 using namespace qml_ros2_plugin;
 using namespace qml_ros2_plugin::conversion;
@@ -235,6 +237,41 @@ TEST( MessageConversion, msgToMapRBF )
   broken_map = msgToMap( wrapped );
   obtainValueAsReference<QVariantMap>( broken_map )["i32"] = QDate( 2019, 11, 4 );
   EXPECT_FALSE( fillMessage( *msg, broken_map ) );
+}
+
+TEST( MessageConversion, int64ArraysReadBackAsNumbers )
+{
+  // int64[]/uint64[] elements must be stored as LongLong/ULongLong. On LP64 the raw long/unsigned
+  // long map to QMetaType::Long/ULong, which QJSEngine can not convert to a JS number, so such
+  // array fields would read back as undefined in QML.
+  BabelFish fish = BabelFishDispenser::getBabelFish();
+  ros_babel_fish_test_msgs::msg::TestArray test_array;
+  // int64s is int64[32] (fixed length), uint64s is uint64[] (dynamic).
+  test_array.int64s[2] = std::numeric_limits<int64_t>::max();
+  test_array.uint64s = { 1, 2, std::numeric_limits<uint64_t>::max() };
+  auto wrapped = CompoundMessage::make_shared(
+      *fish.get_message_type_support( "ros_babel_fish_test_msgs/TestArray" ),
+      std::shared_ptr<void>( &test_array, []( void * ) { /*empty deleter*/ } ) );
+
+  // Eager QVariantList path (msgToMap on an array Message reference -> ArrayToQVariantListConverter).
+  const QVariantList i64 = msgToMap( ( *wrapped )["int64s"] ).toList();
+  const QVariantList u64 = msgToMap( ( *wrapped )["uint64s"] ).toList();
+  ASSERT_GE( i64.size(), 3 );
+  ASSERT_EQ( u64.size(), 3 );
+  EXPECT_EQ( i64[2].userType(), QMetaType::LongLong );
+  EXPECT_EQ( u64[2].userType(), QMetaType::ULongLong );
+  EXPECT_EQ( i64[2].toLongLong(), std::numeric_limits<int64_t>::max() );
+  EXPECT_EQ( u64[2].toULongLong(), std::numeric_limits<uint64_t>::max() );
+
+  // Lazy-wrapped Array path (msgToMap on a Message shared_ptr -> Array::at), the path used by the
+  // subscription and action/service server callbacks.
+  const QVariantMap lazy = msgToMap( wrapped ).toMap();
+  const Array i64_array = lazy["int64s"].value<Array>();
+  const Array u64_array = lazy["uint64s"].value<Array>();
+  ASSERT_GE( i64_array.length(), 3 );
+  ASSERT_EQ( u64_array.length(), 3 );
+  EXPECT_EQ( i64_array.at( 2 ).userType(), QMetaType::LongLong );
+  EXPECT_EQ( u64_array.at( 2 ).userType(), QMetaType::ULongLong );
 }
 
 TEST( MessageConversion, array )

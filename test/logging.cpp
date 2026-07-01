@@ -122,5 +122,6 @@ int main( int argc, char **argv )
   int result = RUN_ALL_TESTS();
   executor.reset();
   node.reset();
+  rclcpp::shutdown();
   return result;
 }
