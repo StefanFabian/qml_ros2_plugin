@@ -15,6 +15,7 @@
 #include <ros_babel_fish/babel_fish.hpp>
 #include <ros_babel_fish_test_msgs/msg/test_array.hpp>
 #include <ros_babel_fish_test_msgs/msg/test_message.hpp>
+#include <rosidl_buffer/buffer.hpp>
 
 #include <QDateTime>
 #include <QVariant>
@@ -64,6 +65,16 @@ mapAndMessageEqual( const QVariant &map, const std::vector<ElementType> msg,
     return mapAndMessageEqualArray( map.toList(), msg, path, precision );
   }
   return mapAndMessageEqualArray( map.value<Array>(), msg, path, precision );
+}
+
+// Rolling generates dynamic primitive arrays (e.g. uint8[]) as rosidl::Buffer instead of
+// std::vector. It is a drop-in replacement, so compare it like the std::vector overload above.
+template<typename ElementType>
+::testing::AssertionResult
+mapAndMessageEqual( const QVariant &map, const rosidl::Buffer<ElementType> &msg,
+                    const std::string &path = "msg", double precision = DEFAULT_PRECISION )
+{
+  return mapAndMessageEqual( map, msg.to_vector(), path, precision );
 }
 
 template<typename ElementType, unsigned long N>
