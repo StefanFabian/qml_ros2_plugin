@@ -101,8 +101,6 @@ private:
 
   void onRos2Shutdown() override;
 
-  int generateInternalGoalId();
-
   std::shared_future<ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr>
   internalSendGoal( int internal_goal_id );
 

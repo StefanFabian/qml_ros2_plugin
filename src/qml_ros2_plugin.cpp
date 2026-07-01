@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #include "qml_ros2_plugin/action_client.hpp"
+#include "qml_ros2_plugin/action_server.hpp"
+#include "qml_ros2_plugin/action_server_goal_handle.hpp"
 #include "qml_ros2_plugin/ament_index.hpp"
 #include "qml_ros2_plugin/array.hpp"
 #include "qml_ros2_plugin/goal_handle.hpp"
@@ -12,6 +14,7 @@
 #include "qml_ros2_plugin/qos.hpp"
 #include "qml_ros2_plugin/ros2.hpp"
 #include "qml_ros2_plugin/service_client.hpp"
+#include "qml_ros2_plugin/service_server.hpp"
 #include "qml_ros2_plugin/subscription.hpp"
 #include "qml_ros2_plugin/tf_transform.hpp"
 #include "qml_ros2_plugin/tf_transform_listener.hpp"
@@ -97,6 +100,17 @@ public:
         "Ros2", 1, 0, "ServiceClient",
         "Error: Can not create ServiceClient manually in QML. Use the "
         "Ros2.createServiceClient(name, type) factory method." );
+    qmlRegisterType<ServiceServer>( "Ros2", 1, 0, "ServiceServer" );
+
+    // Action and service servers
+    qmlRegisterType<ActionServer>( "Ros2", 1, 0, "ActionServer" );
+    qmlRegisterUncreatableType<ActionServerGoalHandle>(
+        "Ros2", 1, 0, "ActionServerGoalHandle",
+        "Error: ActionServerGoalHandle is obtained via ActionServer.onGoalAccepted, not "
+        "constructed "
+        "in QML." );
+    qRegisterMetaType<std::shared_ptr<ros_babel_fish::BabelFishActionServerGoalHandle>>();
+    qRegisterMetaType<ros_babel_fish::CompoundMessage::ConstSharedPtr>();
 
     qRegisterMetaType<QoSWrapper>();
     // Time

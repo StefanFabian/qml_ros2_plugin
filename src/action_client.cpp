@@ -7,6 +7,8 @@
 #include "qml_ros2_plugin/conversion/message_conversions.hpp"
 #include "qml_ros2_plugin/conversion/qml_ros_conversion.hpp"
 #include "qml_ros2_plugin/goal_handle.hpp"
+#include "qml_ros2_plugin/helpers/callback_registry.hpp"
+#include "qml_ros2_plugin/helpers/logging.hpp"
 #include "qml_ros2_plugin/ros2.hpp"
 
 #include <QJSEngine>
@@ -131,14 +133,14 @@ void ActionClient::invokeGoalResponseCallback(
     return;
   }
   std::unique_lock lock( pending_goals_mutex_ );
-  auto it = pending_goals_.find( internal_goal_id );
-  if ( it == pending_goals_.end() ) {
+  PendingGoal *pending = findPending( pending_goals_, internal_goal_id );
+  if ( pending == nullptr ) {
     QML_ROS2_PLUGIN_ERROR( "ActionClient: Could not find pending goal with internal ID %d in "
                            "invokeGoalResponseCallback. Can not invoke callback.",
                            internal_goal_id );
     return;
   }
-  PendingGoal &pending_goal = it->second;
+  PendingGoal &pending_goal = *pending;
   QJSValue &callback = pending_goal.goal_callback;
   if ( !callback.isCallable() ) {
     return;
@@ -160,14 +162,14 @@ void ActionClient::invokeFeedbackCallback( int internal_goal_id,
     return;
   }
   std::unique_lock lock( pending_goals_mutex_ );
-  auto it = pending_goals_.find( internal_goal_id );
-  if ( it == pending_goals_.end() ) {
+  PendingGoal *pending = findPending( pending_goals_, internal_goal_id );
+  if ( pending == nullptr ) {
     QML_ROS2_PLUGIN_DEBUG( "ActionClient: Could not find pending goal with internal ID %d in "
                            "invokeFeedbackCallback. Can not invoke callback.",
                            internal_goal_id );
     return;
   }
-  PendingGoal &pending_goal = it->second;
+  PendingGoal &pending_goal = *pending;
   QJSValue &callback = pending_goal.feedback_callback;
   if ( !callback.isCallable() ) {
     return;
@@ -191,14 +193,14 @@ void ActionClient::invokeResultCallback( int internal_goal_id, QString goal_id,
     return;
   }
   std::unique_lock lock( pending_goals_mutex_ );
-  auto it = pending_goals_.find( internal_goal_id );
-  if ( it == pending_goals_.end() ) {
+  PendingGoal *pending = findPending( pending_goals_, internal_goal_id );
+  if ( pending == nullptr ) {
     QML_ROS2_PLUGIN_ERROR( "ActionClient: Could not find pending goal with internal ID %d in "
                            "invokeResultCallback. Can not invoke callback.",
                            internal_goal_id );
     return;
   }
-  PendingGoal &pending_goal = it->second;
+  PendingGoal &pending_goal = *pending;
   QJSValue &callback = pending_goal.result_callback;
   if ( callback.isCallable() ) {
     try {
@@ -220,8 +222,7 @@ QJSValue ActionClient::sendGoalAsync( const QVariantMap &goal, const QJSValue &o
     engine_ = qjsEngine( this );
   }
   std::unique_lock lock( pending_goals_mutex_ );
-  int id = generateInternalGoalId();
-  while ( pending_goals_.find( id ) != pending_goals_.end() ) { id = generateInternalGoalId(); }
+  int id = freshId( pending_goals_ );
   pending_goals_[id] = {};
   PendingGoal &pending_goal = pending_goals_[id];
   pending_goal.start = clock::now();
@@ -271,25 +272,18 @@ void ActionClient::cancelGoalsBefore( const QDateTime &time )
   client_->async_cancel_goals_before( qmlToRos2Time( time ) );
 }
 
-int ActionClient::generateInternalGoalId()
-{
-  // Create a unique incrementing internal goal ID
-  static std::atomic<int> current_id = 0;
-  return current_id.fetch_add( 1 );
-}
-
 std::shared_future<ros_babel_fish::BabelFishActionClient::GoalHandle::SharedPtr>
 ActionClient::internalSendGoal( int internal_goal_id )
 {
   std::unique_lock lock( pending_goals_mutex_ );
-  auto it = pending_goals_.find( internal_goal_id );
-  if ( it == pending_goals_.end() ) {
+  PendingGoal *pending = findPending( pending_goals_, internal_goal_id );
+  if ( pending == nullptr ) {
     QML_ROS2_PLUGIN_ERROR( "ActionClient: Could not find pending goal with internal ID %d in "
                            "internalSendGoal. Can not send goal.",
                            internal_goal_id );
     return {};
   }
-  PendingGoal &pending_goal = it->second;
+  PendingGoal &pending_goal = *pending;
   try {
     auto message = client_->create_goal();
     if ( !fillMessage( message, pending_goal.goal ) )

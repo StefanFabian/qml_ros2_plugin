@@ -5,6 +5,7 @@
 #include "qml_ros2_plugin/ros2.hpp"
 
 #include <QCoreApplication>
+#include <QJSEngine>
 
 namespace qml_ros2_plugin
 {
@@ -29,6 +30,13 @@ QObjectRos2::QObjectRos2( QObject *parent ) : QObject( parent ), is_initialized_
 QObjectRos2::~QObjectRos2() { Ros2Qml::getInstance().unregisterDependant(); }
 
 bool QObjectRos2::isRosInitialized() const { return is_initialized_; }
+
+QJSEngine *QObjectRos2::jsEngine()
+{
+  if ( !js_engine_ )
+    js_engine_ = qjsEngine( this );
+  return js_engine_;
+}
 
 void QObjectRos2::_initialize()
 {

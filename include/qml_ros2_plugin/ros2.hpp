@@ -15,6 +15,7 @@
 #include <QObject>
 #include <QTimer>
 
+#include <atomic>
 #include <rclcpp/rclcpp.hpp>
 #include <ros_babel_fish/babel_fish.hpp>
 
@@ -155,6 +156,14 @@ public:
    */
   QVariant createEmptyActionGoal( const QString &datatype ) const;
 
+  /*!
+   * Ensures the global default context is valid, initializing it (only if not already valid) with
+   * the arguments passed to init. rclcpp_action's goal-expiry thread sleeps on the global default
+   * context rather than the node's, so an ActionServer needs it valid before being added to the
+   * executor. Call before creating an action server. No-op until init() has been called.
+   */
+  void ensureGlobalDefaultContextInitialized();
+
   //! Increases the dependant counter.
   void registerDependant();
 
@@ -173,10 +182,15 @@ signals:
 
 private:
   std::thread executor_thread_;
+  std::atomic<bool> executor_running_{ false };
   std::shared_ptr<rclcpp::Context> context_;
   std::shared_ptr<rclcpp::Node> node_;
   ros_babel_fish::BabelFish babel_fish_;
   std::atomic<int> count_wrappers;
+  // Arguments and options used by init, kept so an ActionServer can lazily initialize the global
+  // default context (see ensureGlobalDefaultContextInitialized).
+  std::vector<std::string> init_args_;
+  rclcpp::InitOptions global_context_init_options_;
 };
 
 class Ros2QmlSingletonWrapper : public QObject
