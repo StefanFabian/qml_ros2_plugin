@@ -46,6 +46,10 @@ public:
 
   const rclcpp::QoS &rclcppQoS() const { return qos_; }
 
+  bool operator==( const QoSWrapper &other ) const { return qos_ == other.qos_; }
+
+  bool operator!=( const QoSWrapper &other ) const { return !( *this == other ); }
+
   std::string toString() const;
 
 private:

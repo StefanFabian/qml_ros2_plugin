@@ -5,6 +5,9 @@
 #define QML_ROS2_PLUGIN_QOBJECT_ROS2_HPP
 
 #include <QObject>
+#include <QPointer>
+
+class QJSEngine;
 
 namespace qml_ros2_plugin
 {
@@ -26,6 +29,10 @@ public:
   bool isRosInitialized() const;
 
 protected:
+  //! Lazily resolves and caches the QJSEngine that owns this object. Returns nullptr if the object
+  //! is not owned by a QJSEngine (e.g., when constructed from C++ rather than QML).
+  QJSEngine *jsEngine();
+
   /*!
    * Called once ROS was initialized in this application.
    *
@@ -49,6 +56,7 @@ public slots:
 
 private:
   bool is_initialized_;
+  QPointer<QJSEngine> js_engine_;
 };
 } // namespace qml_ros2_plugin
 
