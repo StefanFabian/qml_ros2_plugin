@@ -488,6 +488,46 @@ TEST( ServerCommunication, actionServerCancelSynchronousCanceled )
   EXPECT_EQ( result_code, rclcpp_action::ResultCode::CANCELED );
 }
 
+TEST( ServerCommunication, actionServerAbortsOpenGoalsOnDestruction )
+{
+  QJSEngine engine;
+  auto server = std::make_unique<ActionServer>();
+  QJSValue server_js = engine.newQObject( server.get() );
+  ActionServerGoalHandle *accepted_handle = nullptr;
+  QObject::connect( server.get(), &ActionServer::goalAccepted,
+                    [&]( ActionServerGoalHandle *handle ) { accepted_handle = handle; } );
+  server->setType( "example_interfaces/action/Fibonacci" );
+  server->setName( "/server_communication/fibonacci_destroy" );
+
+  auto action_client =
+      rclcpp_action::create_client<Fibonacci>( node, "/server_communication/fibonacci_destroy" );
+  ASSERT_TRUE( waitFor( [&]() { return action_client->action_server_is_ready(); }, 5s ) );
+  // action_server_is_ready() can report ready before the underlying services are matched for
+  // delivery; settle briefly so the first goal request is not dropped (graph discovery race).
+  waitFor( 1s );
+
+  Fibonacci::Goal goal;
+  goal.order = 5;
+  auto gh_future = action_client->async_send_goal( goal );
+  ASSERT_TRUE(
+      waitFor( [&]() { return gh_future.wait_for( 0s ) == std::future_status::ready; }, 3s ) );
+  auto goal_handle = gh_future.get();
+  ASSERT_NE( goal_handle, nullptr );
+  ASSERT_TRUE( waitFor( [&]() { return accepted_handle != nullptr; }, 3s ) );
+
+  // Request the result and let the request reach the server before destroying it, so the abort
+  // issued during destruction has a pending result request to answer.
+  auto result_future = action_client->async_get_result( goal_handle );
+  waitFor( 500ms );
+
+  // Destroy the server with the goal still open: it must abort the goal so the client receives a
+  // result instead of waiting for the goal to expire.
+  server.reset();
+  ASSERT_TRUE(
+      waitFor( [&]() { return result_future.wait_for( 0s ) == std::future_status::ready; }, 3s ) );
+  EXPECT_EQ( result_future.get().code, rclcpp_action::ResultCode::ABORTED );
+}
+
 int main( int argc, char **argv )
 {
   testing::InitGoogleTest( &argc, argv );
