@@ -24,6 +24,7 @@ using namespace std::chrono_literals;
 using AddTwoInts = example_interfaces::srv::AddTwoInts;
 using Fibonacci = example_interfaces::action::Fibonacci;
 
+rclcpp::executors::SingleThreadedExecutor::SharedPtr executor;
 rclcpp::Node::SharedPtr node;
 
 // The servers are held in a unique_ptr so an early ASSERT_* that returns from the test still deletes
@@ -32,7 +33,7 @@ rclcpp::Node::SharedPtr node;
 void processEvents()
 {
   QCoreApplication::processEvents();
-  rclcpp::spin_some( node );
+  executor->spin_some();
 }
 
 bool waitFor( const std::function<bool()> &pred, std::chrono::milliseconds timeout = 1s )
@@ -493,9 +494,14 @@ int main( int argc, char **argv )
   QCoreApplication app( argc, argv );
   rclcpp::init( argc, argv );
   node = rclcpp::Node::make_shared( "server_communication" );
+  executor = rclcpp::executors::SingleThreadedExecutor::SharedPtr(
+      new rclcpp::executors::SingleThreadedExecutor() );
+  executor->add_node( node );
   Ros2QmlSingletonWrapper wrapper;
   wrapper.init( "server_communication_qml" );
   int result = RUN_ALL_TESTS();
+  executor->remove_node( node );
+  executor.reset();
   node.reset();
   wrapper.shutdown();
   // Match the rclcpp::init above so the (test-owned) global default context is cleaned up; the

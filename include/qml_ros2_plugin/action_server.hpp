@@ -4,6 +4,7 @@
 #ifndef QML_ROS2_PLUGIN_ACTION_SERVER_HPP
 #define QML_ROS2_PLUGIN_ACTION_SERVER_HPP
 
+#include "qml_ros2_plugin/helpers/alive_token.hpp"
 #include "qml_ros2_plugin/qobject_ros2.hpp"
 
 #include <QJSValue>
@@ -131,6 +132,7 @@ private:
   int server_generation_ = 0;
   // Maps a goal uuid to its wrapper. GUI-thread confined.
   std::unordered_map<QString, ActionServerGoalHandle *> goal_handles_;
+  std::shared_ptr<AliveToken> alive_ = makeAliveToken();
 };
 } // namespace qml_ros2_plugin
 

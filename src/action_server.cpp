@@ -23,6 +23,9 @@ ActionServer::~ActionServer()
   // Set first so any in-flight executor callback degrades to the safe default and never blocks on
   // this (tearing-down) GUI thread.
   shutting_down_ = true;
+  // Wait for an in-flight handle_accepted callback to finish and stop future ones from touching us
+  // before tearing down members. (handle_goal/handle_cancel are gated by shutting_down_ above.)
+  retire( alive_ );
   server_.reset();
 }
 
@@ -118,44 +121,53 @@ void ActionServer::tryCreate()
   const std::string name = name_.toStdString();
   const std::string type = type_.toStdString();
 
-  QPointer<ActionServer> instance = this;
+  ActionServer *instance = this;
+  std::shared_ptr<AliveToken> token = alive_;
   auto handle_goal =
-      [instance]( const rclcpp_action::GoalUUID &uuid,
-                  std::shared_ptr<const CompoundMessage> goal ) -> rclcpp_action::GoalResponse {
-    if ( !instance || instance->shutting_down_.load() )
+      [token, instance]( const rclcpp_action::GoalUUID &uuid,
+                         std::shared_ptr<const CompoundMessage> goal ) -> rclcpp_action::GoalResponse {
+    std::unique_lock lock( token->mutex );
+    if ( !token->alive || instance->shutting_down_.load() )
       return rclcpp_action::GoalResponse::REJECT;
     if ( !instance->has_handle_goal_.load() )
       return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
     bool accept = false;
+    lock.unlock();
     QMetaObject::invokeMethod( instance, "onHandleGoal", Qt::BlockingQueuedConnection,
                                Q_RETURN_ARG( bool, accept ), Q_ARG( QString, uuidToString( uuid ) ),
                                Q_ARG( QVariant, msgToMap( goal ) ) );
     return accept ? rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE
                   : rclcpp_action::GoalResponse::REJECT;
   };
-  auto handle_cancel = [instance]( const std::shared_ptr<BabelFishActionServerGoalHandle> goal_handle )
+  auto handle_cancel =
+      [token, instance]( const std::shared_ptr<BabelFishActionServerGoalHandle> goal_handle )
       -> rclcpp_action::CancelResponse {
     // Cancels are rejected unless the user explicitly accepts them via handleCancel.
-    if ( !instance || instance->shutting_down_.load() )
+    std::unique_lock lock( token->mutex );
+    if ( !token->alive || instance->shutting_down_.load() )
       return rclcpp_action::CancelResponse::REJECT;
     if ( !instance->has_handle_cancel_.load() )
       return rclcpp_action::CancelResponse::REJECT;
     bool accept = false;
+    lock.unlock();
     QMetaObject::invokeMethod( instance, "onHandleCancel", Qt::BlockingQueuedConnection,
                                Q_RETURN_ARG( bool, accept ),
                                Q_ARG( QString, uuidToString( goal_handle->get_goal_id() ) ) );
     return accept ? rclcpp_action::CancelResponse::ACCEPT : rclcpp_action::CancelResponse::REJECT;
   };
   const int generation = server_generation_;
-  auto handle_accepted =
-      [instance, generation]( std::shared_ptr<BabelFishActionServerGoalHandle> goal_handle ) {
-        if ( !instance )
-          return;
-        QMetaObject::invokeMethod(
-            instance, "onGoalAccepted", Qt::QueuedConnection,
-            Q_ARG( std::shared_ptr<ros_babel_fish::BabelFishActionServerGoalHandle>, goal_handle ),
-            Q_ARG( int, generation ) );
-      };
+  ActionServer *self = this;
+  auto handle_accepted = [self, token, generation](
+                             std::shared_ptr<BabelFishActionServerGoalHandle> goal_handle ) {
+    // Runs on the executor thread; the token keeps `self` valid while we post the (non-blocking)
+    // queued call, or drops the goal if the server was destroyed.
+    runIfAlive( token, [&] {
+      QMetaObject::invokeMethod(
+          self, "onGoalAccepted", Qt::QueuedConnection,
+          Q_ARG( std::shared_ptr<ros_babel_fish::BabelFishActionServerGoalHandle>, goal_handle ),
+          Q_ARG( int, generation ) );
+    } );
+  };
 
   // An action server's goal-expiry thread sleeps on the global default context; ensure it is valid
   // before the server is added to the executor. Done here so only apps that use an action server

@@ -19,7 +19,9 @@ ServiceServer::ServiceServer() { babel_fish_ = BabelFishDispenser::getBabelFish(
 
 ServiceServer::~ServiceServer()
 {
-  std::unique_lock lock( mutex_ );
+  // Stop any in-flight executor-thread callback from touching us, and wait for one already running
+  // to finish, before tearing down the members it accesses.
+  retire( alive_ );
   service_.reset();
   pending_requests_.clear();
 }
@@ -77,11 +79,13 @@ void ServiceServer::onRos2Initialized()
 
 void ServiceServer::onRos2Shutdown()
 {
-  std::unique_lock lock( mutex_ );
-  bool was_advertised = service_ != nullptr;
-  service_.reset();
-  pending_requests_.clear();
-  lock.unlock();
+  bool was_advertised;
+  {
+    std::unique_lock lock( mutex_ );
+    was_advertised = service_ != nullptr;
+    service_.reset();
+    pending_requests_.clear();
+  }
   if ( was_advertised )
     emit advertisedChanged();
 }
@@ -117,13 +121,14 @@ void ServiceServer::tryCreate()
     return;
   }
 
-  QPointer<ServiceServer> instance = this;
+  std::shared_ptr<AliveToken> token = alive_;
+  ServiceServer *self = this;
   std::function<void( std::shared_ptr<rmw_request_id_t>, std::shared_ptr<CompoundMessage> )> callback =
-      [instance]( std::shared_ptr<rmw_request_id_t> request_header,
-                  std::shared_ptr<CompoundMessage> request ) {
-        if ( !instance )
-          return;
-        instance->onRequestReceived( request_header, request );
+      [self, token]( std::shared_ptr<rmw_request_id_t> request_header,
+                     std::shared_ptr<CompoundMessage> request ) {
+        // Runs on the executor thread; the token keeps `self` valid for the (quick, non-blocking)
+        // duration of the call, or drops the request if the server was destroyed.
+        runIfAlive( token, [&] { self->onRequestReceived( request_header, request ); } );
       };
   try {
     BabelFishService::SharedPtr service = babel_fish_.create_service(
@@ -204,16 +209,19 @@ void ServiceServer::handleRequest( int id, QVariant request )
 
 void ServiceServer::sendResponse( int id, QVariantMap response )
 {
-  std::unique_lock lock( mutex_ );
-  BabelFishService::SharedPtr local = service_;
-  auto it = pending_requests_.find( id );
-  const bool found = it != pending_requests_.end();
+  BabelFishService::SharedPtr local;
   rmw_request_id_t header{};
-  if ( found ) {
-    header = it->second;
-    pending_requests_.erase( it );
+  bool found;
+  {
+    std::unique_lock lock( mutex_ );
+    local = service_;
+    auto it = pending_requests_.find( id );
+    found = it != pending_requests_.end();
+    if ( found ) {
+      header = it->second;
+      pending_requests_.erase( it );
+    }
   }
-  lock.unlock();
 
   if ( local == nullptr ) {
     QML_ROS2_PLUGIN_WARN( "ServiceServer '%s': Tried to send response but the service is no longer "

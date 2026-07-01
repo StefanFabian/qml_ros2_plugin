@@ -88,8 +88,6 @@ private slots:
   void invokeCallback( int id, const QVariant &result );
 
 private:
-  int generateInternalCallbackId();
-
   ros_babel_fish::BabelFish babel_fish_;
   QoSWrapper qos_;
   QString name_;

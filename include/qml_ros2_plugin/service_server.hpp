@@ -4,6 +4,7 @@
 #ifndef QML_ROS2_PLUGIN_SERVICE_SERVER_HPP
 #define QML_ROS2_PLUGIN_SERVICE_SERVER_HPP
 
+#include "qml_ros2_plugin/helpers/alive_token.hpp"
 #include "qml_ros2_plugin/qobject_ros2.hpp"
 #include "qml_ros2_plugin/qos.hpp"
 
@@ -129,6 +130,8 @@ private:
   std::unordered_map<int, rmw_request_id_t> pending_requests_;
   std::mutex mutex_;
   int next_request_id_ = 0;
+  // Guards the executor-thread service callback against a concurrent destruction of this object.
+  std::shared_ptr<AliveToken> alive_ = makeAliveToken();
 };
 } // namespace qml_ros2_plugin
 
