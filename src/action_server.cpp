@@ -23,6 +23,9 @@ ActionServer::~ActionServer()
   // Set first so any in-flight executor callback degrades to the safe default and never blocks on
   // this (tearing-down) GUI thread.
   shutting_down_ = true;
+  // Abort any still-running goal so its client receives a result. Done while the server is still
+  // alive so the abort can be delivered.
+  abortOpenGoals();
   // Wait for an in-flight handle_accepted callback to finish and stop future ones from touching us
   // before tearing down members. (handle_goal/handle_cancel are gated by shutting_down_ above.)
   retire( alive_ );
@@ -86,26 +89,38 @@ void ActionServer::onRos2Shutdown()
 {
   shutting_down_ = true;
   bool was_advertised = server_ != nullptr;
+  // Abort open goals before dropping the server; the context is still valid here (this runs before
+  // rclcpp::shutdown), so the abort can still reach the client.
+  abortOpenGoals();
   server_.reset();
-  clearGoalHandles();
   if ( was_advertised )
     emit advertisedChanged();
 }
 
-void ActionServer::clearGoalHandles()
+void ActionServer::abortOpenGoals()
 {
-  for ( auto &[uuid, wrapper] : goal_handles_ ) {
-    if ( wrapper )
-      wrapper->deleteLater();
+  // Move the handles out first: abort() emits terminated(), whose handler erases from goal_handles_
+  // and would otherwise invalidate this iteration.
+  std::unordered_map<QString, ActionServerGoalHandle *> handles;
+  handles.swap( goal_handles_ );
+  for ( auto &[uuid, wrapper] : handles ) {
+    if ( wrapper == nullptr )
+      continue;
+    // Only a goal that is still active can be aborted; a terminal one would already have been
+    // removed from the map by its terminated() handler.
+    if ( wrapper->isActive() )
+      wrapper->abort();
+    wrapper->deleteLater();
   }
-  goal_handles_.clear();
 }
 
 void ActionServer::tryCreate()
 {
   bool was_advertised = server_ != nullptr;
+  // Abort goals from the previous server instance before dropping it so their clients receive a
+  // result; the abort must reach them while that server is still alive.
+  abortOpenGoals();
   server_.reset();
-  clearGoalHandles();
   // Invalidate any goal-accept still queued from the previous server instance (its handle is backed
   // by the server we just destroyed) so onGoalAccepted drops it instead of emitting a zombie handle.
   ++server_generation_;
