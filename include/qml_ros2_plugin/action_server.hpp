@@ -39,6 +39,9 @@ class ActionServerGoalHandle;
  * The handleGoal and handleCancel callbacks are invoked synchronously on the executor and must
  * return quickly. They are optional; without handleGoal all goals are accepted. Without handleCancel
  * all cancel requests are rejected, so an action server must set handleCancel to support cancelling.
+ *
+ * Any goal still running when the server is destroyed, re-created or ROS shuts down is aborted so
+ * its client receives a result instead of waiting for the goal to expire.
  */
 class ActionServer : public QObjectRos2
 {
@@ -116,7 +119,9 @@ private:
   //! (Re-)creates the action server if name, type and ROS are available. Drops any prior server.
   void tryCreate();
 
-  void clearGoalHandles();
+  //! Aborts every goal that has not reached a terminal state and destroys its handle. Must run
+  //! while the server is still alive so the abort can still be delivered to the client.
+  void abortOpenGoals();
 
   ros_babel_fish::BabelFish babel_fish_;
   QString name_;

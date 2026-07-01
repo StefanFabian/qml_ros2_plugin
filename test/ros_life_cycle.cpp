@@ -98,5 +98,9 @@ int main( int argc, char **argv )
   testing::InitGoogleTest( &argc, argv );
   QCoreApplication app( argc, argv );
   rclcpp::init( argc, argv );
-  return RUN_ALL_TESTS();
+  int result = RUN_ALL_TESTS();
+  // Match the rclcpp::init above so the global default context is shut down before the process
+  // exits; otherwise the RMW (e.g. rmw_zenoh) is torn down from an atexit handler and aborts.
+  rclcpp::shutdown();
+  return result;
 }
