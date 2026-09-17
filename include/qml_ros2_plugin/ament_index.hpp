@@ -26,6 +26,12 @@ public:
   Q_INVOKABLE QString getPackageShareDirectory( const QString &package_name );
 
   /*!
+   * Alias for `getPackageShareDirectory` to match the ament_index_cpp API. Use this in new code.
+   * @see getPackageShareDirectory(const QString &)
+   */
+  Q_INVOKABLE QString getPackageSharePath( const QString &package_name );
+
+  /*!
    * Queries the path to the prefix for a given package.
    * @param package_name The name of the package.
    * @return The fully-qualified path to the prefix of the given

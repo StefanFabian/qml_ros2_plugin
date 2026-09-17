@@ -9,13 +9,18 @@
 
 #include <QQmlComponent>
 #include <QQmlEngine>
-#include <ament_index_cpp/get_package_share_directory.hpp>
 #include <filesystem>
 
 #if __has_include( <ament_index_cpp/version.h> )
   #include <ament_index_cpp/version.h>
 #else
   #define AMENT_INDEX_CPP_VERSION_GTE( major, minor, patch ) false
+#endif
+
+#if AMENT_INDEX_CPP_VERSION_GTE( 1, 13, 2 )
+  #include <ament_index_cpp/get_package_share_path.hpp>
+#else
+  #include <ament_index_cpp/get_package_share_directory.hpp>
 #endif
 
 using namespace qml_ros2_plugin;
@@ -53,7 +58,9 @@ TEST( IO, yaml )
   QVariant map = conversion::msgToMap( translated );
 
   std::filesystem::path path;
-#if AMENT_INDEX_CPP_VERSION_GTE( 1, 13, 0 )
+#if AMENT_INDEX_CPP_VERSION_GTE( 1, 13, 2 )
+  path = ament_index_cpp::get_package_share_path( "qml_ros2_plugin" );
+#elif AMENT_INDEX_CPP_VERSION_GTE( 1, 13, 0 )
   ament_index_cpp::get_package_share_directory( "qml_ros2_plugin", path );
 #else
   path = ament_index_cpp::get_package_share_directory( "qml_ros2_plugin" );
@@ -98,7 +105,9 @@ QtObject {
 )",
                      QUrl() );
   auto obj = std::unique_ptr<QObject>( component.create() );
-#if AMENT_INDEX_CPP_VERSION_GTE( 1, 13, 0 )
+#if AMENT_INDEX_CPP_VERSION_GTE( 1, 13, 2 )
+  path = ament_index_cpp::get_package_share_path( "qml_ros2_plugin" );
+#elif AMENT_INDEX_CPP_VERSION_GTE( 1, 13, 0 )
   ament_index_cpp::get_package_share_directory( "qml_ros2_plugin", path );
 #else
   path = ament_index_cpp::get_package_share_directory( "qml_ros2_plugin" );
@@ -151,7 +160,9 @@ QtObject {
   ASSERT_EQ( arr[1].type(), QVariant::String );
   ASSERT_EQ( arr[1].toString(), "second" );
 
-#if AMENT_INDEX_CPP_VERSION_GTE( 1, 13, 0 )
+#if AMENT_INDEX_CPP_VERSION_GTE( 1, 13, 2 )
+  path = ament_index_cpp::get_package_share_path( "qml_ros2_plugin" );
+#elif AMENT_INDEX_CPP_VERSION_GTE( 1, 13, 0 )
   ament_index_cpp::get_package_share_directory( "qml_ros2_plugin", path );
 #else
   path = ament_index_cpp::get_package_share_directory( "qml_ros2_plugin" );

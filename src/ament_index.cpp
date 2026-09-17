@@ -10,7 +10,11 @@
 #endif
 
 #include <ament_index_cpp/get_package_prefix.hpp>
-#include <ament_index_cpp/get_package_share_directory.hpp>
+#if AMENT_INDEX_CPP_VERSION_GTE( 1, 13, 2 )
+  #include <ament_index_cpp/get_package_share_path.hpp>
+#else
+  #include <ament_index_cpp/get_package_share_directory.hpp>
+#endif
 #include <ament_index_cpp/get_packages_with_prefixes.hpp>
 
 namespace qml_ros2_plugin
@@ -19,17 +23,23 @@ namespace qml_ros2_plugin
 QString AmentIndex::getPackageShareDirectory( const QString &package_name )
 {
   try {
-#if AMENT_INDEX_CPP_VERSION_GTE( 1, 13, 0 )
     std::filesystem::path path;
+#if AMENT_INDEX_CPP_VERSION_GTE( 1, 13, 2 )
+    path = ament_index_cpp::get_package_share_path( package_name.toStdString() );
+#elif AMENT_INDEX_CPP_VERSION_GTE( 1, 13, 0 )
     ament_index_cpp::get_package_share_directory( package_name.toStdString(), path );
-    return QString::fromStdString( path.string() );
 #else
-    return QString::fromStdString(
-        ament_index_cpp::get_package_share_directory( package_name.toStdString() ) );
+    path = ament_index_cpp::get_package_share_directory( package_name.toStdString() );
 #endif
+    return QString::fromStdString( path.string() );
   } catch ( ament_index_cpp::PackageNotFoundError &ex ) {
     return {};
   }
+}
+
+QString AmentIndex::getPackageSharePath( const QString &package_name )
+{
+  return getPackageShareDirectory( package_name );
 }
 
 QString AmentIndex::getPackagePrefix( const QString &package_name )
