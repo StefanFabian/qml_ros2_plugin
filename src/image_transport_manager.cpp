@@ -13,16 +13,34 @@
 #include <mutex>
 #include <set>
 #include <thread>
+#include <type_traits>
 
 using namespace std::chrono_literals;
 
 namespace qml_ros2_plugin
 {
 
+namespace
+{
+//! Newer image_transport versions take rclcpp::node_interfaces::NodeInterfaces instead of a
+//! rclcpp::Node::SharedPtr. The interfaces can be constructed from a node reference.
+template<typename NodeT>
+std::unique_ptr<image_transport::ImageTransport> createImageTransport( const NodeT &node )
+{
+  // Check for the reference-based constructor since NodeInterfaces has an unconstrained
+  // template constructor which makes is_constructible from a SharedPtr report true as well.
+  if constexpr ( std::is_constructible_v<image_transport::ImageTransport, decltype( *node )> ) {
+    return std::make_unique<image_transport::ImageTransport>( *node );
+  } else {
+    return std::make_unique<image_transport::ImageTransport>( node );
+  }
+}
+} // namespace
+
 struct ImageTransportManager::SubscriptionManager {
   explicit SubscriptionManager( const rclcpp::Node::SharedPtr &node )
   {
-    transport = std::make_unique<image_transport::ImageTransport>( node );
+    transport = createImageTransport( node );
   }
 
   std::vector<std::shared_ptr<Subscription>> subscriptions;
