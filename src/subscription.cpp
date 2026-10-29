@@ -169,15 +169,14 @@ void Subscription::try_subscribe()
             if ( instance )
               instance->messageCallback( msg );
           },
-          nullptr, {}, std::chrono::nanoseconds( 0 ) );
+          {}, std::chrono::nanoseconds( 0 ) );
     } else {
       subscription_ = babel_fish_.create_subscription(
           *node, topic_.toStdString(), user_message_type_.toStdString(), qos_.rclcppQoS(),
           [instance]( ros_babel_fish::CompoundMessage::SharedPtr msg ) {
             if ( instance )
               instance->messageCallback( msg );
-          },
-          nullptr, {} );
+          });
     }
   } catch ( const std::exception &e ) {
     QML_ROS2_PLUGIN_ERROR( "Failed to create subscription for topic '%s': %s",

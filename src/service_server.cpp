@@ -132,7 +132,7 @@ void ServiceServer::tryCreate()
       };
   try {
     BabelFishService::SharedPtr service = babel_fish_.create_service(
-        *node, name, type, callback, qos_.rclcppQoS().get_rmw_qos_profile() );
+        *node, name, type, callback, qos_.rclcppQoS() );
     std::unique_lock lock( mutex_ );
     service_ = service;
   } catch ( const std::exception &ex ) {
